@@ -3,6 +3,8 @@ package spadi.model
 import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
 import utopia.flow.generic.{FromModelFactoryWithSchema, ModelConvertible, StringType}
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.generic.ValueUnwraps._
+import utopia.flow.util.StringExtensions._
 
 object SalesGroupKeyMapping extends FromModelFactoryWithSchema[SalesGroupKeyMapping]
 {
@@ -16,7 +18,6 @@ object SalesGroupKeyMapping extends FromModelFactoryWithSchema[SalesGroupKeyMapp
 
 	override protected def fromValidatedModel(m: Model[Constant]) =
 	{
-		import utopia.flow.generic.ValueUnwraps._
 		SalesGroupKeyMapping(m("id_key"), m("name_key"), m("sale_percent_key"), m("producer_key"))
 	}
 }
@@ -31,8 +32,18 @@ object SalesGroupKeyMapping extends FromModelFactoryWithSchema[SalesGroupKeyMapp
  * @param producerKey Key that contains product producer (optional)
  */
 case class SalesGroupKeyMapping(groupIdKey: String, nameKey: String, salePercentKey: String,
-																producerKey: Option[String] = None) extends ModelConvertible
+																producerKey: Option[String] = None)
+	extends ModelConvertible with KeyMapping[SalesGroup]
 {
 	override def toModel = Model(Vector("id_key" -> groupIdKey, "name_key" -> nameKey,
 		"sale_percent_key" -> salePercentKey, "producer_key" -> producerKey))
+	
+	override def requiredKeys = Set(groupIdKey, nameKey, salePercentKey)
+	
+	override protected def fromValidatedModel(model: Model[Constant]) =
+	{
+		val salePercent = model(salePercentKey).getString.untilFirst("%").getInt
+		val priceModifier = (100 - salePercent.abs) / 100.0
+		SalesGroup(model(groupIdKey), model(nameKey), priceModifier, producerKey.flatMap { model(_) })
+	}
 }

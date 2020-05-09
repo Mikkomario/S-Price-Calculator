@@ -26,6 +26,11 @@ import scala.jdk.CollectionConverters._
 object ReadExcel
 {
 	/**
+	 * File types this object is able to read
+	 */
+	val supportedFileTypes = Vector("xlsx", "xls")
+	
+	/**
 	 * Reads a single sheet from an excel file
 	 * @param path Path to the excel file
 	 * @param target Target that specifies which sheet (or a portion of a sheet) should be read
