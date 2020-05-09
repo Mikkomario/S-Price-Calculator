@@ -3,7 +3,7 @@ package spadi.model
 import utopia.flow.datastructure.immutable.{Model, ModelDeclaration}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
-import utopia.flow.generic.{DoubleType, FromModelFactory, IntType, ModelConvertible, ModelType, StringType}
+import utopia.flow.generic.{DoubleType, FromModelFactory, ModelConvertible, ModelType, StringType}
 import utopia.flow.generic.ValueConversions._
 
 object ProductPrice extends FromModelFactory[ProductPrice]
@@ -32,6 +32,16 @@ object ProductPrice extends FromModelFactory[ProductPrice]
 case class ProductPrice(productId: String, salesGroupId: String, names: Vector[String], price: Double, priceUnit: String)
 	extends ModelConvertible
 {
+	// COMPUTED --------------------------------------
+	
+	/**
+	 * @return Name that should be displayed for this product
+	 */
+	def displayName = names.headOption.getOrElse("")
+	
+	
+	// IMPLEMENTED  ----------------------------------
+	
 	override def toModel =
 	{
 		val priceModel = Model(Vector("amount" -> price, "unit" -> priceUnit))

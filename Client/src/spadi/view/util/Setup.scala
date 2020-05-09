@@ -2,12 +2,16 @@ package spadi.view.util
 
 import java.nio.file.Path
 
+import spadi.controller.Globals
 import utopia.flow.util.FileExtensions._
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.reflection.color.{ColorScheme, ColorSet}
-import utopia.reflection.component.context.BaseContext
+import utopia.reflection.component.context.{AnimationContext, BaseContext, ScrollingContext}
+import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.Margins
 import utopia.reflection.text.Font
+
+import scala.concurrent.ExecutionContext
 
 /**
  * Contains view level globals / basic setup
@@ -29,4 +33,15 @@ object Setup
 	val baseContext = BaseContext(actorHandler,
 		Font.load(resourceDirectory/"fonts/RobotoCondensed-Regular.ttf", 16).getOrElse(Font("Arial", 16)),
 		colorScheme, margins)
+	
+	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
+	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler,
+		margins.medium.toInt)
+	
+	implicit val localizer: Localizer = NoLocalization
+	
+	
+	// COMPUTED --------------------------------
+	
+	implicit def exc: ExecutionContext = Globals.executionContext
 }
