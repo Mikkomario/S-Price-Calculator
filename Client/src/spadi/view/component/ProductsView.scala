@@ -42,8 +42,9 @@ class ProductsView(productsPointer: Changing[Vector[Product]], maxOptimalLength:
 	private val scrollView = stackContext.use { implicit c =>
 		val stack = Stack.column[ProductRowVC](margins.medium.any)
 		// Registers a content displayer for the stack
-		ContainerContentDisplayer.forImmutableStates[Product, ProductRowVC](stack, productsPointer) {
+		val displayer = ContainerContentDisplayer.forImmutableStates[Product, ProductRowVC](stack, productsPointer) {
 			(a, b) => a.id == b.id } { ProductRowVC(segmentGroup, _) }
+		displayer.addDisplayRemovalListener { _.detachFromSegmentedGroup() }
 		// The stack is placed within a scroll view
 		val scrollView = ScrollView.contextual(stack, lengthLimits = StackLengthLimit(maxOptimal = Some(maxOptimalLength)))
 		

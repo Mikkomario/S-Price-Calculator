@@ -58,4 +58,12 @@ class ProductRowVC(segmentGroup: SegmentedGroup, initialProduct: Product)(parent
 	}
 	
 	override def content = _content
+	
+	
+	// OTHER    -----------------------------------
+	
+	/**
+	 * Removes this component from the segmented group it was registered to
+	 */
+	def detachFromSegmentedGroup() = segmentGroup.remove(row)
 }

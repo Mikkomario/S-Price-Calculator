@@ -5,7 +5,6 @@ import spadi.model.Product
 import spadi.view.component.{ProductsView, SearchField}
 import spadi.view.util.Setup._
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.flow.util.CombinedOrdering
 import utopia.flow.util.StringExtensions._
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.{AwtContainerRelated, Stack}
@@ -25,11 +24,11 @@ class MainVC extends StackableAwtComponentWrapperWrapper with AwtContainerRelate
 	
 	private implicit val language: String = "fi"
 	
-	private val producerProductOrdering = Ordering.by[Product, Option[String]] { _.producer }
-	private val productNameOrdering = Ordering.by[Product, String] { _.displayName }
-	private val productIdOrdering = Ordering.by[Product, String] { _.id }
-	private implicit val productOrdering: Ordering[Product] = new CombinedOrdering[Product](
-		Vector(producerProductOrdering, productNameOrdering, productIdOrdering))
+	//private val producerProductOrdering = Ordering.by[Product, Option[String]] { _.producer }
+	//private val productNameOrdering = Ordering.by[Product, String] { _.displayName }
+	private implicit val productIdOrdering: Ordering[Product] = Ordering.by[Product, String] { _.id }
+	//private implicit val productOrdering: Ordering[Product] = new CombinedOrdering[Product](
+	//	Vector(producerProductOrdering, productNameOrdering, productIdOrdering))
 	
 	// Reads and orders product data
 	private val allProducts = ReadProducts() match
@@ -43,10 +42,10 @@ class MainVC extends StackableAwtComponentWrapperWrapper with AwtContainerRelate
 	}
 	private val productsPointer = new PointerWithEvents[Vector[Product]](allProducts)
 	
-	// Won't display more than 25 items at once
+	// Won't display more than 100 items at once
 	private val (searchField, view) = baseContext.inContextWithBackground(colorScheme.primary).use { implicit c =>
 		val searchField = SearchField.default("Rajaa tuotteita")
-		val productsView = ProductsView(productsPointer.map { _.take(25) }, Screen.height / 2)
+		val productsView = ProductsView(productsPointer.map { _.take(100) }, Screen.height / 2)
 		val view = Stack.buildColumnWithContext(isRelated = true) { s =>
 			s += searchField
 			s += productsView.withAnimatedSize(actorHandler)
