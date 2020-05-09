@@ -1,5 +1,6 @@
 package spadi.view.controller
 
+import spadi.controller.ProfitsPercentage
 import spadi.view.util.Setup._
 import spadi.model.Product
 import utopia.reflection.component.Refreshable
@@ -37,12 +38,19 @@ class ProductRowVC(segmentGroup: SegmentedGroup, initialProduct: Product)(parent
 	
 	private implicit val context: TextContext = parentContext.forTextComponents()
 	
-	private val idLabel = TextLabel.contextual(initialProduct.id.noLanguageLocalizationSkipped)
-	private val nameLabel = TextLabel.contextual(initialProduct.displayName.noLanguageLocalizationSkipped)
-	private val priceLabel = TextLabel.contextual(initialProduct.priceString.noLanguageLocalizationSkipped)
+	private val idLabel = TextLabel.contextual()
+	private val nameLabel = TextLabel.contextual()
+	private val priceLabel = TextLabel.contextual()
+	private val profitLabel = TextLabel.contextual()
+	private val finalPriceLabel = TextLabel.contextual()
 	
-	private val row = SegmentedRow.partOfGroupWithItems(segmentGroup, Vector(idLabel, nameLabel, priceLabel),
-		margins.medium.any)
+	private val row = SegmentedRow.partOfGroupWithItems(segmentGroup, Vector(idLabel, nameLabel, priceLabel,
+		profitLabel, finalPriceLabel), margins.medium.any)
+	
+	
+	// INITIAL CODE -------------------------------
+	
+	updateLabels()
 	
 	
 	// IMPLEMENTED  -------------------------------
@@ -52,9 +60,7 @@ class ProductRowVC(segmentGroup: SegmentedGroup, initialProduct: Product)(parent
 	override def content_=(newContent: Product) =
 	{
 		_content = newContent
-		idLabel.text = newContent.id.noLanguageLocalizationSkipped
-		nameLabel.text = newContent.displayName.noLanguageLocalizationSkipped
-		priceLabel.text = newContent.priceString.noLanguageLocalizationSkipped
+		updateLabels()
 	}
 	
 	override def content = _content
@@ -66,4 +72,20 @@ class ProductRowVC(segmentGroup: SegmentedGroup, initialProduct: Product)(parent
 	 * Removes this component from the segmented group it was registered to
 	 */
 	def detachFromSegmentedGroup() = segmentGroup.remove(row)
+	
+	private def percentString(percentage: Double) =
+	{
+		val rounded = math.round(percentage).toInt
+		s"$rounded%"
+	}
+	
+	private def updateLabels() =
+	{
+		idLabel.text = content.id.noLanguageLocalizationSkipped
+		nameLabel.text = content.displayName.noLanguageLocalizationSkipped
+		priceLabel.text = content.standardPriceString.noLanguageLocalizationSkipped
+		val profitsPercentage = ProfitsPercentage.forPrice(content.price)
+		profitLabel.text = percentString(profitsPercentage).noLanguageLocalizationSkipped
+		finalPriceLabel.text = content.priceString(1 + profitsPercentage / 100.0).noLanguageLocalizationSkipped
+	}
 }

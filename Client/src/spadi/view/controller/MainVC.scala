@@ -45,7 +45,7 @@ class MainVC extends StackableAwtComponentWrapperWrapper with AwtContainerRelate
 	// Won't display more than 100 items at once
 	private val (searchField, view) = baseContext.inContextWithBackground(colorScheme.primary).use { implicit c =>
 		val searchField = SearchField.default("Rajaa tuotteita")
-		val productsView = ProductsView(productsPointer.map { _.take(100) }, Screen.height / 2)
+		val productsView = ProductsView(productsPointer.map { _.take(50) }, Screen.height / 2)
 		val view = Stack.buildColumnWithContext(isRelated = true) { s =>
 			s += searchField
 			s += productsView.withAnimatedSize(actorHandler)

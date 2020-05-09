@@ -29,14 +29,14 @@ case class Product(id: String, prices: Set[ProductSalePrice])
 	def producer = cheapest.sale.flatMap { _.producerName }
 	
 	/**
+	 * @return Price of this product
+	 */
+	def price = cheapest.price
+	
+	/**
 	 * @return A string representation of this product's price (unit included)
 	 */
-	def priceString =
-	{
-		val roundedPrice = math.round(cheapest.price * 10) / 10.0
-		val displayPrice = if (roundedPrice % 1 == 0) roundedPrice.toInt.toString else roundedPrice.toString
-		s"$displayPrice ${cheapest.basePrice.priceUnit}"
-	}
+	def standardPriceString = priceString(1.0)
 	
 	
 	// OTHER    ------------------------------
@@ -45,5 +45,18 @@ case class Product(id: String, prices: Set[ProductSalePrice])
 	 * @param search Search words
 	 * @return How well this product matches specified search words
 	 */
-	def matches(search: Set[String]) = (prices.foldLeft(0) { _ + _.matches(search) } / prices.size) + cheapest.matches(search)
+	def matches(search: Set[String]) = (prices.foldLeft(0) { _ + _.matches(search) } / prices.size) +
+		cheapest.matches(search)
+	
+	/**
+	 * Forms a string representation of this product's price
+	 * @param priceModifier A modifier applied to the price
+	 * @return String representation of product price
+	 */
+	def priceString(priceModifier: Double) =
+	{
+		val roundedPrice = math.round(cheapest.price * priceModifier * 10) / 10.0
+		val displayPrice = if (roundedPrice > 10) roundedPrice.toInt.toString else roundedPrice.toString
+		s"$displayPrice ${cheapest.basePrice.priceUnit}"
+	}
 }
