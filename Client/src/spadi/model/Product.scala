@@ -37,4 +37,13 @@ case class Product(id: String, prices: Set[ProductSalePrice])
 		val displayPrice = if (roundedPrice % 1 == 0) roundedPrice.toInt.toString else roundedPrice.toString
 		s"$displayPrice ${cheapest.basePrice.priceUnit}"
 	}
+	
+	
+	// OTHER    ------------------------------
+	
+	/**
+	 * @param search Search words
+	 * @return How well this product matches specified search words
+	 */
+	def matches(search: Set[String]) = (prices.foldLeft(0) { _ + _.matches(search) } / prices.size) + cheapest.matches(search)
 }

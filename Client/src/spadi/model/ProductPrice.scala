@@ -47,4 +47,14 @@ case class ProductPrice(productId: String, salesGroupId: String, names: Vector[S
 		val priceModel = Model(Vector("amount" -> price, "unit" -> priceUnit))
 		Model(Vector("id" -> productId, "group_id" -> salesGroupId, "names" -> names, "price" -> priceModel))
 	}
+	
+	
+	// OTHER    --------------------------------------
+	
+	/**
+	 * @param search Search words
+	 * @return How well this product price matches that search
+	 */
+	def matches(search: Set[String]) = search.count { s => productId.toLowerCase.contains(s) ||
+		names.exists { _.toLowerCase.contains(s) } }
 }

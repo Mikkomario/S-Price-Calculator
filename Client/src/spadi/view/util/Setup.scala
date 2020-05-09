@@ -29,6 +29,8 @@ object Setup
 	val resourceDirectory: Path = "resources"
 	
 	val margins = Margins(12)
+	val standardFieldWidth = 320
+	
 	val actorHandler = ActorHandler()
 	val baseContext = BaseContext(actorHandler,
 		Font.load(resourceDirectory/"fonts/RobotoCondensed-Regular.ttf", 16).getOrElse(Font("Arial", 16)) * 2,

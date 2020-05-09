@@ -4,6 +4,7 @@ import spadi.view.controller.MainVC
 import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.reflection.shape.Alignment
 import utopia.reflection.util.SingleFrameSetup
 
 /**
@@ -18,7 +19,8 @@ object SPriceApp extends App
 	import spadi.view.util.Setup._
 	
 	private implicit val languageCode: String = "fi"
-	val frame = Frame.windowed(new MainVC, "S-Padi Hintalaskuri", resizePolicy = Program)
+	val frame = Frame.windowed(new MainVC, "S-Padi Hintalaskuri", resizePolicy = Program,
+		resizeAlignment = Alignment.TopLeft)
 	
 	new SingleFrameSetup(actorHandler, frame).start()
 }

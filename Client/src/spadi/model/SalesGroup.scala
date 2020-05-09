@@ -24,6 +24,18 @@ object SalesGroup extends FromModelFactoryWithSchema[SalesGroup]
 case class SalesGroup(salesGroupId: String, name: String, priceModifier: Double, producerName: Option[String] = None)
 	extends ModelConvertible
 {
+	// IMPLEMENTED  -------------------------------
+	
 	override def toModel = Model("id" -> salesGroupId, "name" -> name, "producer" -> producerName,
 		"price_modifier" -> priceModifier)
+	
+	
+	// OTHER    -----------------------------------
+	
+	/**
+	 * @param search Search words
+	 * @return How well this sales group matches that search
+	 */
+	def matches(search: Set[String]) = search.count { s => salesGroupId.toLowerCase.contains(s) ||
+		name.toLowerCase.contains(s) || producerName.exists { _.toLowerCase.contains(s) } }
 }

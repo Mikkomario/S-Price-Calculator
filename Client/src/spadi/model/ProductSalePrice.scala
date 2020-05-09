@@ -36,4 +36,13 @@ case class ProductSalePrice(basePrice: ProductPrice, sale: Option[SalesGroup])
 			case None => base
 		}
 	}
+	
+	
+	// OTHER    ----------------------------
+	
+	/**
+	 * @param search Search words
+	 * @return How well this product matches specified search
+	 */
+	def matches(search: Set[String]) = basePrice.matches(search) * 2 + sale.map { _.matches(search) }.getOrElse(0)
 }

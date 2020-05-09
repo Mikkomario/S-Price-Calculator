@@ -29,7 +29,8 @@ class ProductRowsHeader(segmentedGroup: SegmentedGroup)(parentContext: ColorCont
 	
 	private implicit val language: String = "fi"
 	
-	private val view = parentContext.withPrimaryBackground.forTextComponents().expandingHorizontally.use { implicit c =>
+	private val view = parentContext.inContextWithBackground(colorScheme.primary.dark).forTextComponents()
+		.expandingHorizontally.use { implicit c =>
 		val labels = Vector("ID", "Tuote", "Hinta").map { TextLabel.contextual(_) }
 		SegmentedRow.partOfGroupWithItems(segmentedGroup, labels, margins.medium.any).framed(
 			margins.medium.any x margins.small.any, c.containerBackground)

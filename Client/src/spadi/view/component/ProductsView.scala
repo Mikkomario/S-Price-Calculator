@@ -8,7 +8,7 @@ import utopia.genesis.shape.Axis.X
 import utopia.reflection.component.context.ColorContext
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.stack.segmented.SegmentedGroup
-import utopia.reflection.container.swing.{AnimatedStack, ScrollView, Stack}
+import utopia.reflection.container.swing.{ScrollView, Stack}
 import utopia.reflection.controller.data.ContainerContentDisplayer
 import utopia.reflection.shape.{StackLength, StackLengthLimit}
 import utopia.reflection.shape.LengthExtensions._
@@ -37,9 +37,10 @@ class ProductsView(productsPointer: Changing[Vector[Product]], maxOptimalLength:
 	
 	private val stackContext: ColorContext = parentContext.withLightGrayBackground
 	
+	// TODO: When rows get removed, they should be removed from the group as well
 	private val segmentGroup = new SegmentedGroup(X)
 	private val scrollView = stackContext.use { implicit c =>
-		val stack = AnimatedStack.contextualColumn[ProductRowVC]()
+		val stack = Stack.column[ProductRowVC](margins.medium.any)
 		// Registers a content displayer for the stack
 		ContainerContentDisplayer.forImmutableStates[Product, ProductRowVC](stack, productsPointer) {
 			(a, b) => a.id == b.id } { ProductRowVC(segmentGroup, _) }
