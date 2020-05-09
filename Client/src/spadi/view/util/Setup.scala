@@ -38,7 +38,7 @@ object Setup
 	
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler,
-		margins.medium.toInt)
+		margins.medium.toInt, margins.medium * 6)
 	
 	implicit val localizer: Localizer = NoLocalization
 	
