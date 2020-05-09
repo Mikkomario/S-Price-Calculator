@@ -11,6 +11,19 @@ import utopia.reflection.container.stack.segmented.SegmentedGroup
 import utopia.reflection.container.swing.{AnimatedStack, ScrollView, Stack}
 import utopia.reflection.controller.data.ContainerContentDisplayer
 import utopia.reflection.shape.{StackLength, StackLengthLimit}
+import utopia.reflection.shape.LengthExtensions._
+
+object ProductsView
+{
+	/**
+	 * @param productsPointer Pointer to displayed products
+	 * @param maxOptimalLength Maximum optimal length of the scroll view
+	 * @param context Component creation context (implicit)
+	 * @return A new products view
+	 */
+	def apply(productsPointer: Changing[Vector[Product]], maxOptimalLength: Double)(implicit context: ColorContext) =
+		new ProductsView(productsPointer, maxOptimalLength)(context)
+}
 
 /**
  * Used for displaying a number of products at once
@@ -33,7 +46,7 @@ class ProductsView(productsPointer: Changing[Vector[Product]], maxOptimalLength:
 		// The stack is placed within a scroll view
 		val scrollView = ScrollView.contextual(stack, lengthLimits = StackLengthLimit(maxOptimal = Some(maxOptimalLength)))
 		
-		scrollView
+		scrollView.framed(margins.medium.any x margins.verySmall.any, stackContext.containerBackground)
 	}
 	private val view = parentContext.use { implicit c =>
 		val header = ProductRowsHeader(segmentGroup)

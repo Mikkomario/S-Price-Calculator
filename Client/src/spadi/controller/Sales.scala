@@ -7,9 +7,4 @@ import spadi.model.SalesGroup
  * @author Mikko Hilpinen
  * @since 8.5.2020, v1
  */
-object Sales extends LocalModelsContainer[SalesGroup]
-{
-	override protected def factory = SalesGroup
-	
-	override protected val fileName = "sales.json"
-}
+object Sales extends LocalModelsContainer[SalesGroup]("sales.json", SalesGroup)

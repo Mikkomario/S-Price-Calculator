@@ -31,7 +31,7 @@ object Setup
 	val margins = Margins(12)
 	val actorHandler = ActorHandler()
 	val baseContext = BaseContext(actorHandler,
-		Font.load(resourceDirectory/"fonts/RobotoCondensed-Regular.ttf", 16).getOrElse(Font("Arial", 16)),
+		Font.load(resourceDirectory/"fonts/RobotoCondensed-Regular.ttf", 16).getOrElse(Font("Arial", 16)) * 2,
 		colorScheme, margins)
 	
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)

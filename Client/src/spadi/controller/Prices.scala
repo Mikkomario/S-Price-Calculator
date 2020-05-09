@@ -7,11 +7,4 @@ import spadi.model.ProductPrice
  * @author Mikko Hilpinen
  * @since 8.5.2020, v1
  */
-object Prices extends LocalModelsContainer[ProductPrice]
-{
-	// IMPLEMENTED	-------------------------------
-	
-	override protected def factory = ProductPrice
-	
-	override protected val fileName = "prices.json"
-}
+object Prices extends LocalModelsContainer[ProductPrice]("prices.json", ProductPrice)

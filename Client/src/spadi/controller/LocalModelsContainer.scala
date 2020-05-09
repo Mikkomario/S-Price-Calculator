@@ -11,10 +11,8 @@ import scala.util.{Failure, Success}
  * @author Mikko Hilpinen
  * @since 8.5.2020, v1
  */
-trait LocalModelsContainer[A <: ModelConvertible] extends LocalContainer[Vector[A]]
+class LocalModelsContainer[A <: ModelConvertible](fileName: String, factory: FromModelFactory[A]) extends LocalContainer[Vector[A]](fileName)
 {
-	protected def factory: FromModelFactory[A]
-	
 	override protected def toJsonValue(item: Vector[A]) = item.map { _.toModel }
 	
 	override protected def fromJsonValue(value: Value) =

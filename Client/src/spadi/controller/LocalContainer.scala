@@ -15,14 +15,9 @@ import scala.util.{Failure, Success, Try}
  * @author Mikko Hilpinen
  * @since 8.5.2020, v1
  */
-trait LocalContainer[A]
+abstract class LocalContainer[A](fileName: String)
 {
 	// ABSTRACT	-------------------------------
-	
-	/**
-	 * @return Name of the file where this data is stored
-	 */
-	protected def fileName: String
 	
 	/**
 	 * @param item An item to convert into a json value
@@ -52,7 +47,7 @@ trait LocalContainer[A]
 	/**
 	 * @return Location where this container's data is backed up
 	 */
-	def fileLocation = dataDirectory/fileName
+	val fileLocation = dataDirectory/fileName
 	
 	/**
 	 * @return The currently stored data

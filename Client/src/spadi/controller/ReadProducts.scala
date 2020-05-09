@@ -20,7 +20,7 @@ import scala.util.{Failure, Success, Try}
  * @author Mikko Hilpinen
  * @since 9.5.2020, v1
  */
-object ReadPriceData
+object ReadProducts
 {
 	// ATTRIBUTES   --------------------------
 	
@@ -36,14 +36,17 @@ object ReadPriceData
 	 */
 	def apply() =
 	{
+		println("Reading data")
 		// Reads the products first
 		read(Price).map { case (prices, priceErrors) =>
+			println(s"${prices.size} prices read, ${priceErrors.size} errors")
 			// Updates products to local data
 			Prices.current = prices
 			// Next reads the sales
 			read(Sale) match
 			{
 				case Success(saleData) =>
+					println(s"${saleData._1.size} sales read, ${saleData._2.size} errors")
 					val sales = saleData._1
 					val allErrors = priceErrors ++ saleData._2
 					// Updates local data
@@ -71,19 +74,26 @@ object ReadPriceData
 	private def read[A](targetType: TargetType[A]): Try[(Vector[A], Vector[Throwable])] =
 	{
 		// Checks which files are available
+		println(s"Reading ${targetType.inputDirectory.toAbsolutePath}")
 		targetType.inputDirectory.children.flatMap { files =>
 			// Only handles excel files
 			val excelFiles = files.filter { f => f.isRegularFile && ReadExcel.supportedFileTypes.exists { _ ~== f.fileType } }
+			println(s"Found ${excelFiles.size} for ${targetType.name}")
 			// If some files were deleted or modifier since last read, reads all data again
 			val lastReadStatus = FileReads.current(targetType)
+			println(s"Last read times = ${lastReadStatus.map { _.lastReadTime.toLocalDateTime }.mkString(", ") }")
 			val wasModified = lastReadStatus.exists { lastRead =>
 				excelFiles.find { _ == lastRead.path }.forall { newVersion =>
+					println(s"$newVersion was last modified at ${newVersion.lastModified.toOption.map { _.toLocalDateTime } }")
 					newVersion.lastModified.toOption.forall { _ > lastRead.lastReadTime }
 				}
 			}
-			val readTime = Instant.now()
+			// Because file reading (and closing) actually changes the last modified time, marks the last read time
+			// in the future instead of present
+			val readTime = Instant.now() + 30.seconds
 			if (wasModified)
 			{
+				println("Resetting all content")
 				val result = read(files, targetType)
 				// Records new read status
 				if (result.isSuccess)
@@ -94,6 +104,7 @@ object ReadPriceData
 			else
 			{
 				val newFiles = files.filterNot { f => lastReadStatus.exists { _.path == f } }
+				println(s"Reading ${newFiles.size} new files")
 				val existingData = targetType.container.current
 				if (newFiles.isEmpty)
 					Success(existingData -> Vector())
@@ -165,7 +176,7 @@ object ReadPriceData
 		
 		override def mappings = PriceKeyMappings.current
 		
-		override def inputDirectory = ReadPriceData.inputDirectory / "products"
+		override def inputDirectory = ReadProducts.inputDirectory / "products"
 		
 		override def name = "product"
 		
@@ -177,17 +188,15 @@ object ReadPriceData
 		
 		override def mappings = SalesKeyMappings.current
 		
-		override def inputDirectory = ReadPriceData.inputDirectory / "sales"
+		override def inputDirectory = ReadProducts.inputDirectory / "sales"
 		
 		override def name = "sale"
 		
 		override def container = Sales
 	}
 	
-	private object FileReads extends LocalContainer[Map[TargetType[_], Vector[LastFileRead]]]
+	private object FileReads extends LocalContainer[Map[TargetType[_], Vector[LastFileRead]]]("read-status.json")
 	{
-		override protected def fileName = "read-status.json"
-		
 		override protected def toJsonValue(item: Map[TargetType[_], Vector[LastFileRead]]) =
 		{
 			Model(item.map { case (target, reads) => target.name -> (reads.map { _.toModel }: Value) })

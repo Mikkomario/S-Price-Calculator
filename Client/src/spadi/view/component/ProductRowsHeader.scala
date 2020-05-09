@@ -31,7 +31,8 @@ class ProductRowsHeader(segmentedGroup: SegmentedGroup)(parentContext: ColorCont
 	
 	private val view = parentContext.withPrimaryBackground.forTextComponents().expandingHorizontally.use { implicit c =>
 		val labels = Vector("ID", "Tuote", "Hinta").map { TextLabel.contextual(_) }
-		SegmentedRow.partOfGroupWithItems(segmentedGroup, labels, margins.medium.any)
+		SegmentedRow.partOfGroupWithItems(segmentedGroup, labels, margins.medium.any).framed(
+			margins.medium.any x margins.small.any, c.containerBackground)
 	}
 	
 	
