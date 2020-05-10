@@ -45,8 +45,7 @@ case class Product(id: String, prices: Set[ProductSalePrice])
 	 * @param search Search words
 	 * @return How well this product matches specified search words
 	 */
-	def matches(search: Set[String]) = (prices.foldLeft(0) { _ + _.matches(search) } / prices.size) +
-		cheapest.matches(search)
+	def matches(search: Set[String]) = prices.map { _.matches(search) }.max
 	
 	/**
 	 * Forms a string representation of this product's price
