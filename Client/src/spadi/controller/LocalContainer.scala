@@ -1,9 +1,9 @@
 package spadi.controller
 
 import spadi.controller.Globals._
+import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.Volatile
 import utopia.flow.datastructure.immutable.Value
-import utopia.flow.parse.JSONReader
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 
@@ -82,7 +82,7 @@ abstract class LocalContainer[A](fileName: String)
 	{
 		if (fileLocation.exists)
 		{
-			JSONReader(fileLocation.toFile) match
+			JsonBunny(fileLocation) match
 			{
 				case Success(value) =>
 					fromJsonValue(value) match
