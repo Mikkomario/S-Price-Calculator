@@ -30,7 +30,7 @@ object ProductBasePrice extends FromModelFactory[ProductBasePrice]
  * @param priceUnit Unit describing the price of this product
  */
 case class ProductBasePrice(productId: String, salesGroupId: String, names: Vector[String], price: Double, priceUnit: String)
-	extends ModelConvertible with Searchable
+	extends ModelConvertible with KeywordSearchable with ProductPriceLike
 {
 	// COMPUTED --------------------------------------
 	

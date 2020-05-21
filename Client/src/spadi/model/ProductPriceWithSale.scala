@@ -7,22 +7,9 @@ package spadi.model
  * @param basePrice Product price without sale applied
  * @param sale Sale to apply to the price (optional)
  */
-case class ProductPriceWithSale(basePrice: ProductBasePrice, sale: Option[SalesGroup])
+case class ProductPriceWithSale(basePrice: ProductBasePrice, sale: Option[SalesGroup]) extends ProductPriceLike
 {
 	// COMPUTED -------------------------
-	
-	/**
-	 * @return Product price
-	 */
-	def price =
-	{
-		val base = basePrice.price
-		sale match
-		{
-			case Some(sale) => base * sale.priceModifier
-			case None => base
-		}
-	}
 	
 	/**
 	 * @return Name that should be displayed for this product
@@ -36,6 +23,23 @@ case class ProductPriceWithSale(basePrice: ProductBasePrice, sale: Option[SalesG
 			case None => base
 		}
 	}
+	
+	
+	// IMPLEMENTED  ------------------------
+	
+	override def productId = basePrice.productId
+	
+	def price =
+	{
+		val base = basePrice.price
+		sale match
+		{
+			case Some(sale) => base * sale.priceModifier
+			case None => base
+		}
+	}
+	
+	override def priceUnit = basePrice.priceUnit
 	
 	
 	// OTHER    ----------------------------

@@ -35,7 +35,7 @@ object ProductPrice extends FromModelFactory[ProductPrice]
  * @param priceUnit Unit describing the product's price
  */
 case class ProductPrice(productId: String, names: Vector[String], price: Double, priceUnit: String)
-	extends ModelConvertible with Searchable
+	extends ModelConvertible with KeywordSearchable with ProductPriceLike
 {
 	override val keywords = (productId +: names).map { _.toLowerCase }
 	
