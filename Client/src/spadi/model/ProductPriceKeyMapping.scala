@@ -33,7 +33,7 @@ object ProductPriceKeyMapping extends FromModelFactoryWithSchema[ProductPriceKey
  */
 case class ProductPriceKeyMapping(idKey: String, groupIdKey: String, nameKeys: Vector[String], priceKey: String,
 								  perAmountKey: String, perUnitKey: String)
-	extends ModelConvertible with KeyMapping[ProductPrice]
+	extends ModelConvertible with KeyMapping[ProductBasePrice]
 {
 	override def toModel = Model(Vector("id_key" -> idKey, "group_id_key" -> groupIdKey,
 		"name_keys" -> nameKeys, "price_key" -> priceKey, "per_amount_key" -> perAmountKey, "per_unit_key" -> perUnitKey))
@@ -45,7 +45,7 @@ case class ProductPriceKeyMapping(idKey: String, groupIdKey: String, nameKeys: V
 		val perUnit = model(perUnitKey).stringOr("kpl")
 		val perAmount = model(perAmountKey).intOr(1)
 		val unit = s"€/${if (perAmount == 1) "" else perAmount}$perUnit"
-		ProductPrice(model(idKey), model(groupIdKey), nameKeys.flatMap { nameKey => model(nameKey).string },
+		ProductBasePrice(model(idKey), model(groupIdKey), nameKeys.flatMap { nameKey => model(nameKey).string },
 			model(priceKey), unit)
 	}
 }

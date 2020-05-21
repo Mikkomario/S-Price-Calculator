@@ -9,7 +9,7 @@ import scala.math.Ordering.Double.TotalOrdering
  * @param id Product id
  * @param prices Available prices for this product (Must not be empty)
  */
-case class Product(id: String, prices: Set[ProductSalePrice])
+case class Product(id: String, prices: Set[ProductPriceWithSale])
 {
 	// ATTRIBUTES   --------------------------
 	

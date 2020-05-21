@@ -3,7 +3,7 @@ package spadi.controller
 import java.nio.file.Path
 import java.time.Instant
 
-import spadi.model.{KeyMapping, Product, ProductPrice, ProductSalePrice, SalesGroup}
+import spadi.model.{KeyMapping, Product, ProductBasePrice, ProductPriceWithSale, SalesGroup}
 import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration, Value}
 import utopia.flow.generic.{FromModelFactoryWithSchema, InstantType, ModelConvertible, StringType}
 import utopia.flow.generic.ValueConversions._
@@ -55,9 +55,9 @@ object ReadProducts
 					val salePrices = prices.flatMap { basePrice =>
 						val productSales = sales.filter { _.salesGroupId == basePrice.salesGroupId }
 						if (productSales.nonEmpty)
-							productSales.map { sale => ProductSalePrice(basePrice, Some(sale)) }
+							productSales.map { sale => ProductPriceWithSale(basePrice, Some(sale)) }
 						else
-							Some(ProductSalePrice(basePrice, None))
+							Some(ProductPriceWithSale(basePrice, None))
 					}
 					// Combines products based on id
 					val products = salePrices.groupBy { _.basePrice.productId }.map { case (id, prices) =>
@@ -66,7 +66,7 @@ object ReadProducts
 				case Failure(error) =>
 					// If sale reading failed, returns products without sale prices
 					prices.groupBy { _.productId }.map { case (id, prices) => Product(id,
-						prices.map { ProductSalePrice(_, None) }.toSet) }.toSet -> (priceErrors :+ error)
+						prices.map { ProductPriceWithSale(_, None) }.toSet) }.toSet -> (priceErrors :+ error)
 			}
 		}
 	}
@@ -170,7 +170,7 @@ object ReadProducts
 		def name: String
 		def container: LocalContainer[Vector[A]]
 	}
-	private object Price extends TargetType[ProductPrice]
+	private object Price extends TargetType[ProductBasePrice]
 	{
 		override val sheetTarget = SheetTarget.sheetAtIndex(0, 3 -> 0, cellHeadersRowIndex = 2)
 		
