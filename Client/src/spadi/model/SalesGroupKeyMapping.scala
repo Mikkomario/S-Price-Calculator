@@ -1,7 +1,7 @@
 package spadi.model
 
 import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, ModelConvertible, StringType}
+import utopia.flow.generic.{FromModelFactoryWithSchema, StringType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.util.StringExtensions._
@@ -33,7 +33,7 @@ object SalesGroupKeyMapping extends FromModelFactoryWithSchema[SalesGroupKeyMapp
  */
 case class SalesGroupKeyMapping(groupIdKey: String, nameKey: String, salePercentKey: String,
 																producerKey: Option[String] = None)
-	extends ModelConvertible with KeyMapping[SalesGroup]
+	extends KeyMapping[SalesGroup]
 {
 	override def toModel = Model(Vector("id_key" -> groupIdKey, "name_key" -> nameKey,
 		"sale_percent_key" -> salePercentKey, "producer_key" -> producerKey))

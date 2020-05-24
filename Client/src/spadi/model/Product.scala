@@ -9,53 +9,22 @@ import scala.math.Ordering.Double.TotalOrdering
  * @param id Product id
  * @param prices Available prices for this product (Must not be empty)
  */
-case class Product(id: String, prices: Set[ProductPriceWithSale])
+case class Product(id: String, prices: Map[Shop, ProductPriceLike with Searchable]) extends ProductPriceLike with Searchable
 {
 	// ATTRIBUTES   --------------------------
 	
-	private val cheapest = prices.minBy { _.price }
+	private val (cheapestShop, cheapestProduct) = prices.minBy { _._2.price }
 	
 	
-	// COMPUTED ------------------------------
+	// IMPLEMENTED ---------------------------
 	
-	/**
-	 * @return Name that should be displayed for this product
-	 */
-	def displayName = cheapest.displayName
+	override def productId = id
 	
-	/**
-	 * @return Name of the producer of this product
-	 */
-	def producer = cheapest.sale.flatMap { _.producerName }
+	override def priceUnit = cheapestProduct.priceUnit
 	
-	/**
-	 * @return Price of this product
-	 */
-	def price = cheapest.price
+	def displayName = s"${cheapestProduct.displayName} (${cheapestShop.name})"
 	
-	/**
-	 * @return A string representation of this product's price (unit included)
-	 */
-	def standardPriceString = priceString(1.0)
+	def price = cheapestProduct.price
 	
-	
-	// OTHER    ------------------------------
-	
-	/**
-	 * @param search Search words
-	 * @return How well this product matches specified search words
-	 */
-	def matches(search: Set[String]) = prices.map { _.matches(search) }.max
-	
-	/**
-	 * Forms a string representation of this product's price
-	 * @param priceModifier A modifier applied to the price
-	 * @return String representation of product price
-	 */
-	def priceString(priceModifier: Double) =
-	{
-		val roundedPrice = math.round(cheapest.price * priceModifier * 10) / 10.0
-		val displayPrice = if (roundedPrice > 10) roundedPrice.toInt.toString else roundedPrice.toString
-		s"$displayPrice ${cheapest.basePrice.priceUnit}"
-	}
+	def matches(search: Set[String]) = prices.valuesIterator.map { _.matches(search) }.max
 }

@@ -39,6 +39,8 @@ case class ProductPrice(productId: String, names: Vector[String], price: Double,
 {
 	override val keywords = (productId +: names).map { _.toLowerCase }
 	
+	override def displayName = names.headOption.getOrElse("")
+	
 	override def toModel =
 	{
 		val priceModel = Model(Vector("amount" -> price, "unit" -> priceUnit))

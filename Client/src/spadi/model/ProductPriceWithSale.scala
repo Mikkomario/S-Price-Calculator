@@ -7,24 +7,9 @@ package spadi.model
  * @param basePrice Product price without sale applied
  * @param sale Sale to apply to the price (optional)
  */
-case class ProductPriceWithSale(basePrice: ProductBasePrice, sale: Option[SalesGroup]) extends ProductPriceLike
+case class ProductPriceWithSale(basePrice: ProductBasePrice, sale: Option[SalesGroup])
+	extends ProductPriceLike with Searchable
 {
-	// COMPUTED -------------------------
-	
-	/**
-	 * @return Name that should be displayed for this product
-	 */
-	def displayName =
-	{
-		val base = basePrice.displayName
-		sale.flatMap { _.producerName } match
-		{
-			case Some(producer) => s"$base ($producer)"
-			case None => base
-		}
-	}
-	
-	
 	// IMPLEMENTED  ------------------------
 	
 	override def productId = basePrice.productId
@@ -41,12 +26,15 @@ case class ProductPriceWithSale(basePrice: ProductBasePrice, sale: Option[SalesG
 	
 	override def priceUnit = basePrice.priceUnit
 	
+	def displayName =
+	{
+		val base = basePrice.displayName
+		sale.flatMap { _.producerName } match
+		{
+			case Some(producer) => s"$base ($producer)"
+			case None => base
+		}
+	}
 	
-	// OTHER    ----------------------------
-	
-	/**
-	 * @param search Search words
-	 * @return How well this product matches specified search
-	 */
 	def matches(search: Set[String]) = basePrice.matches(search) * 2 + sale.map { _.matches(search) }.getOrElse(0)
 }

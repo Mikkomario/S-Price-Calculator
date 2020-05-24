@@ -32,17 +32,11 @@ object ProductBasePrice extends FromModelFactory[ProductBasePrice]
 case class ProductBasePrice(productId: String, salesGroupId: String, names: Vector[String], price: Double, priceUnit: String)
 	extends ModelConvertible with KeywordSearchable with ProductPriceLike
 {
-	// COMPUTED --------------------------------------
-	
-	/**
-	 * @return Name that should be displayed for this product
-	 */
-	def displayName = names.headOption.getOrElse("")
-	
-	
 	// IMPLEMENTED  ----------------------------------
 	
 	override val keywords = (productId +: names).map { _.toLowerCase }
+	
+	def displayName = names.headOption.getOrElse("")
 	
 	override def toModel =
 	{

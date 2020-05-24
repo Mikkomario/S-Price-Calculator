@@ -60,6 +60,7 @@ object ReadProducts
 							Some(ProductPriceWithSale(basePrice, None))
 					}
 					// Combines products based on id
+					// FIXME: Handle shops
 					val products = salePrices.groupBy { _.basePrice.productId }.map { case (id, prices) =>
 						Product(id, prices.toSet) }.toSet
 					products -> allErrors
