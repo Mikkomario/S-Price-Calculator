@@ -43,7 +43,22 @@ object Icons
 	def checkCircle = cache("check-circle.png")
 	
 	/**
+	 * @return A trash can icon for deletion
+	 */
+	def delete = cache("delete.png")
+	
+	/**
 	 * @return A drop down icon
 	 */
 	def dropDown = cache("drop-down.png")
+	
+	/**
+	 * @return A file icon
+	 */
+	def file = cache("file.png")
+	
+	/**
+	 * @return A warning icon
+	 */
+	def warning = cache("warning.png")
 }

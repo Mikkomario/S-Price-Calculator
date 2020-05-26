@@ -2,13 +2,14 @@ package spadi.view.controller
 
 import spadi.controller.ShopData
 import spadi.model.Shop
+import spadi.view.component.Fields
 import spadi.view.dialog.EditShopDialog
 import spadi.view.util.Icons
 import spadi.view.util.Setup._
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.input.Input
-import utopia.reflection.component.swing.{DropDown, StackableAwtComponentWrapperWrapper}
+import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.Stack
@@ -27,7 +28,7 @@ class ShopSelectionVC(implicit context: ButtonContextLike) extends StackableAwtC
 	private implicit val languageCode: String = "fi"
 	
 	private val noResultView = TextLabel.contextual("Yhtään tukkua ei ole vielä rekisteröity")
-	private val dd = DropDown.contextualWithTextOnly[Shop](noResultView, Icons.dropDown.singleColorImage,
+	private val dd = Fields.dropDown[Shop]("Yhtään tukkua ei ole vielä rekisteröity",
 		"Valitse Tukku", DisplayFunction.noLocalization[Shop] { _.name },
 		sameInstanceCheck = _.id == _.id, contentIsStateless = false)
 	// Edit button is used for renaming the shop
@@ -62,7 +63,7 @@ class ShopSelectionVC(implicit context: ButtonContextLike) extends StackableAwtC
 	noResultView.background = context.buttonColor
 	
 	// Updates drop down options whenever container content changes
-	ShopData.shopsPointer.addListener(ContentUpdator)
+	ShopData.shopsPointer.addListener(ContentUpdator, Some(Vector()))
 	
 	
 	// IMPLEMENTED  ----------------------------
