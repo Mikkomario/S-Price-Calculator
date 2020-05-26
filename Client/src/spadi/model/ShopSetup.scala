@@ -68,7 +68,7 @@ case class ShopSetup(shop: Shop, dataSource: Either[(DataSource[ProductBasePrice
 			case Left((baseSource, saleSource)) =>
 				Vector("base_source" -> baseSource.toModel, "sale_source" -> saleSource.toModel)
 		}
-		val allProperties: Vector[(String, Value)] = ("shop" -> shop.toModel) +: dataSourceProperties
+		val allProperties: Vector[(String, Value)] = ("shop" -> (shop.toModel: Value)) +: dataSourceProperties
 		Model(allProperties)
 	}
 }

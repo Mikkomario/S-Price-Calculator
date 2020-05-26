@@ -1,9 +1,13 @@
 package spadi.controller
 
-import spadi.model.{Product, ProductBasePrice, ProductPrice, ProductPriceWithSale, SalesGroup, ShopSetup}
+import spadi.model.{Product, ProductBasePrice, ProductPrice, ProductPriceWithSale, SalesGroup, Shop, ShopSetup}
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.FileExtensions._
+
+import scala.collection.immutable.VectorBuilder
+import scala.math.Ordering.Double.TotalOrdering
 
 /**
  * Stores all processed shop data locally
@@ -15,7 +19,7 @@ object ShopData
 	// ATTRIBUTES   -----------------------------
 	
 	private var _shopData = ShopsContainer.shops.map { shop =>
-		shop -> new ProductsContainer(s"shop-products-${shop.id}.json")
+		shop -> new ProductsContainer(productsFileNameForShop(shop))
 	}
 	
 	
@@ -41,7 +45,55 @@ object ShopData
 	 */
 	def shopSetups = ShopsContainer.current
 	
-	// TODO: Add update methods
+	/**
+	 * Overwrites the current products list
+	 * @param newProducts New products
+	 */
+	def updateProducts(newProducts: Iterable[(Shop, Either[(Vector[ProductBasePrice], Vector[SalesGroup]), Vector[ProductPrice]])]) =
+	{
+		val groupedProducts = newProducts.groupMap { _._1 } { _._2 }.view.mapValues { products =>
+			// Groups the models based on type
+			val baseBuilder = new VectorBuilder[ProductBasePrice]
+			val salesBuilder = new VectorBuilder[SalesGroup]
+			val comboBuilder = new VectorBuilder[ProductPrice]
+			
+			products.foreach
+			{
+				case Right(combo) => comboBuilder ++= combo
+				case Left((base, sales)) =>
+					baseBuilder ++= base
+					salesBuilder ++= sales
+			}
+			
+			(baseBuilder.result(), salesBuilder.result(), comboBuilder.result())
+		}.toMap
+		
+		// Updates existing shop containers and possibly adds new ones
+		val newContainersBuilder = new VectorBuilder[(Shop, ProductsContainer)]
+		groupedProducts.foreach { case (shop, products) =>
+			_shopData.find { _._1.id == shop.id }.map { _._2 } match
+			{
+				case Some(container) => container.current = products
+				case None =>
+					val newContainer = new ProductsContainer(productsFileNameForShop(shop))
+					newContainer.current = products
+					newContainersBuilder += (shop -> newContainer)
+			}
+		}
+		val newContainers = newContainersBuilder.result()
+		
+		if (newContainers.nonEmpty)
+			_shopData ++= newContainers
+		
+		// Deletes containers that were not included
+		val shopsToDelete = _shopData.filterNot { case (shop, _) => groupedProducts.exists { case (newShop, _) =>
+			shop.id == newShop.id } }
+		if (shopsToDelete.nonEmpty)
+		{
+			shopsToDelete.foreach { _._2.fileLocation.delete() }
+			_shopData = _shopData.filterNot { case (shop, _) => shopsToDelete.exists { _._1 == shop } }
+		}
+	}
 	
 	
 	// OTHER    ---------------------------------
@@ -51,6 +103,8 @@ object ShopData
 	 * @return A shop matching that id
 	 */
 	def shopForId(shopId: String) = ShopsContainer.shops.find { _.id == shopId }
+	
+	private def productsFileNameForShop(shop: Shop) = s"shop-products-${shop.id}.json"
 	
 	
 	// NESTED   ---------------------------------

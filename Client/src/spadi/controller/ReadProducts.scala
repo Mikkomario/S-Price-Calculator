@@ -21,7 +21,7 @@ object ReadProducts
 {
 	// ATTRIBUTES   --------------------------
 	
-	private val inputDirectory: Path = "input"
+	private val inputDirectory: Path = "luettavat-tiedostot"
 	private val supportedFileTypes = ReadExcel.supportedFileTypes.map { _.toLowerCase }
 	
 	

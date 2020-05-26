@@ -18,17 +18,17 @@ object DataSource
 	/**
 	 * A data source factory compatible with product prices
 	 */
-	val factoryForProductPrices = factoryWith(ProductPriceKeyMapping)
+	val factoryForProductPrices = factoryWith[ProductPrice, ProductPriceKeyMapping](ProductPriceKeyMapping)
 	
 	/**
 	 * A data source factory compatible with product base prices
 	 */
-	val factoryForBasePrices = factoryWith(ProductBasePriceKeyMapping)
+	val factoryForBasePrices = factoryWith[ProductBasePrice, ProductBasePriceKeyMapping](ProductBasePriceKeyMapping)
 	
 	/**
 	 * A data source factory compatible with sales groups
 	 */
-	val factoryForSalesGroups = factoryWith(SalesGroupKeyMapping)
+	val factoryForSalesGroups = factoryWith[SalesGroup, SalesGroupKeyMapping](SalesGroupKeyMapping)
 	
 	
 	// OTHER    ----------------------------------
@@ -40,7 +40,7 @@ object DataSource
 	 * @return A new model to data source parser that uses the specified mapping factory when parsing models
 	 */
 	def factoryWith[A, M <: KeyMapping[A]](mappingFactory: FromModelFactory[M]): FromModelFactory[DataSource[A]] =
-		Factory(mappingFactory)
+		Factory[A, M](mappingFactory)
 	
 	
 	// NESTED   ----------------------------------
@@ -50,7 +50,7 @@ object DataSource
 	{
 		override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 			mappingFactory(valid("mapping").getModel).map { DataSource(valid("path").getString, _,
-				valid("header_row_index"), valid("first_data_row_index").intOr(1)) } }
+				valid("header_row_index").getInt, valid("first_data_row_index").intOr(1)) } }
 	}
 }
 
