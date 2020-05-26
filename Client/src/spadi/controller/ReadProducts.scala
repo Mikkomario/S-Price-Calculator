@@ -3,17 +3,14 @@ package spadi.controller
 import java.nio.file.Path
 import java.time.Instant
 
-import spadi.model.{KeyMapping, Product, ProductBasePrice, ProductPriceWithSale, SalesGroup}
-import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration, Value}
-import utopia.flow.generic.{FromModelFactoryWithSchema, InstantType, ModelConvertible, StringType}
+import spadi.model.{DataSource, ProductBasePrice, ProductPrice, SalesGroup}
+import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.ValueConversions._
-import utopia.flow.generic.ValueUnwraps._
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.StringExtensions._
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 
-import scala.util.{Failure, Success, Try}
+import scala.util.Success
 
 /**
  * Reads product related data from excel files and stores them locally
@@ -25,199 +22,100 @@ object ReadProducts
 	// ATTRIBUTES   --------------------------
 	
 	private val inputDirectory: Path = "input"
+	private val supportedFileTypes = ReadExcel.supportedFileTypes.map { _.toLowerCase }
 	
 	
 	// OTHER    ------------------------------
 	
 	/**
-	 * Reads product price data from the file system + local containers
-	 * @return Read products + possible errors encountered during reads. Failure if a failure made product
-	 *         reading impossible
+	 * Reads product data from input excel files.
+	 * @return Either <br>
+	 *         - Right (Option[ Shop -> Try[...] ]): Shop -> Either product prices (right (Try[ Vector[ProductPrice] ]))
+	 *         or base prices and sales groups (left (Try[ Vector[ProductBasePrice] -> Vector[SalesGroup] ]) -
+	 *         Failure if reads failed. None if no data refresh was required. OR<br>
+	 *         - Left (Vector[Path]): Files that require new mappings
 	 */
 	def apply() =
 	{
-		println("Reading data")
-		// Reads the products first
-		read(Price).map { case (prices, priceErrors) =>
-			println(s"${prices.size} prices read, ${priceErrors.size} errors")
-			// Updates products to local data
-			Prices.current = prices
-			// Next reads the sales
-			read(Sale) match
-			{
-				case Success(saleData) =>
-					println(s"${saleData._1.size} sales read, ${saleData._2.size} errors")
-					val sales = saleData._1
-					val allErrors = priceErrors ++ saleData._2
-					// Updates local data
-					Sales.current = sales
-					// Combines prices with sales
-					val salePrices = prices.flatMap { basePrice =>
-						val productSales = sales.filter { _.salesGroupId == basePrice.salesGroupId }
-						if (productSales.nonEmpty)
-							productSales.map { sale => ProductPriceWithSale(basePrice, Some(sale)) }
-						else
-							Some(ProductPriceWithSale(basePrice, None))
-					}
-					// Combines products based on id
-					// FIXME: Handle shops
-					val products = salePrices.groupBy { _.basePrice.productId }.map { case (id, prices) =>
-						Product(id, prices.toSet) }.toSet
-					products -> allErrors
-				case Failure(error) =>
-					// If sale reading failed, returns products without sale prices
-					prices.groupBy { _.productId }.map { case (id, prices) => Product(id,
-						prices.map { ProductPriceWithSale(_, None) }.toSet) }.toSet -> (priceErrors :+ error)
-			}
-		}
-	}
-	
-	private def read[A](targetType: TargetType[A]): Try[(Vector[A], Vector[Throwable])] =
-	{
-		// Checks which files are available
-		println(s"Reading ${targetType.inputDirectory.toAbsolutePath}")
-		targetType.inputDirectory.children.flatMap { files =>
-			// Only handles excel files
-			val excelFiles = files.filter { f => f.isRegularFile && ReadExcel.supportedFileTypes.exists { _ ~== f.fileType } }
-			println(s"Found ${excelFiles.size} for ${targetType.name}")
-			// If some files were deleted or modifier since last read, reads all data again
-			val lastReadStatus = FileReads.current(targetType)
-			println(s"Last read times = ${lastReadStatus.map { _.lastReadTime.toLocalDateTime }.mkString(", ") }")
-			val wasModified = lastReadStatus.exists { lastRead =>
-				excelFiles.find { _ == lastRead.path }.forall { newVersion =>
-					println(s"$newVersion was last modified at ${newVersion.lastModified.toOption.map { _.toLocalDateTime } }")
-					newVersion.lastModified.toOption.forall { _ > lastRead.lastReadTime }
-				}
-			}
-			// Because file reading (and closing) actually changes the last modified time, marks the last read time
-			// in the future instead of present
-			val readTime = Instant.now() + 30.seconds
-			if (wasModified)
-			{
-				println("Resetting all content")
-				val result = read(files, targetType)
-				// Records new read status
-				if (result.isSuccess)
-					FileReads.current += targetType -> files.map { LastFileRead(_, readTime) }
-				result
-			}
-			// Otherwise only appends data from new files
-			else
-			{
-				val newFiles = files.filterNot { f => lastReadStatus.exists { _.path == f } }
-				println(s"Reading ${newFiles.size} new files")
-				val existingData = targetType.container.current
-				if (newFiles.isEmpty)
-					Success(existingData -> Vector())
+		// Checks the input files, whether there were any new, removed or modified cases
+		inputDirectory.findDescendants { file => file.isRegularFile &&
+			supportedFileTypes.contains(file.fileType.toLowerCase) }
+			.map { allFiles =>
+				// Checks for new (unmapped) files first
+				val setups = ShopData.shopSetups
+				val mappedPaths = setups.flatMap { _.paths }.toSet
+				val unmappedPaths = allFiles.filterNot(mappedPaths.contains)
+				if (unmappedPaths.nonEmpty)
+					Left(unmappedPaths)
 				else
 				{
-					read(newFiles, targetType) match
+					// Next checks whether any of the files were modified, deleted or added since last read
+					if (FileReads.current.exists { case (path, lastReadTime) => allFiles.find { _ == path }.forall {
+						_.lastModified.toOption.forall { _ > lastReadTime } } } ||
+						allFiles.exists { !FileReads.contains(_) })
 					{
-						case Success(newReads) =>
-							// Records read status
-							FileReads.current += targetType -> (lastReadStatus ++ newFiles.map { LastFileRead(_, readTime) })
-							Success(existingData ++ newReads._1 -> newReads._2)
-						case Failure(readFailure) =>
-							if (existingData.isEmpty)
-								Failure(readFailure)
-							else
-								Success(existingData -> Vector(readFailure))
+						val setupsToUse = setups.filter { _.paths.forall { _.exists } }
+						
+						// In which case re-reads all data
+						val result = setupsToUse.map { setup =>
+							val readData = setup.dataSource.mapBoth { case (baseSource, saleSource) =>
+								read(baseSource).flatMap { base => read(saleSource).map { sale => base -> sale } }
+							} { comboSource => read(comboSource) }.mapToSingle {
+								_.map[Either[(Vector[ProductBasePrice], Vector[SalesGroup]), Vector[ProductPrice]]] {
+									Left(_) } } { _.map { Right(_) } }
+							setup.shop -> readData
+						}
+						
+						// Records data read (read time is set slightly into the future since file closing will
+						// update file modified time
+						val readTime = Instant.now() + 10.seconds
+						FileReads.current = setupsToUse.flatMap { _.paths }.map { _ -> readTime }.toMap
+						
+						Right(Some(result))
 					}
+					else
+						Right(None)
 				}
 			}
-		}
 	}
 	
-	private def read[A](files: Vector[Path], targetType: TargetType[A]): Try[(Vector[A], Vector[Throwable])] =
+	private def read[A](source: DataSource[A]) =
 	{
-		val (failures, successes) = files.map { read(_, targetType) }.divideBy { _.isSuccess }
-		val readModels = successes.flatMap { _.get }
-		if (readModels.nonEmpty || failures.isEmpty)
-			Success(readModels -> failures.map { _.failure.get })
-		else
-			Failure(failures.head.failure.get)
+		val target = SheetTarget.sheetAtIndex(0, source.firstDataRowIndex -> 0,
+			cellHeadersRowIndex = source.headerRowIndex)
+		ReadExcel.from(source.filePath, target).flatMap { models => models.tryMap(source.mapping.apply) }
 	}
 	
-	private def read[A](file: Path, targetType: TargetType[A]) =
+	
+	private object FileReads extends LocalContainer[Map[Path, Instant]]("read-status.json")
 	{
-		ReadExcel.from(file, targetType.sheetTarget).flatMap { rows => tryMap(rows, targetType.mappings) }
+		// IMPLEMENTED  --------------------------
+		
+		override protected def toJsonValue(item: Map[Path, Instant]) = Model.fromMap(
+			item.map { case (path, time) => path.toJson -> time })
+		
+		override protected def fromJsonValue(value: Value) = Success(
+			value.getModel.attributeMap.map { case (pathString, const) => (pathString: Path) -> const.value.getInstant })
+		
+		override protected def empty = Map()
+		
+		
+		// OTHER    ------------------------------
+		
+		/**
+		 * @param path A path
+		 * @return Last read time for that path. None if the file wasn't read
+		 */
+		def apply(path: Path) = current.get(path)
+		
+		/**
+		 * @param path A path
+		 * @return Whether that path has been read
+		 */
+		def contains(path: Path) = current.contains(path)
 	}
 	
-	private def tryMap[A](rows: Vector[Model[Constant]], mappings: IterableOnce[KeyMapping[A]]): Try[Vector[A]] =
-	{
-		val iter = mappings.iterator.map { tryMap(rows, _) }
-		var lastResult = iter.next()
-		while (lastResult.isFailure && iter.hasNext)
-		{
-			lastResult = iter.next()
-		}
-		lastResult
-	}
-	
-	private def tryMap[A](rows: Vector[Model[Constant]], mapping: KeyMapping[A]) = rows.tryMap { mapping(_) }
-	
-	
-	// NESTED   ------------------------------
-	
-	private object TargetType
-	{
-		val values = Vector[TargetType[_]](Price, Sale)
-	}
-	private sealed trait TargetType[A]
-	{
-		def sheetTarget: SheetTarget
-		def mappings: Vector[KeyMapping[A]]
-		def inputDirectory: Path
-		def name: String
-		def container: LocalContainer[Vector[A]]
-	}
-	private object Price extends TargetType[ProductBasePrice]
-	{
-		override val sheetTarget = SheetTarget.sheetAtIndex(0, 3 -> 0, cellHeadersRowIndex = 2)
-		
-		override def mappings = PriceKeyMappings.current
-		
-		override def inputDirectory = ReadProducts.inputDirectory / "products"
-		
-		override def name = "product"
-		
-		override def container = Prices
-	}
-	private object Sale extends TargetType[SalesGroup]
-	{
-		override val sheetTarget = SheetTarget.sheetAtIndex(0, 2 -> 0, cellHeadersRowIndex = 1)
-		
-		override def mappings = SalesKeyMappings.current
-		
-		override def inputDirectory = ReadProducts.inputDirectory / "sales"
-		
-		override def name = "sale"
-		
-		override def container = Sales
-	}
-	
-	private object FileReads extends LocalContainer[Map[TargetType[_], Vector[LastFileRead]]]("read-status.json")
-	{
-		override protected def toJsonValue(item: Map[TargetType[_], Vector[LastFileRead]]) =
-		{
-			Model(item.map { case (target, reads) => target.name -> (reads.map { _.toModel }: Value) })
-		}
-		
-		override protected def fromJsonValue(value: Value) =
-		{
-			val model = value.getModel
-			val readData = TargetType.values.map { target =>
-				// Ignores parsing failures within individual status rows
-				val reads = model(target.name).getVector.flatMap { v => v.model.flatMap { readModel =>
-					LastFileRead(readModel).toOption } }
-				target -> reads
-			}.toMap
-			Success(readData)
-		}
-		
-		override protected val empty = TargetType.values.map { t => t -> Vector[LastFileRead]() }.toMap
-	}
-	
+	/*
 	private object LastFileRead extends FromModelFactoryWithSchema[LastFileRead]
 	{
 		override val schema = ModelDeclaration("path" -> StringType, "read_time" -> InstantType)
@@ -229,5 +127,5 @@ object ReadProducts
 	private case class LastFileRead(path: Path, lastReadTime: Instant) extends ModelConvertible
 	{
 		override def toModel = Model(Vector("path" -> path.toString, "read_time" -> lastReadTime))
-	}
+	}*/
 }

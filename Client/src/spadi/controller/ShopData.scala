@@ -1,6 +1,6 @@
 package spadi.controller
 
-import spadi.model.{Product, ProductBasePrice, ProductPrice, ProductPriceWithSale, SalesGroup, Shop}
+import spadi.model.{Product, ProductBasePrice, ProductPrice, ProductPriceWithSale, SalesGroup, ShopSetup}
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
@@ -14,7 +14,7 @@ object ShopData
 {
 	// ATTRIBUTES   -----------------------------
 	
-	private var _shopData = ShopsContainer.current.map { shop =>
+	private var _shopData = ShopsContainer.shops.map { shop =>
 		shop -> new ProductsContainer(s"shop-products-${shop.id}.json")
 	}
 	
@@ -36,12 +36,32 @@ object ShopData
 			}.toVector
 	}
 	
+	/**
+	 * @return Currently registered shop setups
+	 */
+	def shopSetups = ShopsContainer.current
+	
 	// TODO: Add update methods
+	
+	
+	// OTHER    ---------------------------------
+	
+	/**
+	 * @param shopId A shop id
+	 * @return A shop matching that id
+	 */
+	def shopForId(shopId: String) = ShopsContainer.shops.find { _.id == shopId }
 	
 	
 	// NESTED   ---------------------------------
 	
-	private object ShopsContainer extends LocalModelsContainer[Shop]("shops.json", Shop)
+	private object ShopsContainer extends LocalModelsContainer[ShopSetup]("shops.json", ShopSetup)
+	{
+		/**
+		 * @return All shops currently in this container
+		 */
+		def shops = current.map { _.shop }
+	}
 	
 	private class ProductsContainer(fileName: String)
 		extends LocalContainer[(Vector[ProductBasePrice], Vector[SalesGroup], Vector[ProductPrice])](fileName)

@@ -49,7 +49,8 @@ object DataSource
 		extends FromModelFactory[DataSource[A]]
 	{
 		override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
-			mappingFactory(valid("mapping").getModel).map { DataSource(valid("path").getString, _) } }
+			mappingFactory(valid("mapping").getModel).map { DataSource(valid("path").getString, _,
+				valid("header_row_index"), valid("first_data_row_index").intOr(1)) } }
 	}
 }
 
@@ -57,8 +58,15 @@ object DataSource
  * Describes a file data is read from
  * @author Mikko Hilpinen
  * @since 21.5.2020, v1.1
+ * @param filePath Path where the data is read
+ * @param mapping Mapping used for interpreting column data and producing output
+ * @param headerRowIndex Index of the row that contains the column names. 0 is the first row. Default = 0.
+ * @param firstDataRowIndex Index of the first row that contains read data (after header row). 0 is the first row.
+ *                          Default = 1.
  */
-case class DataSource[+A](filePath: Path, mapping: KeyMapping[A]) extends ModelConvertible
+case class DataSource[+A](filePath: Path, mapping: KeyMapping[A], headerRowIndex: Int = 0,
+                          firstDataRowIndex: Int = 1) extends ModelConvertible
 {
-	override def toModel = Model(Vector("path" -> filePath.toJson, "mapping" -> mapping.toModel))
+	override def toModel = Model(Vector("path" -> filePath.toJson, "mapping" -> mapping.toModel,
+		"header_row_index" -> headerRowIndex, "first_data_row_index" -> firstDataRowIndex))
 }

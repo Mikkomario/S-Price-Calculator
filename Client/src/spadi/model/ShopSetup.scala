@@ -46,6 +46,20 @@ object ShopSetup extends FromModelFactory[ShopSetup]
 case class ShopSetup(shop: Shop, dataSource: Either[(DataSource[ProductBasePrice], DataSource[SalesGroup]),
 	DataSource[ProductPrice]]) extends ModelConvertible
 {
+	// COMPUTED ---------------------------
+	
+	/**
+	 * @return Paths read by in setup
+	 */
+	def paths = dataSource match
+	{
+		case Right(comboSource) => Vector(comboSource.filePath)
+		case Left((baseSource, saleSource)) => Vector(baseSource.filePath, saleSource.filePath)
+	}
+	
+	
+	// IMPLEMENTED  -----------------------
+	
 	override def toModel =
 	{
 		val dataSourceProperties: Vector[(String, Value)] = dataSource match
