@@ -1,5 +1,7 @@
 package spadi.controller
 
+import java.util.UUID
+
 import spadi.model.{Product, ProductBasePrice, ProductPrice, ProductPriceWithSale, SalesGroup, Shop, ShopSetup}
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.ValueConversions._
@@ -18,9 +20,15 @@ object ShopData
 {
 	// ATTRIBUTES   -----------------------------
 	
-	private var _shopData = ShopsContainer.shops.map { shop =>
+	private var _shopData = ShopSetupContainer.shops.map { shop =>
 		shop -> new ProductsContainer(productsFileNameForShop(shop))
 	}
+	
+	/**
+	 * A pointer that points to currently available shop options
+	 */
+	val shopsPointer = ShopSetupContainer.contentPointer.mergeWith(PartialShopsContainer.contentPointer) {
+		case (setups, shops) => (setups.map { _.shop } ++ shops).sortBy { _.name } }
 	
 	
 	// COMPUTED ---------------------------------
@@ -43,7 +51,7 @@ object ShopData
 	/**
 	 * @return Currently registered shop setups
 	 */
-	def shopSetups = ShopsContainer.current
+	def shopSetups = ShopSetupContainer.current
 	
 	/**
 	 * Overwrites the current products list
@@ -99,23 +107,48 @@ object ShopData
 	// OTHER    ---------------------------------
 	
 	/**
+	 * Adds a new shop to this container
+	 * @param newShopName Name of the new shop to add
+	 * @return The newly created shop
+	 */
+	def addShop(newShopName: String) =
+	{
+		val newShop = Shop(UUID.randomUUID().toString, newShopName)
+		PartialShopsContainer.current :+= newShop
+		newShop
+	}
+	
+	/**
+	 * Renames a single shop in this container
+	 * @param shopId Id of targeted shop
+	 * @param newName New shop name
+	 */
+	def renameShopWithId(shopId: String, newName: String) =
+	{
+		ShopSetupContainer.current = ShopSetupContainer.current.map { s =>
+			if (s.shop.id == shopId) s.copy(shop = s.shop.copy(name = newName)) else s }
+	}
+	
+	/**
 	 * @param shopId A shop id
 	 * @return A shop matching that id
 	 */
-	def shopForId(shopId: String) = ShopsContainer.shops.find { _.id == shopId }
+	def shopForId(shopId: String) = ShopSetupContainer.shops.find { _.id == shopId }
 	
 	private def productsFileNameForShop(shop: Shop) = s"shop-products-${shop.id}.json"
 	
 	
 	// NESTED   ---------------------------------
 	
-	private object ShopsContainer extends LocalModelsContainer[ShopSetup]("shops.json", ShopSetup)
+	private object ShopSetupContainer extends LocalModelsContainer[ShopSetup]("shops.json", ShopSetup)
 	{
 		/**
 		 * @return All shops currently in this container
 		 */
 		def shops = current.map { _.shop }
 	}
+	
+	private object PartialShopsContainer extends LocalModelsContainer[Shop]("shops-incomplete.json", Shop)
 	
 	private class ProductsContainer(fileName: String)
 		extends LocalContainer[(Vector[ProductBasePrice], Vector[SalesGroup], Vector[ProductPrice])](fileName)
