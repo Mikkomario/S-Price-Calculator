@@ -45,6 +45,8 @@ class EditShopDialog(initialName: String = "") extends InputDialog[Option[String
 	
 	override protected def fields = Vector(RowGroups.singleRow(new InputRowBlueprint("Tukun Nimi", nameField)))
 	
+	override protected def additionalButtons = Vector()
+	
 	override protected def buildLayout(inputRows: Vector[RowGroups[AwtStackable]]) =
 	{
 		// Places each group in a single stack (ignores stacks when there is only a single group / item in a group)
