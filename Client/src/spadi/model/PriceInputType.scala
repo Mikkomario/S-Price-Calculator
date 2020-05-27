@@ -22,6 +22,11 @@ object PriceInputType
 	private implicit val languageCode: String = "en"
 	
 	/**
+	 * All values of this enumeration
+	 */
+	val values = Vector[PriceInputType](SalePrice, BasePrice, SaleGroup)
+	
+	/**
 	 * Input that produces prices with sales
 	 */
 	case object SalePrice extends PriceInputType

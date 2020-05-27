@@ -1,13 +1,13 @@
 package spadi.view.main
 
 import spadi.controller.{ReadProducts, ShopData}
-import spadi.view.controller.MainVC
+import spadi.view.controller.{MainVC, NewFileConfigurationUI}
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.Alignment
-import utopia.reflection.util.SingleFrameSetup
+import utopia.reflection.util.MultiFrameSetup
 
 import scala.util.{Failure, Success}
 
@@ -24,6 +24,9 @@ object SPriceApp extends App
 	
 	private implicit val languageCode: String = "fi"
 	
+	private val setup = new MultiFrameSetup(actorHandler)
+	setup.start()
+	
 	// Reads / updates product data
 	val products = ReadProducts() match
 	{
@@ -37,6 +40,7 @@ object SPriceApp extends App
 							val (failures, successes) = newData.divideBy { _._2.isSuccess }
 							if (failures.nonEmpty)
 							{
+								// TODO: Add separate failure handling UI
 								println(s"Failed to read ${failures.size}/${newData.size} shop's data")
 								failures.foreach { case (shop, failure) =>
 									println(s"${shop.name} (${shop.id}):")
@@ -48,9 +52,8 @@ object SPriceApp extends App
 						case None => ShopData.products
 					}
 				case Left(filesWithoutMappings) =>
-					// TODO: Add UI for handling these
-					println(s"Missing mappings for ${filesWithoutMappings.size} files:")
-					filesWithoutMappings.foreach(println)
+					
+					NewFileConfigurationUI.configureBlocking(filesWithoutMappings)
 					Vector()
 			}
 		case Failure(error) =>
@@ -61,6 +64,7 @@ object SPriceApp extends App
 	
 	val frame = Frame.windowed(new MainVC(products.sortBy { _.productId }), "S-Padi Hintalaskuri",
 		resizePolicy = Program, resizeAlignment = Alignment.TopLeft)
-	
-	new SingleFrameSetup(actorHandler, frame).start()
+	frame.setToCloseOnEsc()
+	frame.setToExitOnClose()
+	setup.display(frame)
 }

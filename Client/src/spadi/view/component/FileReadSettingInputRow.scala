@@ -37,11 +37,12 @@ class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequest
 		val shopSelection = new ShopSelectionVC()
 		val typeSelection = Fields.dropDown[PriceInputType]("Sisältötyyppejä ei ole määritetty",
 			"Valitse tiedostotyyppi", DisplayFunction.localized[PriceInputType] { _.name })
+		typeSelection.content = PriceInputType.values
 		shopSelection -> typeSelection
 	}
 	
 	private val (openButton, deleteButton) = context.forPrimaryColorButtons.use { implicit btnC =>
-		val openFileButton = ImageAndTextButton.contextual(Icons.file.inButton, "Avaa tiedosto") {
+		val openFileButton = ImageAndTextButton.contextual(Icons.file.inButton, "Avaa") {
 			path.openInDesktop().failure.foreach { error =>
 				parentWindow.foreach { window =>
 					val dialogContext = baseContext.inContextWithBackground(colorScheme.error).forTextComponents()
@@ -53,7 +54,7 @@ class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequest
 				}
 			}
 		}
-		val deleteFileButton = ImageAndTextButton.contextual(Icons.delete.inButton, "Poista tiedosto") {
+		val deleteFileButton = ImageAndTextButton.contextual(Icons.delete.inButton, "Poista") {
 			parentWindow.foreach { window =>
 				val dialogContext = baseContext.inContextWithBackground(colorScheme.gray.light).forTextComponents()
 				new YesNoDialog(dialogContext, "Tiedoston poisto",
@@ -74,7 +75,7 @@ class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequest
 	
 	private val view =
 	{
-		val pathLabel = TextLabel.contextual(path.toString.noLanguageLocalizationSkipped)
+		val pathLabel = TextLabel.contextual(path.fileName.noLanguageLocalizationSkipped)
 		SegmentedRow.partOfGroupWithItems(group,
 			Vector(pathLabel, shopSelection, typeSelection, openButton, deleteButton), margins.medium.downscaling)
 	}
