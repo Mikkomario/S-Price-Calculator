@@ -16,12 +16,13 @@ object NewFileConfigurationUI
 	def configureBlocking(newPaths: Vector[Path]) =
 	{
 		// Displays a settings dialog for the new paths
-		// TODO: Handle errors
-		val settings = new FileReadSettingsFrame(newPaths).display().waitFor().get
+		val settings = new FileReadSettingsFrame(newPaths).display().waitFor().getOrElse(Vector())
 		if (settings.isEmpty)
 			println("No settings configured")
 		else
 		{
+			
+			
 			println("Configured following settings:")
 			settings.foreach(println)
 		}

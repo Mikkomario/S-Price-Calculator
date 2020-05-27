@@ -7,7 +7,6 @@ import spadi.model.{FileReadSetting, PriceInputType}
 import spadi.view.controller.ShopSelectionVC
 import spadi.view.util.Icons
 import utopia.flow.util.FileExtensions._
-import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.button.ImageAndTextButton
@@ -15,7 +14,7 @@ import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.segmented.SegmentedGroup
 import utopia.reflection.container.swing.SegmentedRow
 import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor.Fixed
-import utopia.reflection.container.swing.window.dialog.interaction.{MessageDialog, YesNoDialog}
+import utopia.reflection.container.swing.window.dialog.interaction.YesNoDialog
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.LengthExtensions._
@@ -42,18 +41,7 @@ class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequest
 	}
 	
 	private val (openButton, deleteButton) = context.forPrimaryColorButtons.use { implicit btnC =>
-		val openFileButton = ImageAndTextButton.contextual(Icons.file.inButton, "Avaa") {
-			path.openInDesktop().failure.foreach { error =>
-				parentWindow.foreach { window =>
-					val dialogContext = baseContext.inContextWithBackground(colorScheme.error).forTextComponents()
-					new MessageDialog(dialogContext, dialogContext.forSecondaryColorButtons,
-						"Tiedoston avaaminen epäonnistui",
-						"Tiedoston avaaminen ei onnistunut.\nVirheilmoitus: %s".localized.interpolated(
-							Vector(error.getLocalizedMessage)), "OK", Some(Icons.close), Some(Icons.warning))
-						.display(window)
-				}
-			}
-		}
+		val openFileButton = Fields.openFileButton(path, parentWindow)
 		val deleteFileButton = ImageAndTextButton.contextual(Icons.delete.inButton, "Poista") {
 			parentWindow.foreach { window =>
 				val dialogContext = baseContext.inContextWithBackground(colorScheme.gray.light).forTextComponents()

@@ -23,9 +23,14 @@ object Icons
 	def close = cache("close.png")
 	
 	/**
-	 * @return An arrow icon pointing forward
+	 * @return An arrow icon pointing right
 	 */
 	def next = cache("arrow-forward.png")
+	
+	/**
+	 * @return An arrow icon pointing left
+	 */
+	def previous = next.map { _.flippedHorizontally }
 	
 	/**
 	 * @return A plus icon for adding new items
