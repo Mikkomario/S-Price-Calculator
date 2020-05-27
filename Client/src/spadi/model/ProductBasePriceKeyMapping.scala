@@ -7,11 +7,8 @@ import utopia.flow.generic.ValueUnwraps._
 
 object ProductBasePriceKeyMapping extends FromModelFactoryWithSchema[ProductBasePriceKeyMapping]
 {
-	/**
-	 * A standard product price mapping used when no other mappings are specified
-	 */
-	val default = ProductBasePriceKeyMapping("Sähkönumero", "Try", Vector("Lajimerkki", "Tuotenimi"), "Hinta", "Hintaker", "Yks")
-
+	// IMPLEMENTED  ---------------------------
+	
 	override val schema = ModelDeclaration("id_key" -> StringType, "group_id_key" -> StringType,
 		"price_key" -> StringType, "per_amount_key" -> StringType, "per_unit_key" -> StringType)
 
