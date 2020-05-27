@@ -23,6 +23,11 @@ object Icons
 	def close = cache("close.png")
 	
 	/**
+	 * @return An arrow icon pointing forward
+	 */
+	def next = cache("arrow-forward.png")
+	
+	/**
 	 * @return A plus icon for adding new items
 	 */
 	def plus = cache("plus.png")

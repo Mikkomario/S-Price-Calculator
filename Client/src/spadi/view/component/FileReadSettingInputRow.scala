@@ -3,7 +3,7 @@ package spadi.view.component
 import java.nio.file.Path
 
 import spadi.view.util.Setup._
-import spadi.model.PriceInputType
+import spadi.model.{FileReadSetting, PriceInputType}
 import spadi.view.controller.ShopSelectionVC
 import spadi.view.util.Icons
 import utopia.flow.util.FileExtensions._
@@ -25,7 +25,7 @@ import utopia.reflection.shape.LengthExtensions._
  * @author Mikko Hilpinen
  * @since 26.5.2020, v1.1
  */
-class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequested: => Unit)
+class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequested: FileReadSettingInputRow => Unit)
                              (implicit context: TextContext)
 	extends StackableAwtComponentWrapperWrapper
 {
@@ -64,7 +64,7 @@ class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequest
 						if (shouldDelete)
 						{
 							path.delete()
-							onDeleteRequested
+							onDeleteRequested(this)
 						}
 					}
 			}
@@ -77,6 +77,23 @@ class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequest
 		val pathLabel = TextLabel.contextual(path.toString.noLanguageLocalizationSkipped)
 		SegmentedRow.partOfGroupWithItems(group,
 			Vector(pathLabel, shopSelection, typeSelection, openButton, deleteButton), margins.medium.downscaling)
+	}
+	
+	
+	// COMPUTED ---------------------------------
+	
+	/**
+	 * @return Either Right: Current user input in this row or Left: Field that is missing a value
+	 */
+	def currentInput = shopSelection.value match
+	{
+		case Some(shop) =>
+			typeSelection.value match
+			{
+				case Some(inputType) => Right(FileReadSetting(path, shop, inputType))
+				case None => Left(typeSelection)
+			}
+		case None => Left(shopSelection)
 	}
 	
 	
