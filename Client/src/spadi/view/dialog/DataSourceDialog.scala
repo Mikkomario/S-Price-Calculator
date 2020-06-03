@@ -8,6 +8,8 @@ import spadi.model.{KeyMapping, KeyMappingFactory, Shop}
 import spadi.view.component.Fields
 import spadi.view.util.Icons
 import utopia.flow.datastructure.immutable.{Model, Value}
+import utopia.flow.datastructure.template
+import utopia.flow.datastructure.template.Property
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.generic.ValueConversions._
@@ -28,7 +30,7 @@ import scala.util.{Failure, Success}
  * @author Mikko Hilpinen
  * @since 27.5.2020, v1.1
  */
-// TODO: Add edit mode
+// TODO: Handle header row index and first data row index too
 class DataSourceDialog[+A](parentWindow: Window, path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A])
 	extends InputDialog[Either[Boolean, KeyMapping[A]]]
 {
@@ -42,6 +44,24 @@ class DataSourceDialog[+A](parentWindow: Window, path: Path, shop: Shop, mapping
 			val field = TextField.contextual(fieldWidth, prompt = if (isRequired) None else Some("Vapaaehtoinen"))
 			(fieldName, field, isRequired) -> new InputRowBlueprint(fieldName, field)
 		}
+	}
+	
+	
+	// COMPUTED ----------------------------
+	
+	/**
+	 * @return Current field input, each value tied to assiciated field name (based on mapping factory)
+	 */
+	def input = Model(inputComponents.map { case (name, field, _) =>
+		name.string -> field.value
+	})
+	/**
+	 * Updates current input field content
+	 * @param newInput New input field values. Values are read from properties matching field names (determined by
+	 *                 the used mapping factory).
+	 */
+	def input_=(newInput: template.Model[Property]) = inputComponents.foreach { case (name, field, _) =>
+		field.text = newInput(name.string).string
 	}
 	
 	
