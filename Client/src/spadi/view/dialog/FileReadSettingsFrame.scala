@@ -9,8 +9,8 @@ import spadi.view.util.Setup._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.WaitUtils
 import utopia.flow.util.TimeExtensions._
-import utopia.genesis.shape.shape2D.{Direction2D, Point}
-import utopia.reflection.component.{ComponentLike, Focusable}
+import utopia.genesis.shape.shape2D.{Direction2D, Point, Size}
+import utopia.reflection.component.{Area, ComponentLike, Focusable}
 import utopia.reflection.component.swing.{AwtComponentRelated, MultiLineTextView}
 import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton}
 import utopia.reflection.component.swing.label.TextLabel
@@ -29,7 +29,8 @@ import utopia.reflection.util.Screen
  * @author Mikko Hilpinen
  * @since 27.5.2020, v1.1
  */
-class FileReadSettingsFrame(paths: Vector[Path])
+// TODO: Add option for edit mode
+class FileReadSettingsFrame(paths: Vector[Path]) extends Area
 {
 	// ATTRIBUTES   -----------------------------------
 	
@@ -107,6 +108,17 @@ class FileReadSettingsFrame(paths: Vector[Path])
 	// INITIAL CODE ---------------------------------
 	
 	segmentedGroup.addSegmentChangedListener { _ => settingsViewStack.revalidate() }
+	
+	
+	// IMPLEMENTED  ---------------------------------
+	
+	override def position = dialog.position
+	
+	override def position_=(p: Point) = dialog.position = p
+	
+	override def size = dialog.size
+	
+	override def size_=(s: Size) = dialog.size = s
 	
 	
 	// OTHER    -------------------------------------
