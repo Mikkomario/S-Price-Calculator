@@ -52,6 +52,7 @@ object ShopData
 	 * @return Currently registered shop setups
 	 */
 	def shopSetups = ShopSetupContainer.current
+	def shopSetups_=(newSetups: Vector[ShopSetup]) = ShopSetupContainer.current = newSetups
 	
 	/**
 	 * Overwrites the current products list

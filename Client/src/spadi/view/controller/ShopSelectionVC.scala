@@ -9,7 +9,7 @@ import spadi.view.util.Setup._
 import utopia.flow.event.{ChangeEvent, ChangeListener}
 import utopia.reflection.component.Focusable
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.input.Input
+import utopia.reflection.component.input.Interaction
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.TextLabel
@@ -22,7 +22,7 @@ import utopia.reflection.localization.DisplayFunction
  * @since 26.5.2020, v1.1
  */
 class ShopSelectionVC(implicit context: ButtonContextLike) extends StackableAwtComponentWrapperWrapper
-	with Input[Option[Shop]] with Focusable
+	with Interaction[Option[Shop]] with Focusable
 {
 	// ATTRIBUTES   ---------------------------
 	
@@ -72,6 +72,8 @@ class ShopSelectionVC(implicit context: ButtonContextLike) extends StackableAwtC
 	override def requestFocusInWindow() = dd.requestFocusInWindow()
 	
 	override def value = dd.value
+	
+	override def value_=(newValue: Option[Shop]) = dd.value = newValue
 	
 	override protected def wrapped = view
 	

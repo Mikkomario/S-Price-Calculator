@@ -3,7 +3,7 @@ package spadi.controller
 import java.nio.file.Path
 import java.time.Instant
 
-import spadi.model.{DataSource, ProductBasePrice, ProductPrice, SalesGroup}
+import spadi.model.{DataSource, ProductBasePrice, ProductPrice, SalesGroup, ShopSetup}
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.FileExtensions._
@@ -25,6 +25,12 @@ object ReadProducts
 	private val supportedFileTypes = ReadExcel.supportedFileTypes.map { _.toLowerCase }
 	
 	
+	// COMPUTED ------------------------------
+	
+	private def targetFiles = inputDirectory.findDescendants { file => file.isRegularFile &&
+		supportedFileTypes.contains(file.fileType.toLowerCase) }
+	
+	
 	// OTHER    ------------------------------
 	
 	/**
@@ -38,9 +44,7 @@ object ReadProducts
 	def apply() =
 	{
 		// Checks the input files, whether there were any new, removed or modified cases
-		inputDirectory.findDescendants { file => file.isRegularFile &&
-			supportedFileTypes.contains(file.fileType.toLowerCase) }
-			.map { allFiles =>
+		targetFiles.map { allFiles =>
 				// Checks for new (unmapped) files first
 				val setups = ShopData.shopSetups
 				val mappedPaths = setups.flatMap { _.paths }.toSet
@@ -48,35 +52,50 @@ object ReadProducts
 				if (unmappedPaths.nonEmpty)
 					Left(unmappedPaths)
 				else
-				{
-					// Next checks whether any of the files were modified, deleted or added since last read
-					if (FileReads.current.exists { case (path, lastReadTime) => allFiles.find { _ == path }.forall {
-						_.lastModified.toOption.forall { _ > lastReadTime } } } ||
-						allFiles.exists { !FileReads.contains(_) })
-					{
-						val setupsToUse = setups.filter { _.paths.forall { _.exists } }
-						
-						// In which case re-reads all data
-						val result = setupsToUse.map { setup =>
-							val readData = setup.dataSource.mapBoth { case (baseSource, saleSource) =>
-								read(baseSource).flatMap { base => read(saleSource).map { sale => base -> sale } }
-							} { comboSource => read(comboSource) }.mapToSingle {
-								_.map[Either[(Vector[ProductBasePrice], Vector[SalesGroup]), Vector[ProductPrice]]] {
-									Left(_) } } { _.map { Right(_) } }
-							setup.shop -> readData
-						}
-						
-						// Records data read (read time is set slightly into the future since file closing will
-						// update file modified time
-						val readTime = Instant.now() + 10.seconds
-						FileReads.current = setupsToUse.flatMap { _.paths }.map { _ -> readTime }.toMap
-						
-						Right(Some(result))
-					}
-					else
-						Right(None)
-				}
+					Right(readFiles(allFiles, setups))
 			}
+	}
+	
+	/**
+	 * Reads product data from input excel files. Will only read data from files already linked to key mappings
+	 * @return Try [ Option[ Shop -> Try[...] ] ]: Shop -> Either product prices (Right (Try[ Vector[ProductPrice] ]))
+	 *         or base prices and sales groups (Left (Try[ Vector[ProductBasePrice] -> Vector[SalesGroup] ]) -
+	 *         Failure if reads failed. None if no data refresh was required.
+	 */
+	def ignoringUnmappedFiles() =
+	{
+		// Checks the input files, whether there were any removed or modified cases
+		targetFiles.map { allFiles => readFiles(allFiles, ShopData.shopSetups) }
+	}
+	
+	private def readFiles(files: Iterable[Path], setups: Vector[ShopSetup]) =
+	{
+		// Next checks whether any of the files were modified, deleted or added since last read
+		if (FileReads.current.exists { case (path, lastReadTime) => files.find { _ == path }.forall {
+			_.lastModified.toOption.forall { _ > lastReadTime } } } ||
+			files.exists { !FileReads.contains(_) })
+		{
+			val setupsToUse = setups.filter { _.paths.forall { _.exists } }
+			
+			// In which case re-reads all data
+			val result = setupsToUse.map { setup =>
+				val readData = setup.dataSource.mapBoth { case (baseSource, saleSource) =>
+					read(baseSource).flatMap { base => read(saleSource).map { sale => base -> sale } }
+				} { comboSource => read(comboSource) }.mapToSingle {
+					_.map[Either[(Vector[ProductBasePrice], Vector[SalesGroup]), Vector[ProductPrice]]] {
+						Left(_) } } { _.map { Right(_) } }
+				setup.shop -> readData
+			}
+			
+			// Records data read (read time is set slightly into the future since file closing will
+			// update file modified time
+			val readTime = Instant.now() + 10.seconds
+			FileReads.current = setupsToUse.flatMap { _.paths }.map { _ -> readTime }.toMap
+			
+			Some(result)
+		}
+		else
+			None
 	}
 	
 	private def read[A](source: DataSource[A]) =

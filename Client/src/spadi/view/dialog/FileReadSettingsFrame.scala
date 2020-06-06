@@ -24,13 +24,29 @@ import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.StackLength
 import utopia.reflection.util.Screen
 
+object FileReadSettingsFrame
+{
+	/**
+	 * Creates a new frame for adding new settings
+	 * @param paths Paths to add settings for
+	 * @return A new frame
+	 */
+	def forAdding(paths: Vector[Path]) = new FileReadSettingsFrame(Left(paths))
+	
+	/**
+	 * Creates a new frame for editing existing settings
+	 * @param settings Settings to edit
+	 * @return A new frame
+	 */
+	def forEditing(settings: Vector[FileReadSetting]) = new FileReadSettingsFrame(Right(settings))
+}
+
 /**
  * A dialog used for requesting read settings for new files
  * @author Mikko Hilpinen
  * @since 27.5.2020, v1.1
  */
-// TODO: Add option for edit mode
-class FileReadSettingsFrame(paths: Vector[Path]) extends Area
+class FileReadSettingsFrame(base: Either[Vector[Path], Vector[FileReadSetting]]) extends Area
 {
 	// ATTRIBUTES   -----------------------------------
 	
@@ -51,8 +67,11 @@ class FileReadSettingsFrame(paths: Vector[Path]) extends Area
 			row
 		}
 	private val rowStack = rowContext.use { implicit c =>
-		val rows: Vector[FileReadSettingInputRow] = paths.map {
-			new FileReadSettingInputRow(segmentedGroup, _)(removeRow) }
+		val rows: Vector[FileReadSettingInputRow] = base match
+		{
+			case Right(settings) => settings.map { s => new FileReadSettingInputRow(segmentedGroup, Right(s))(removeRow) }
+			case Left(paths) => paths.map { p => new FileReadSettingInputRow(segmentedGroup, Left(p))(removeRow) }
+		}
 		val stack = AnimatedStack.contextualColumn(rows)
 		stack.background = c.containerBackground
 		stack

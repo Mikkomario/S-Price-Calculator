@@ -24,8 +24,8 @@ import utopia.reflection.shape.LengthExtensions._
  * @author Mikko Hilpinen
  * @since 26.5.2020, v1.1
  */
-class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequested: FileReadSettingInputRow => Unit)
-                             (implicit context: TextContext)
+class FileReadSettingInputRow(group: SegmentedGroup, base: Either[Path, FileReadSetting])
+                             (onDeleteRequested: FileReadSettingInputRow => Unit)(implicit context: TextContext)
 	extends StackableAwtComponentWrapperWrapper
 {
 	// ATTRIBUTES   ------------------------------
@@ -69,6 +69,15 @@ class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequest
 	}
 	
 	
+	// INITIAL CODE -----------------------------
+	
+	// On edit mode, sets default values
+	base.toOption.foreach { settings =>
+		shopSelection.value = Some(settings.shop)
+		typeSelection.value = Some(settings.inputType)
+	}
+	
+	
 	// COMPUTED ---------------------------------
 	
 	/**
@@ -83,6 +92,12 @@ class FileReadSettingInputRow(group: SegmentedGroup, path: Path)(onDeleteRequest
 				case None => Left(typeSelection)
 			}
 		case None => Left(shopSelection)
+	}
+	
+	private def path = base match
+	{
+		case Right(settings) => settings.path
+		case Left(path) => path
 	}
 	
 	

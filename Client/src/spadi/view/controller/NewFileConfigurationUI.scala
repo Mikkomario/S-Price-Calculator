@@ -23,10 +23,10 @@ object NewFileConfigurationUI
 {
 	// OTHER    ----------------------------
 	
-	def configureBlocking(newPaths: Vector[Path]) =
+	def configureBlocking(target: Either[Vector[Path], Vector[FileReadSetting]]): Unit =
 	{
 		// Displays a settings dialog for the new paths
-		val readSettingsFrame = new FileReadSettingsFrame(newPaths)
+		val readSettingsFrame = new FileReadSettingsFrame(target)
 		val settings = readSettingsFrame.display().waitFor().getOrElse(Vector())
 		if (settings.isEmpty)
 			println("No settings configured")
@@ -74,39 +74,42 @@ object NewFileConfigurationUI
 				}
 			}
 			
-			if (isCancelled)
+			if (!isCancelled)
 			{
-				// TODO: Read data anyway
-				???
-			}
-			else if (nextDisplayIndex < 0)
-			{
-				// TODO: edit settings and repeat this process (recursion)
-				???
-			}
-			else
-			{
-				// Updates shop setups based on new data
-				val newComboSetups = comboInputs.flatMap { input => input.result.map { ds =>
-					ShopSetup(input.setting.shop, Right(ds)) } }
-				val newSplitShops = (newBaseSettings ++ newSaleSettings).map { _.shop }.toSet
-				val newSplitSetups = newSplitShops.flatMap { shop =>
-					val oldSetup = existingSetupsByType.get(false).flatMap { _.find { _.shop.id == shop.id } }
-					baseInputs.find { _.setting.shop == shop }.flatMap { _.result }
-						.orElse { oldSetup.flatMap { _.dataSource.leftOption.map { _._1 } } }
-						.flatMap { baseDS =>
-							saleInputs.find { _.setting.shop == shop }.flatMap { _.result }
-								.orElse { oldSetup.flatMap { _.dataSource.leftOption.map { _._2 } } }
-								.map { saleDS => ShopSetup(shop, Left(baseDS -> saleDS)) }
+				// If "previous" was pressed on the first dialog, redisplays the settings view and starts the
+				// process over
+				if (nextDisplayIndex < 0)
+					configureBlocking(Right(settings))
+				else
+				{
+					// Updates shop setups based on new data
+					val newComboSetups = comboInputs.flatMap { input =>
+						input.result.map { ds =>
+							ShopSetup(input.setting.shop, Right(ds))
 						}
+					}
+					val newSplitShops = (newBaseSettings ++ newSaleSettings).map { _.shop }.toSet
+					val newSplitSetups = newSplitShops.flatMap { shop =>
+						val oldSetup = existingSetupsByType.get(false).flatMap { _.find { _.shop.id == shop.id } }
+						baseInputs.find { _.setting.shop == shop }.flatMap { _.result }
+							.orElse { oldSetup.flatMap { _.dataSource.leftOption.map { _._1 } } }
+							.flatMap { baseDS =>
+								saleInputs.find { _.setting.shop == shop }.flatMap { _.result }
+									.orElse { oldSetup.flatMap { _.dataSource.leftOption.map { _._2 } } }
+									.map { saleDS => ShopSetup(shop, Left(baseDS -> saleDS)) }
+							}
+					}
+					val allComboSetups = mergeSetups(existingSetupsByType.getOrElse(true, Vector()), newComboSetups)
+					val allSplitSetups = mergeSetups(existingSetupsByType.getOrElse(false, Vector()), newSplitSetups)
+					ShopData.shopSetups = allComboSetups.values.toVector ++ allSplitSetups.values
 				}
-				// TODO: Continue
 			}
-			
-			println("Configured following settings:")
-			settings.foreach(println)
 		}
 	}
+	
+	private def mergeSetups(existing: IterableOnce[ShopSetup], newSetups: IterableOnce[ShopSetup]) =
+		existing.iterator.map { setup => setup.shop.id -> setup }.toMap ++
+		newSetups.iterator.map { setup => setup.shop.id -> setup }.toMap
 	
 	
 	// NESTED   ---------------------------

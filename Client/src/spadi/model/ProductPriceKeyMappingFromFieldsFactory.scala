@@ -17,7 +17,7 @@ object ProductPriceKeyMappingFromFieldsFactory extends KeyMappingFactory[Product
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override val fieldNames = Vector("Sähkönumero".local -> true, "Alennusryhmä".local -> true, "Nimi".local -> true,
+	override val fieldNames = Vector("Sähkönumero".local -> true, "Nimi".local -> true,
 		"Lisänimet".local -> false, "Hinta".local -> true, "Yksikkö".local -> true, "Ostomäärä".local -> true)
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = ProductPriceKeyMapping(

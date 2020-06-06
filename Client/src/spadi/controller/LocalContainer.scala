@@ -54,9 +54,9 @@ abstract class LocalContainer[A](fileName: String)
 	 * @return The currently stored data
 	 */
 	def current = _current.get
-	def current_=(newPrices: A) =
+	def current_=(newData: A) =
 	{
-		_current.set(newPrices)
+		_current.set(newData)
 		saveStatus()
 	}
 	
