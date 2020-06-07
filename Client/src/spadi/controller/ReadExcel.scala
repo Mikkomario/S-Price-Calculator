@@ -6,7 +6,7 @@ import java.time.LocalTime
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import org.apache.poi.openxml4j.opc.OPCPackage
-import org.apache.poi.ss.usermodel.{CellType, DateUtil, Sheet, Workbook}
+import org.apache.poi.ss.usermodel.{Cell, CellType, DateUtil, Sheet, Workbook}
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.util.FileExtensions._
@@ -112,27 +112,37 @@ object ReadExcel
 			val findHeadersIterator = sheet.rowIterator().asScala.drop(target.cellHeadersRowIndex)
 			if (findHeadersIterator.hasNext)
 			{
-				// FIXME: When headers row is of different length than other rows, property names misalign
 				val headersRow = findHeadersIterator.next()
+				// Header index -> header name
 				val headers =
 				{
-					val base = headersRow.cellIterator().asScala.drop(target.firstCellIndex)
-					target.maxCellsRead.map { max => base.take(max) }.getOrElse(base).toVector.mapWithIndex { (cell, idx) =>
-						cell.getCellType match
+					limitedIterator(headersRow.cellIterator().asScala, target.firstCellIndex, target.maxCellsRead).map { cell =>
+						val headerName = cell.getCellType match
 						{
 							case CellType.BOOLEAN => cell.getBooleanCellValue.toString
 							case CellType.NUMERIC => cell.getNumericCellValue.toString
-							case CellType.STRING => cell.getStringCellValue
-							case _ => idx.toString
+							case CellType.STRING =>
+								val str = cell.getStringCellValue
+								if (str.startsWith("'"))
+									str.drop(1)
+								else
+									str
+							case _ => cell.getColumnIndex.toString
 						}
+						cell.getColumnIndex -> headerName
 					}
-				}
+				}.toVector
 				
 				// Then parses targeted rows to models
 				val firstRowIndex = target.firstRowIndex max (target.cellHeadersRowIndex + 1)
 				parseRows(sheet, firstRowIndex, target.maxRowsRead, target.firstCellIndex, target.maxCellsRead)
-					.map { row => Model.withConstants(row.zip(headers)
-						.map { case (value, header) => Constant(header, value) }) }
+					.map { row =>
+						val constants = headers.map { case (index, name) =>
+							val value = row.getOrElse(index - target.firstCellIndex, Value.empty)
+							Constant(name, value)
+						}
+						Model.withConstants(constants)
+					}
 			}
 			else
 				Vector()
@@ -156,12 +166,7 @@ object ReadExcel
 			maxRowsRead.map { max => base.take(max) }.getOrElse(base)
 		}
 		rowsIterator.map { row =>
-			val cellsIterator =
-			{
-				val base = row.cellIterator().asScala.drop(firstCellIndex)
-				maxCellsRead.map { max => base.take(max) }.getOrElse(base)
-			}
-			cellsIterator.map { cell =>
+			val cellValues = limitedIterator(row.cellIterator().asScala, firstCellIndex, maxCellsRead).map { cell =>
 				val value: Value = cell.getCellType match
 				{
 					case CellType.BOOLEAN => cell.getBooleanCellValue
@@ -177,12 +182,38 @@ object ReadExcel
 								date
 						}
 						else
-							cell.getNumericCellValue
-					case CellType.STRING => cell.getStringCellValue
+						{
+							// Formats the number
+							val doubleNumber = cell.getNumericCellValue
+							if (doubleNumber % 1 == 0)
+							{
+								if (doubleNumber > Int.MaxValue)
+									doubleNumber.toLong
+								else
+									doubleNumber.toInt
+							}
+							else
+								doubleNumber
+						}
+					case CellType.STRING =>
+						val str = cell.getStringCellValue
+						if (str.startsWith("'"))
+							str.drop(1)
+						else
+							str
 					case _ => Value.empty
 				}
-				value
-			}.toVector
+				cell.getColumnIndex -> value
+			}.toMap
+			// Fills missing cell values as empty values
+			val lastCellIndex = cellValues.keys.max
+			(firstCellIndex to lastCellIndex).map { idx => cellValues.getOrElse(idx, Value.empty) }.toVector
 		}.toVector
+	}
+	
+	private def limitedIterator(cellIterator: Iterator[Cell], firstCellIndex: Int = 0, maxCellsRead: Option[Int] = None) =
+	{
+		val base = cellIterator.dropWhile { _.getColumnIndex < firstCellIndex }
+		maxCellsRead.map { max => base.takeWhile { _.getColumnIndex < firstCellIndex + max } }.getOrElse(base)
 	}
 }
