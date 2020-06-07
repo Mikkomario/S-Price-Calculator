@@ -18,6 +18,7 @@ object BasePriceKeyMappingFromFieldsFactory extends KeyMappingFactory[ProductBas
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = ProductBasePriceKeyMapping(
 		model("Sähkönumero"), model("Alennusryhmä"),
-		model("Nimi").getString +: model("Lisänimet").getString.split(',').map { _.trim }.toVector, model("Perushinta"),
+		model("Nimi").getString +:
+			model("Lisänimet").getString.split(',').map { _.trim }.filterNot { _.isEmpty }.toVector, model("Perushinta"),
 		model("Ostomäärä"), model("Yksikkö"))
 }

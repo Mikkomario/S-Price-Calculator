@@ -21,6 +21,7 @@ object ProductPriceKeyMappingFromFieldsFactory extends KeyMappingFactory[Product
 		"Lisänimet".local -> false, "Hinta".local -> true, "Yksikkö".local -> true, "Ostomäärä".local -> true)
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = ProductPriceKeyMapping(
-		model("Sähkönumero"), model("Nimi").getString +: model("Lisänimet").getString.split(',').map { _.trim }.toVector,
+		model("Sähkönumero"), model("Nimi").getString +:
+			model("Lisänimet").getString.split(',').map { _.trim }.filterNot { _.isEmpty }.toVector,
 		model("Hinta"), model("Ostomäärä"), model("Yksikkö"))
 }

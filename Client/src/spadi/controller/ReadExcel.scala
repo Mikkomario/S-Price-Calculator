@@ -6,7 +6,7 @@ import java.time.LocalTime
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import org.apache.poi.openxml4j.opc.OPCPackage
-import org.apache.poi.ss.usermodel.{CellType, DateUtil, Workbook}
+import org.apache.poi.ss.usermodel.{CellType, DateUtil, Sheet, Workbook}
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import utopia.flow.datastructure.immutable.{Constant, Model, Value}
 import utopia.flow.util.FileExtensions._
@@ -41,12 +41,34 @@ object ReadExcel
 		_.getOrElse("a", Vector()) }
 	
 	/**
+	 * Reads a single sheet from an excel file
+	 * @param path Path to the excel file
+	 * @param target Target that specifies which sheet (or a portion of a sheet) should be read
+	 * @return Read sheet's data as a vector of value vectors (rows). Failure if no data could be read.
+	 *         If the sheet didn't exist in the excel, returns an empty vector.
+	 */
+	def withoutHeadersFrom(path: Path, target: SheetTarget): Try[Vector[Vector[Value]]] =
+		withoutHeadersFrom(path, HashMap("a" -> target)).map { _.getOrElse("a", Vector()) }
+	
+	/**
 	 * Reads row data as models from specified excel file
 	 * @param path An excel file
 	 * @param targets Targets specifying which sheets and areas should be read (each target is matched with a unique key)
 	 * @return Read data matching specified target keys. Failure if data couldn't be read
 	 */
 	def from(path: Path, targets: Map[String, SheetTarget]) =
+		readFileWith(path, targets)(parseWorkBook)
+	
+	/**
+	 * Reads row data as value lists from specified excel file
+	 * @param path An excel file path
+	 * @param targets Targets specifying which sheets and areas should be read. Each target is matched with a unique key.
+	 * @return Read data matching specified target keys. Failure if data couldn't be read
+	 */
+	def withoutHeadersFrom(path: Path, targets: Map[String, SheetTarget]) =
+		readFileWith(path, targets)(onlyParseRows)
+	
+	private def readFileWith[Result](path: Path, targets: Map[String, SheetTarget])(f: (Workbook, Map[String, SheetTarget]) => Result) =
 	{
 		if (path.isRegularFile)
 		{
@@ -55,10 +77,10 @@ object ReadExcel
 				path.fileType match
 				{
 					case "xls" => new FileInputStream(path.toFile).consume { stream =>
-						parseWorkBook(new HSSFWorkbook(stream), targets) }
+						f(new HSSFWorkbook(stream), targets) }
 					case _ => Option(OPCPackage.open(path.toFile)).toTry {
 						new IOException(s"Couldn't open excel file from $path") }.get.consume { pkg =>
-						parseWorkBook(new XSSFWorkbook(pkg), targets) }
+						f(new XSSFWorkbook(pkg), targets) }
 				}
 			}
 		}
@@ -67,87 +89,100 @@ object ReadExcel
 	}
 	
 	// NB: May throw
-	private def parseWorkBook(workBook: Workbook, targets: Map[String, SheetTarget]) =
+	private def parseWorkBookWith[Row](workBook: Workbook, targets: Map[String, SheetTarget])(
+		rowsFromSheet: (Sheet, SheetTarget) => Vector[Row]) =
 	{
 		val numberOfSheets = workBook.getNumberOfSheets
 		// Reads targeted sheets
 		targets.flatMap { case (sheetKey, target) =>
-			val parsedModels = target.sheetId.mapToSingle { name => Option(workBook.getSheet(name)) } { idx =>
-				if (idx < numberOfSheets) Some(workBook.getSheetAt(idx)) else None }.flatMap { sheet =>
-				
-				// Reads the cell headers first
-				val findHeadersIterator = sheet.rowIterator().asScala.drop(target.cellHeadersRowIndex)
-				if (findHeadersIterator.hasNext)
-				{
-					val headersRow = findHeadersIterator.next()
-					val headers =
-					{
-						val base = headersRow.cellIterator().asScala.drop(target.firstCellIndex)
-						target.maxCellsRead.map { max => base.take(max) }.getOrElse(base).toVector.mapWithIndex { (cell, idx) =>
-							cell.getCellType match
-							{
-								case CellType.BOOLEAN => cell.getBooleanCellValue.toString
-								case CellType.NUMERIC => cell.getNumericCellValue.toString
-								case CellType.STRING => cell.getStringCellValue
-								case _ => idx.toString
-							}
-						}
-					}
-					
-					// Then parses targeted rows to models
-					val rowsIterator =
-					{
-						val base = sheet.rowIterator().asScala.drop(target.firstRowIndex)
-						val afterHeader =
-						{
-							if (target.cellHeadersRowIndex >= target.firstRowIndex)
-							{
-								val skippedFromBeginning = target.cellHeadersRowIndex - target.firstRowIndex + 1
-								base.drop(skippedFromBeginning)
-							}
-							else
-								base
-						}
-						target.maxRowsRead.map { max => afterHeader.take(max) }.getOrElse(afterHeader)
-					}
-					val models = rowsIterator.map { row =>
-						val cellsIterator =
-						{
-							val base = row.cellIterator().asScala.drop(target.firstCellIndex)
-							target.maxCellsRead.map { max => base.take(max) }.getOrElse(base)
-						}
-						val properties = cellsIterator.zip(headers).map { case (cell, header) =>
-							val value: Value = cell.getCellType match
-							{
-								case CellType.BOOLEAN => cell.getBooleanCellValue
-								case CellType.FORMULA => cell.getCellFormula
-								case CellType.NUMERIC =>
-									// Number may also represent a date (with or without time)
-									if (DateUtil.isCellDateFormatted(cell))
-									{
-										val date = cell.getLocalDateTimeCellValue
-										if (date.toLocalTime.equals(LocalTime.MIDNIGHT))
-											date.toLocalDate
-										else
-											date
-									}
-									else
-										cell.getNumericCellValue
-								case CellType.STRING => cell.getStringCellValue
-								case _ => Value.empty
-							}
-							header -> value
-						}
-						Model(properties.toVector)
-					}
-					Some(models.toVector)
-				}
-				else
-					None
-			}
+			// Parses row data from the sheets
+			val parsedData = target.sheetId.mapToSingle { name => Option(workBook.getSheet(name)) } { idx =>
+				if (idx < numberOfSheets) Some(workBook.getSheetAt(idx)) else None }.map { rowsFromSheet(_, target) }
 			
 			// Produces map format
-			parsedModels.map { models => sheetKey -> models }
+			parsedData.map { models => sheetKey -> models }
 		}
+	}
+	
+	// NB: May throw
+	private def parseWorkBook(workBook: Workbook, targets: Map[String, SheetTarget]) =
+	{
+		parseWorkBookWith(workBook, targets) { (sheet, target) =>
+			// Reads the cell headers first
+			val findHeadersIterator = sheet.rowIterator().asScala.drop(target.cellHeadersRowIndex)
+			if (findHeadersIterator.hasNext)
+			{
+				// FIXME: When headers row is of different length than other rows, property names misalign
+				val headersRow = findHeadersIterator.next()
+				val headers =
+				{
+					val base = headersRow.cellIterator().asScala.drop(target.firstCellIndex)
+					target.maxCellsRead.map { max => base.take(max) }.getOrElse(base).toVector.mapWithIndex { (cell, idx) =>
+						cell.getCellType match
+						{
+							case CellType.BOOLEAN => cell.getBooleanCellValue.toString
+							case CellType.NUMERIC => cell.getNumericCellValue.toString
+							case CellType.STRING => cell.getStringCellValue
+							case _ => idx.toString
+						}
+					}
+				}
+				
+				// Then parses targeted rows to models
+				val firstRowIndex = target.firstRowIndex max (target.cellHeadersRowIndex + 1)
+				parseRows(sheet, firstRowIndex, target.maxRowsRead, target.firstCellIndex, target.maxCellsRead)
+					.map { row => Model.withConstants(row.zip(headers)
+						.map { case (value, header) => Constant(header, value) }) }
+			}
+			else
+				Vector()
+		}
+	}
+	
+	private def onlyParseRows(workbook: Workbook, targets: Map[String, SheetTarget]) =
+	{
+		parseWorkBookWith(workbook, targets) { (sheet, target) =>
+			parseRows(sheet, target.firstRowIndex, target.maxRowsRead, target.firstCellIndex, target.maxCellsRead)
+		}
+	}
+	
+	private def parseRows(sheet: Sheet, firstRowIndex: Int = 0, maxRowsRead: Option[Int] = None, firstCellIndex: Int = 0,
+	                      maxCellsRead: Option[Int] = None) =
+	{
+		// Then parses targeted rows to models
+		val rowsIterator =
+		{
+			val base = sheet.rowIterator().asScala.drop(firstRowIndex)
+			maxRowsRead.map { max => base.take(max) }.getOrElse(base)
+		}
+		rowsIterator.map { row =>
+			val cellsIterator =
+			{
+				val base = row.cellIterator().asScala.drop(firstCellIndex)
+				maxCellsRead.map { max => base.take(max) }.getOrElse(base)
+			}
+			cellsIterator.map { cell =>
+				val value: Value = cell.getCellType match
+				{
+					case CellType.BOOLEAN => cell.getBooleanCellValue
+					case CellType.FORMULA => cell.getCellFormula
+					case CellType.NUMERIC =>
+						// Number may also represent a date (with or without time)
+						if (DateUtil.isCellDateFormatted(cell))
+						{
+							val date = cell.getLocalDateTimeCellValue
+							if (date.toLocalTime.equals(LocalTime.MIDNIGHT))
+								date.toLocalDate
+							else
+								date
+						}
+						else
+							cell.getNumericCellValue
+					case CellType.STRING => cell.getStringCellValue
+					case _ => Value.empty
+				}
+				value
+			}.toVector
+		}.toVector
 	}
 }

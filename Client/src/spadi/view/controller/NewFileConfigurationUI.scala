@@ -2,11 +2,11 @@ package spadi.view.controller
 
 import java.nio.file.Path
 
-import spadi.controller.{Log, ShopData}
+import spadi.controller.{Log, ReadExcel, SheetTarget, ShopData}
 import spadi.model.{BasePriceKeyMappingFromFieldsFactory, DataSource, FileReadSetting, KeyMappingFactory, ProductPriceKeyMappingFromFieldsFactory, SalesGroupKeyMappingFromFieldsFactory, ShopSetup}
 import spadi.model.PriceInputType.{BasePrice, SalePrice}
 import spadi.view.util.Setup._
-import spadi.view.dialog.{DataSourceDialog, FileReadSettingsFrame}
+import spadi.view.dialog.{DataSourceDialogLike, DataSourceDialogWithSelections, DataSourceDialogWithTextFields, FileReadSettingsFrame}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Direction1D.{Negative, Positive}
@@ -21,8 +21,14 @@ import scala.util.{Failure, Success}
  */
 object NewFileConfigurationUI
 {
+	// ATTRIBUTES   ------------------------
+	
+	private val testReadTarget = SheetTarget.sheetAtIndex(0, maxRowsRead = Some(10))
+	
+	
 	// OTHER    ----------------------------
 	
+	@scala.annotation.tailrec
 	def configureBlocking(target: Either[Vector[Path], Vector[FileReadSetting]]): Unit =
 	{
 		// Displays a settings dialog for the new paths
@@ -118,7 +124,10 @@ object NewFileConfigurationUI
 	{
 		// ATTRIBUTES   -------------------
 		
-		private var lastDialog: Option[DataSourceDialog[A]] = None
+		private lazy val sampleRows = ReadExcel.withoutHeadersFrom(setting.path, testReadTarget).toOption
+			.filter { _.exists { _.nonEmpty } }
+		
+		private var lastDialog: Option[DataSourceDialogLike[A, _, _]] = None
 		private var lastResult: Option[DataSource[A]] = None
 		
 		
@@ -133,7 +142,14 @@ object NewFileConfigurationUI
 		def displayBlocking(parentWindow: java.awt.Window) =
 		{
 			// Creates a new dialog
-			val newDialog = new DataSourceDialog[A](setting.path, setting.shop, mappingFactory)
+			// Tries to read some data from the excel file in order to present a user-friendly dialog
+			val newDialog = sampleRows match
+			{
+				case Some(sampleRows) =>
+					new DataSourceDialogWithSelections[A](setting.path, setting.shop, mappingFactory, sampleRows)
+				case None => new DataSourceDialogWithTextFields[A](setting.path, setting.shop, mappingFactory)
+			}
+			
 			// Pre-fills some content, if possible
 			lastDialog.foreach { d => newDialog.input = d.input }
 			lastDialog = Some(newDialog)

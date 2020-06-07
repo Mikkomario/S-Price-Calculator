@@ -52,7 +52,14 @@ object ShopData
 	 * @return Currently registered shop setups
 	 */
 	def shopSetups = ShopSetupContainer.current
-	def shopSetups_=(newSetups: Vector[ShopSetup]) = ShopSetupContainer.current = newSetups
+	def shopSetups_=(newSetups: Vector[ShopSetup]) =
+	{
+		// Updates setups
+		ShopSetupContainer.current = newSetups
+		// Removes partial shops that are now completed
+		val completeShopIds = newSetups.map { _.shop.id }
+		PartialShopsContainer.current = PartialShopsContainer.current.filterNot { s => completeShopIds.contains(s.id) }
+	}
 	
 	/**
 	 * Overwrites the current products list

@@ -4,15 +4,17 @@ import java.nio.file.Path
 
 import spadi.view.util.Icons
 import spadi.view.util.Setup._
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.swing.DropDown
+import utopia.reflection.component.swing.{DropDown, SearchFrom}
 import utopia.reflection.component.swing.button.ImageAndTextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.swing.window.dialog.interaction.MessageDialog
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.localization.LocalString._
+import utopia.reflection.shape.StackLength
 
 import scala.concurrent.ExecutionContext
 
@@ -30,6 +32,8 @@ object Fields
 	 * @param noResultsText Text displayed when there are no results available
 	 * @param selectionPrompt Prompt displayed when no value is selected
 	 * @param displayFunction Display function for selectable values (default = toString)
+	 * @param contentPointer Pointer used for managing selectable content (default = new empty pointer)
+	 * @param valuePointer Pointer used for managing selected value (default = new empty pointer)
 	 * @param sameInstanceCheck Function for comparing items (default = equals)
 	 * @param contentIsStateless Whether items only have one possible state (default = true, set to false if you
 	 *                           specify your own same instance check function)
@@ -40,13 +44,48 @@ object Fields
 	 */
 	def dropDown[A](noResultsText: LocalizedString, selectionPrompt: LocalizedString,
 	                displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
+	                valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
 	                sameInstanceCheck: (A, A) => Boolean = (a: Any, b: Any) => a == b, contentIsStateless: Boolean = true)
 	               (implicit context: ButtonContextLike, exc: ExecutionContext) =
 	{
 		val noResultsView = TextLabel.contextual(noResultsText)
 		noResultsView.background = context.buttonColor
 		DropDown.contextualWithTextOnly[A](noResultsView, Icons.dropDown.singleColorImage,
-			selectionPrompt, displayFunction,
+			selectionPrompt, displayFunction, contentPointer, valuePointer,
+			sameInstanceCheck = sameInstanceCheck, contentIsStateless = contentIsStateless)
+	}
+	
+	/**
+	 * Creates a new drop down component
+	 * @param standardWidth The width of the search input field when selection options haven't yet been evaluated
+	 * @param noResultsText Text displayed when there are no results available
+	 * @param selectionPrompt Prompt displayed when no value is selected
+	 * @param displayFunction Display function for selectable values (default = toString)
+	 * @param contentPointer Pointer used for managing selectable content (default = new empty pointer)
+	 * @param valuePointer Pointer used for managing selected value (default = new empty pointer)
+	 * @param sameInstanceCheck Function for comparing items (default = equals)
+	 * @param contentIsStateless Whether items only have one possible state (default = true, set to false if you
+	 *                           specify your own same instance check function)
+	 * @param context Component creation context (implicit)
+	 * @param exc Execution context (implicit)
+	 * @tparam A Type of selected item
+	 * @return A new drop down field
+	 */
+	def searchFrom[A](standardWidth: StackLength, noResultsText: LocalizedString, selectionPrompt: LocalizedString,
+	                  displayFunction: DisplayFunction[A] = DisplayFunction.raw,
+	                  contentPointer: PointerWithEvents[Vector[A]] = new PointerWithEvents[Vector[A]](Vector()),
+	                  valuePointer: PointerWithEvents[Option[A]] = new PointerWithEvents[Option[A]](None),
+	                  sameInstanceCheck: (A, A) => Boolean = (a: Any, b: Any) => a == b, contentIsStateless: Boolean = true)
+	               (implicit context: ButtonContextLike, exc: ExecutionContext) =
+	{
+		val searchStringPointer = new PointerWithEvents[Option[String]](None)
+		val noResultsView = SearchFrom.noResultsLabel(noResultsText, searchStringPointer)
+		noResultsView.background = context.buttonColor
+		
+		SearchFrom.contextualWithTextOnly(noResultsView, selectionPrompt, standardWidth, displayFunction,
+			searchIcon = Some(Icons.search.singleColorImage), contentPointer = contentPointer,
+			selectedValuePointer = valuePointer, searchFieldPointer = searchStringPointer,
 			sameInstanceCheck = sameInstanceCheck, contentIsStateless = contentIsStateless)
 	}
 	

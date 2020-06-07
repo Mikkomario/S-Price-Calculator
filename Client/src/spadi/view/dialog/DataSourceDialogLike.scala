@@ -2,57 +2,71 @@ package spadi.view.dialog
 
 import java.nio.file.Path
 
-import spadi.view.util.Setup._
 import spadi.model.{DataSource, KeyMappingFactory, Shop}
 import spadi.view.component.Fields
 import spadi.view.util.Icons
+import spadi.view.util.Setup._
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
-import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.generic.ValueConversions._
-import utopia.reflection.component.swing.{MultiLineTextView, TextField}
+import utopia.flow.util.FileExtensions._
+import utopia.reflection.component.Focusable
 import utopia.reflection.component.swing.label.TextLabel
+import utopia.reflection.component.swing.MultiLineTextView
+import utopia.reflection.container.stack.StackLayout.Leading
 import utopia.reflection.container.swing.Stack
+import utopia.reflection.container.swing.Stack.AwtStackable
 import utopia.reflection.container.swing.window.dialog.interaction.{DialogButtonBlueprint, InputRowBlueprint, RowGroups}
 import utopia.reflection.localization.LocalString
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.Alignment.BottomLeft
-import utopia.reflection.util.Screen
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.util.Screen
 
 import scala.util.{Failure, Success}
 
 /**
- * Used for creating new data sources. Returns either Right: a data source or Left: whether previous dialog
- * should be shown instead
+ * A common trait for dialogs used for creating new data sources.
+ * Returns either Right: a data source or Left: whether previous dialog should be shown instead
  * @author Mikko Hilpinen
  * @since 27.5.2020, v1.1
  */
-class DataSourceDialog[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A])
+abstract class DataSourceDialogLike[+A, HF <: AwtStackable with Focusable, KF <: AwtStackable with Focusable]
+(path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A])
 	extends InputDialog[Either[Boolean, DataSource[A]]]
 {
 	// ATTRIBUTES   ------------------------
 	
 	private implicit val languageCode: String = "fi"
 	
-	private val fieldWidth = standardFieldWidth.any.expanding
+	/**
+	 * Default input field width
+	 */
+	protected val fieldWidth = standardFieldWidth.any.expanding
 	
 	private val headerRowFieldName: LocalString = "Otsikkorivi"
 	private val firstDataRowFieldName: LocalString = "Ensimmäinen tuoterivi"
 	
-	private val (headerRowField, firstDataRowField) = inputContext.forGrayFields.use { implicit context =>
-		TextField.contextualForPositiveInts(fieldWidth, prompt = Some("Ensimmäinen rivi on 1")) ->
-			TextField.contextualForPositiveInts(fieldWidth, prompt = Some("Yleensä otsikkorivi +1"))
-	}
-	
-	private val (inputComponents, inputRows) = inputContext.forGrayFields.use { implicit context =>
+	private lazy val (inputComponents, inputRows) = inputContext.forGrayFields.use { implicit context =>
 		mappingFactory.fieldNames.splitMap { case (fieldName, isRequired) =>
-			val field = TextField.contextual(fieldWidth, prompt = if (isRequired) None else Some("Vapaaehtoinen"))
+			val field = keyField(isRequired)
 			(fieldName, field, isRequired) -> new InputRowBlueprint(fieldName, field)
 		}
 	}
+	
+	
+	// ABSTRACT ----------------------------
+	
+	protected val headerRowField: HF
+	
+	protected val firstDataRowField: HF
+	
+	protected def keyField(isRequired: Boolean): KF
+	
+	protected def valueOfField(field: Either[HF, KF]): Value
+	
+	protected def setFieldValue(field: Either[HF, KF], value: Value): Unit
 	
 	
 	// COMPUTED ----------------------------
@@ -60,18 +74,26 @@ class DataSourceDialog[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFac
 	/**
 	 * @return Current field input, each value tied to assiciated field name (based on mapping factory)
 	 */
-	def input = Model(fieldsWithNames.map { case (name, field) => name -> field.value })
+	def input = Model(allFieldsWithNames.map { case (name, field) => name -> valueOfField(field) })
+	
 	/**
 	 * Updates current input field content
 	 * @param newInput New input field values. Values are read from properties matching field names (determined by
 	 *                 the used mapping factory).
 	 */
-	def input_=(newInput: template.Model[Property]) = fieldsWithNames.foreach { case (name, field) =>
-		field.text = newInput(name).string }
+	def input_=(newInput: template.Model[Property]) =
+		allFieldsWithNames.foreach { case (name, field) => setFieldValue(field, newInput(name)) }
 	
-	private def fieldsWithNames = inputComponents.map { case (name, field, _) =>
-		name.string -> field } :+ (headerRowFieldName.string -> headerRowField) :+
-		(firstDataRowFieldName.string -> firstDataRowField)
+	private def keyFieldsWithNames = inputComponents.map { case (name, field, _) =>
+		name.string -> field }
+	
+	private def headerFieldsWithNames = Vector(
+		headerRowFieldName.string -> headerRowField,
+		firstDataRowFieldName.string -> firstDataRowField)
+	
+	private def allFieldsWithNames = keyFieldsWithNames.map {
+		case (name, field) => name -> Right(field) } ++
+		headerFieldsWithNames.map { case (name, field) => name -> Left(field) }
 	
 	
 	// IMPLEMENTED  ------------------------
@@ -80,14 +102,14 @@ class DataSourceDialog[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFac
 	{
 		// TODO: Possibly add a progress bar in the header
 		
-		val titleLabel = backgroundContext.forTextComponents().expandingToRight.mapFont { _ * 1.5 }.use { implicit titleC =>
+		val titleLabel = backgroundContext.forTextComponents().expandingToRight.mapFont { _ * 1.2 }.use { implicit titleC =>
 			TextLabel.contextual("${shop}-tiedoston (${fileName}) lukeminen".localized.interpolated(
 				Map("shop" -> shop.name, "fileName" -> path.fileName)))
 		}
 		Some(backgroundContext.forTextComponents().use { implicit context =>
 			Stack.buildColumnWithContext(isRelated = true) { s =>
 				s += titleLabel
-				s += Stack.buildRowWithContext() { row =>
+				s += Stack.buildRowWithContext(layout = Leading) { row =>
 					row += MultiLineTextView.contextual(
 						"Ohje: Kirjoita alle minkä nimisestä kolumnista kukin tieto haetaan", Screen.width / 3,
 						useLowPriorityForScalingSides = true, isHint = true)
@@ -100,10 +122,10 @@ class DataSourceDialog[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFac
 	}
 	
 	override protected def fields = Vector(
-		RowGroups.separateGroups(inputRows),
 		RowGroups.singleGroup(
 			new InputRowBlueprint(headerRowFieldName, headerRowField),
-			new InputRowBlueprint(firstDataRowFieldName, firstDataRowField))
+			new InputRowBlueprint(firstDataRowFieldName, firstDataRowField)),
+		RowGroups.separateGroups(inputRows)
 	)
 	
 	override protected def additionalButtons = Vector(new DialogButtonBlueprint[Either[Boolean, DataSource[A]]](
@@ -112,15 +134,15 @@ class DataSourceDialog[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFac
 	override protected def produceResult =
 	{
 		// Both header row index and first data row index are required
-		headerRowField.intValue.filter { _ > 0 } match
+		valueOfField(Left(headerRowField)).int.filter { _ > 0 } match
 		{
 			case Some(headerRow) =>
-				firstDataRowField.intValue.filter { _ > 0 } match
+				valueOfField(Left(firstDataRowField)).int.filter { _ > 0 } match
 				{
 					case Some(firstDataRow) =>
 						// Makes sure all required values are defined
 						val valuesAndFields = inputComponents.map { case (fieldName, field, isRequired) =>
-							(fieldName, field, isRequired, field.value) }
+							(fieldName, field, isRequired, valueOfField(Right(field))) }
 						valuesAndFields.findMap { case (_, field, isRequired, value) =>
 							if (isRequired && value.isEmpty) Some(field) else None } match
 						{
@@ -128,7 +150,7 @@ class DataSourceDialog[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFac
 							case None =>
 								// Parses the key mapping based on fields
 								mappingFactory(Model(valuesAndFields.map { case (fieldName, _, _, value) =>
-									fieldName.string -> (value: Value)
+									fieldName.string -> value
 								})) match
 								{
 									case Success(parsed) =>

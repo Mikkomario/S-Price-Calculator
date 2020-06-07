@@ -3,6 +3,7 @@ package spadi.view.dialog
 import spadi.view.util.Icons
 import spadi.view.util.Setup._
 import utopia.genesis.shape.shape2D.Direction2D
+import utopia.reflection.container.stack.segmented.SegmentedGroup
 import utopia.reflection.container.swing.window.dialog.interaction
 import utopia.reflection.container.swing.Stack
 import utopia.reflection.container.swing.Stack.AwtStackable
@@ -49,12 +50,12 @@ trait InputDialog[+A] extends interaction.InputDialog[A]
 	
 	override protected def executionContext = exc
 	
-	override protected def buildLayout(inputRows: Vector[RowGroups[AwtStackable]]) =
+	override protected def buildLayout(rowGroups: Vector[(RowGroups[AwtStackable], SegmentedGroup)]) =
 	{
 		// Places each group in a single stack (ignores stacks when there is only a single group / item in a group)
 		// Possible header is treated as an individual group
 		val groupComponents = header.toVector ++ inputContext.use { implicit context =>
-			inputRows.map { group =>
+			rowGroups.map { case (group, segment) =>
 				val relatedItemStacks = group.groups.map { relatedRows =>
 					if (relatedRows.isSingleRow)
 						relatedRows.rows.head
@@ -68,6 +69,11 @@ trait InputDialog[+A] extends interaction.InputDialog[A]
 					else
 						Stack.buildColumnWithContext() { s => relatedItemStacks.foreach { s += _ } }
 				}
+				
+				// TODO: Check whether lower level components should be revalidated instead
+				// Revalidates the components whenever segment updates
+				segment.addSegmentChangedListener { _ => groupComponent.revalidate() }
+				
 				groupComponent.framed(margins.small.any, context.containerBackground)
 			}
 		}
