@@ -11,8 +11,7 @@ import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.button.ImageAndTextButton
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.stack.segmented.SegmentedGroup
-import utopia.reflection.container.swing.SegmentedRow
+import utopia.reflection.container.swing.{SegmentGroup,Stack}
 import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor.Fixed
 import utopia.reflection.container.swing.window.dialog.interaction.YesNoDialog
 import utopia.reflection.localization.DisplayFunction
@@ -24,7 +23,7 @@ import utopia.reflection.shape.LengthExtensions._
  * @author Mikko Hilpinen
  * @since 26.5.2020, v1.1
  */
-class FileReadSettingInputRow(group: SegmentedGroup, base: Either[Path, FileReadSetting])
+class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSetting])
                              (onDeleteRequested: FileReadSettingInputRow => Unit)(implicit context: TextContext)
 	extends StackableAwtComponentWrapperWrapper
 {
@@ -64,8 +63,8 @@ class FileReadSettingInputRow(group: SegmentedGroup, base: Either[Path, FileRead
 	private val view =
 	{
 		val pathLabel = TextLabel.contextual(path.fileName.noLanguageLocalizationSkipped)
-		SegmentedRow.partOfGroupWithItems(group,
-			Vector(pathLabel, shopSelection, typeSelection, openButton, deleteButton), margins.medium.downscaling)
+		Stack.rowWithItems(group.wrap(Vector(pathLabel, shopSelection, typeSelection, openButton, deleteButton)),
+			margins.medium.downscaling)
 	}
 	
 	
@@ -111,9 +110,5 @@ class FileReadSettingInputRow(group: SegmentedGroup, base: Either[Path, FileRead
 	/**
 	 * This method should be called before this component is disposed
 	 */
-	def end() =
-	{
-		shopSelection.end()
-		group.remove(view)
-	}
+	def end() = shopSelection.end()
 }

@@ -15,10 +15,9 @@ import utopia.reflection.component.swing.{AwtComponentRelated, MultiLineTextView
 import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.container.stack.StackLayout.Center
-import utopia.reflection.container.stack.segmented.SegmentedGroup
 import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.container.swing.{AnimatedStack, SegmentedRow, Stack}
+import utopia.reflection.container.swing.{AnimatedStack, SegmentGroup, Stack}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.StackLength
@@ -56,13 +55,13 @@ class FileReadSettingsFrame(base: Either[Vector[Path], Vector[FileReadSetting]])
 	private val backgroundContext = baseContext.inContextWithBackground(primaryColors)
 	private val rowContext = backgroundContext.withLightGrayBackground.forTextComponents()
 	
-	private val segmentedGroup = SegmentedGroup.horizontal
+	private val segmentedGroup = new SegmentGroup()
 	private val headerRow = backgroundContext.inContextWithBackground(primaryColors.dark).forTextComponents()
 		.expandingToRight
 		.use { implicit c =>
-			val labels = Vector[LocalizedString]("Tiedosto", "Tukkuri", "Tyyppi", "Avaa", "Poista").map { TextLabel.contextual(_) }
-			val row = SegmentedRow.partOfGroupWithItems(segmentedGroup, labels, margins.medium.downscaling,
-				margins.medium.any)
+			val labels = Vector[LocalizedString]("Tiedosto", "Tukkuri", "Tyyppi", "Avaa", "Poista")
+				.map { TextLabel.contextual(_) }
+			val row = Stack.rowWithItems(segmentedGroup.wrap(labels), margins.medium.downscaling, margins.medium.any)
 			row.background = c.containerBackground
 			row
 		}
@@ -122,11 +121,6 @@ class FileReadSettingsFrame(base: Either[Vector[Path], Vector[FileReadSetting]])
 		rowStack.components.foreach { _.end() }
 		output
 	}
-	
-	
-	// INITIAL CODE ---------------------------------
-	
-	segmentedGroup.addSegmentChangedListener { _ => settingsViewStack.revalidate() }
 	
 	
 	// IMPLEMENTED  ---------------------------------

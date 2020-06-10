@@ -4,8 +4,7 @@ import spadi.view.util.Setup._
 import utopia.reflection.component.context.ColorContext
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.stack.segmented.SegmentedGroup
-import utopia.reflection.container.swing.SegmentedRow
+import utopia.reflection.container.swing.{SegmentGroup, Stack}
 import utopia.reflection.shape.LengthExtensions._
 
 object ProductRowsHeader
@@ -15,7 +14,7 @@ object ProductRowsHeader
 	 * @param context Implicit component creation context
 	 * @return A new product rows header
 	 */
-	def apply(group: SegmentedGroup)(implicit context: ColorContext) = new ProductRowsHeader(group)(context)
+	def apply(group: SegmentGroup)(implicit context: ColorContext) = new ProductRowsHeader(group)(context)
 }
 
 /**
@@ -23,7 +22,7 @@ object ProductRowsHeader
  * @author Mikko Hilpinen
  * @since 9.5.2020, v1
  */
-class ProductRowsHeader(segmentedGroup: SegmentedGroup)(parentContext: ColorContext) extends StackableAwtComponentWrapperWrapper
+class ProductRowsHeader(segmentedGroup: SegmentGroup)(parentContext: ColorContext) extends StackableAwtComponentWrapperWrapper
 {
 	// ATTRIBUTES   ---------------------------------
 	
@@ -32,7 +31,7 @@ class ProductRowsHeader(segmentedGroup: SegmentedGroup)(parentContext: ColorCont
 	private val view = parentContext.inContextWithBackground(colorScheme.primary.dark).forTextComponents()
 		.expandingHorizontally.use { implicit c =>
 		val labels = Vector("ID", "Tuote", "Tukkuhinta", "Kate", "Hinta").map { TextLabel.contextual(_) }
-		SegmentedRow.partOfGroupWithItems(segmentedGroup, labels, margins.medium.any).framed(
+		Stack.rowWithItems(segmentedGroup.wrap(labels), margins.medium.any).framed(
 			margins.medium.any x margins.small.any, c.containerBackground)
 	}
 	

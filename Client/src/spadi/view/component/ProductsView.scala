@@ -4,11 +4,9 @@ import spadi.model.Product
 import spadi.view.controller.ProductRowVC
 import spadi.view.util.Setup._
 import utopia.flow.event.Changing
-import utopia.genesis.shape.Axis.X
 import utopia.reflection.component.context.ColorContext
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
-import utopia.reflection.container.stack.segmented.SegmentedGroup
-import utopia.reflection.container.swing.{ScrollView, Stack}
+import utopia.reflection.container.swing.{ScrollView, SegmentGroup, Stack}
 import utopia.reflection.controller.data.ContainerContentDisplayer
 import utopia.reflection.shape.{StackLength, StackLengthLimit}
 import utopia.reflection.shape.LengthExtensions._
@@ -38,13 +36,12 @@ class ProductsView(productsPointer: Changing[Vector[Product]], maxOptimalLength:
 	private val stackContext: ColorContext = parentContext.withLightGrayBackground
 	
 	// TODO: When rows get removed, they should be removed from the group as well
-	private val segmentGroup = new SegmentedGroup(X)
+	private val segmentGroup = new SegmentGroup()
 	private val scrollView = stackContext.use { implicit c =>
 		val stack = Stack.column[ProductRowVC](margins.medium.any)
 		// Registers a content displayer for the stack
-		val displayer = ContainerContentDisplayer.forImmutableStates[Product, ProductRowVC](stack, productsPointer) {
+		ContainerContentDisplayer.forImmutableStates[Product, ProductRowVC](stack, productsPointer) {
 			(a, b) => a.id == b.id } { ProductRowVC(segmentGroup, _) }
-		displayer.addDisplayRemovalListener { _.detachFromSegmentedGroup() }
 		// The stack is placed within a scroll view
 		val scrollView = ScrollView.contextual(stack, lengthLimits = StackLengthLimit(maxOptimal = Some(maxOptimalLength)))
 		

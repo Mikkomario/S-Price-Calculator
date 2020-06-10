@@ -7,8 +7,7 @@ import utopia.reflection.component.Refreshable
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.stack.segmented.SegmentedGroup
-import utopia.reflection.container.swing.SegmentedRow
+import utopia.reflection.container.swing.{SegmentGroup, Stack}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.LengthExtensions._
 
@@ -20,7 +19,7 @@ object ProductRowVC
 	 * @param context Component creation context (implicit)
 	 * @return New product row
 	 */
-	def apply(group: SegmentedGroup, product: Product)(implicit context: ColorContext) =
+	def apply(group: SegmentGroup, product: Product)(implicit context: ColorContext) =
 		new ProductRowVC(group, product)(context)
 }
 
@@ -29,7 +28,7 @@ object ProductRowVC
  * @author Mikko Hilpinen
  * @since 9.5.2020, v1
  */
-class ProductRowVC(segmentGroup: SegmentedGroup, initialProduct: Product)(parentContext: ColorContext)
+class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product)(parentContext: ColorContext)
 	extends StackableAwtComponentWrapperWrapper with Refreshable[Product]
 {
 	// ATTRIBUTES   -------------------------------
@@ -44,8 +43,8 @@ class ProductRowVC(segmentGroup: SegmentedGroup, initialProduct: Product)(parent
 	private val profitLabel = TextLabel.contextual()
 	private val finalPriceLabel = TextLabel.contextual()
 	
-	private val row = SegmentedRow.partOfGroupWithItems(segmentGroup, Vector(idLabel, nameLabel, priceLabel,
-		profitLabel, finalPriceLabel), margins.medium.any)
+	private val row = Stack.rowWithItems(segmentGroup.wrap(Vector(idLabel, nameLabel, priceLabel,
+		profitLabel, finalPriceLabel)), margins.medium.any)
 	
 	
 	// INITIAL CODE -------------------------------
@@ -67,11 +66,6 @@ class ProductRowVC(segmentGroup: SegmentedGroup, initialProduct: Product)(parent
 	
 	
 	// OTHER    -----------------------------------
-	
-	/**
-	 * Removes this component from the segmented group it was registered to
-	 */
-	def detachFromSegmentedGroup() = segmentGroup.remove(row)
 	
 	private def percentString(percentage: Double) =
 	{
