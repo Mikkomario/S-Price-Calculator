@@ -79,7 +79,7 @@ class FileReadSettingsFrame(base: Either[Vector[Path], Vector[FileReadSetting]])
 		ImageAndTextButton.contextualWithoutAction(Icons.next.inButton, "Seuraava")
 	}
 	private val closeButton = backgroundContext.forTextComponents().forPrimaryColorButtons.use { implicit c =>
-		ImageAndTextButton.contextualWithoutAction(Icons.close.inButton, "Peruuta")
+		ImageAndTextButton.contextualWithoutAction(Icons.close.inButton, "Ohita")
 	}
 	private val settingsViewStack = Stack.columnWithItems(
 		Vector(headerRow, rowStack.framed(margins.medium.any, rowContext.containerBackground)),

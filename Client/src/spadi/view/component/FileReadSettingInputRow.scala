@@ -2,16 +2,18 @@ package spadi.view.component
 
 import java.nio.file.Path
 
+import spadi.controller.Log
 import spadi.view.util.Setup._
 import spadi.model.{FileReadSetting, PriceInputType}
 import spadi.view.controller.ShopSelectionVC
 import spadi.view.util.Icons
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.button.ImageAndTextButton
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.{SegmentGroup,Stack}
+import utopia.reflection.container.swing.{SegmentGroup, Stack}
 import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor.Fixed
 import utopia.reflection.container.swing.window.dialog.interaction.YesNoDialog
 import utopia.reflection.localization.DisplayFunction
@@ -51,7 +53,7 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 					.foreach { shouldDelete =>
 						if (shouldDelete)
 						{
-							path.delete()
+							path.delete().failure.foreach { Log(_, s"Failed to delete $path") }
 							onDeleteRequested(this)
 						}
 					}
