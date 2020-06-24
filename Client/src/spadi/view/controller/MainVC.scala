@@ -1,6 +1,5 @@
 package spadi.view.controller
 
-import spadi.controller.{Log, ReadProducts}
 import spadi.model.Product
 import spadi.view.component.{ProductsView, SearchField}
 import spadi.view.util.Setup._
@@ -10,8 +9,6 @@ import utopia.genesis.util.Screen
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.{AwtContainerRelated, Stack}
 import utopia.reflection.shape.LengthExtensions._
-
-import scala.util.{Failure, Success}
 
 /**
  * The main view controller in the client app

@@ -45,7 +45,7 @@ class ProductsView(productsPointer: Changing[Vector[Product]], maxOptimalLength:
 		// The stack is placed within a scroll view
 		val scrollView = ScrollView.contextual(stack, lengthLimits = StackLengthLimit(maxOptimal = Some(maxOptimalLength)))
 		
-		scrollView.framed(margins.medium.any x margins.verySmall.any, stackContext.containerBackground)
+		scrollView.framed(margins.small.any x margins.verySmall.any, stackContext.containerBackground)
 	}
 	private val view = parentContext.use { implicit c =>
 		val header = ProductRowsHeader(segmentGroup)

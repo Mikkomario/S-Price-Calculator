@@ -38,7 +38,7 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product)(parentCo
 	private implicit val context: TextContext = parentContext.forTextComponents()
 	
 	private val idLabel = TextLabel.contextual()
-	private val nameLabel = TextLabel.contextual()
+	private val nameLabel = TextLabel.contextual()(context.mapFont { _ * 0.8 })
 	private val priceLabel = TextLabel.contextual()
 	private val profitLabel = TextLabel.contextual()
 	private val finalPriceLabel = TextLabel.contextual()

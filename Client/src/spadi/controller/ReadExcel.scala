@@ -121,12 +121,7 @@ object ReadExcel
 						{
 							case CellType.BOOLEAN => cell.getBooleanCellValue.toString
 							case CellType.NUMERIC => cell.getNumericCellValue.toString
-							case CellType.STRING =>
-								val str = cell.getStringCellValue
-								if (str.startsWith("'"))
-									str.drop(1)
-								else
-									str
+							case CellType.STRING => cellStringValue(cell)
 							case _ => cell.getColumnIndex.toString
 						}
 						cell.getColumnIndex -> headerName
@@ -195,12 +190,7 @@ object ReadExcel
 							else
 								doubleNumber
 						}
-					case CellType.STRING =>
-						val str = cell.getStringCellValue
-						if (str.startsWith("'"))
-							str.drop(1)
-						else
-							str
+					case CellType.STRING => cellStringValue(cell)
 					case _ => Value.empty
 				}
 				cell.getColumnIndex -> value
@@ -215,5 +205,13 @@ object ReadExcel
 	{
 		val base = cellIterator.dropWhile { _.getColumnIndex < firstCellIndex }
 		maxCellsRead.map { max => base.takeWhile { _.getColumnIndex < firstCellIndex + max } }.getOrElse(base)
+	}
+	
+	// Only call for string type cells
+	private def cellStringValue(cell: Cell) =
+	{
+		val base = cell.getStringCellValue
+		val text = if (base.startsWith("'")) base.drop(1) else base
+		text.trim
 	}
 }

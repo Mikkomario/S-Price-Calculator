@@ -27,12 +27,13 @@ object Setup
 	implicit val ppi: Ppi = Screen.ppi
 	
 	val primaryColors = ColorSet.fromHexes("#455a64", "#718792", "#1c313a").get
-	val secondaryColors = ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
-	val colorScheme = ColorScheme(primaryColors, secondaryColors)
+	val secondaryColors = ColorSet.fromHexes("#ffc400", "#fff64f", "#c79400").get
+	val grayColors = ColorSet.fromHexes("#424242", "#6d6d6d", "#1b1b1b").get
+	val colorScheme = ColorScheme(primaryColors, secondaryColors, grayColors)
 	
 	val resourceDirectory: Path = "resources"
 	
-	val margins = Margins(0.33.cm.toPixels)
+	val margins = Margins(3.mm.toPixels)
 	val standardFieldWidth = 320
 	
 	val actorHandler = ActorHandler()
@@ -42,7 +43,7 @@ object Setup
 			.getOrElse(Font("Arial", standardFontSize)), colorScheme, margins)
 	
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
-	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler,
+	implicit val scrollingContext: ScrollingContext = ScrollingContext.withLightRoundedBar(actorHandler,
 		margins.medium.toInt, margins.medium * 6)
 	
 	implicit val localizer: Localizer = NoLocalization
