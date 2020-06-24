@@ -2,9 +2,14 @@ package spadi.view.util
 
 import java.nio.file.Path
 
-import spadi.controller.Globals
+import spadi.controller.{Globals, ScreenSizeOverrideSetup}
+import utopia.bunnymunch.jawn.JsonBunny
+import utopia.flow.parse.JsonParser
 import utopia.flow.util.FileExtensions._
+import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
+import utopia.genesis.util.{Ppi, Screen}
+import utopia.genesis.util.DistanceExtensions._
 import utopia.reflection.color.{ColorScheme, ColorSet}
 import utopia.reflection.component.context.{AnimationContext, BaseContext, ScrollingContext}
 import utopia.reflection.localization.{Localizer, NoLocalization}
@@ -20,27 +25,39 @@ import scala.concurrent.ExecutionContext
  */
 object Setup
 {
-	// ATTRIBUTES   ----------------------------
+	// INITIAL CODE ----------------------------
 	
-	val primaryColors = ColorSet.fromHexes("#455a64", "#718792", "#1c313a").get
-	val secondaryColors = ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
-	val colorScheme = ColorScheme(primaryColors, secondaryColors)
+	GenesisDataType.setup()
+	
+	implicit val localizer: Localizer = NoLocalization
+	implicit val jsonParser: JsonParser = JsonBunny
 	
 	val resourceDirectory: Path = "resources"
 	
-	val margins = Margins(12)
-	val standardFieldWidth = 320
+	ScreenSizeOverrideSetup.load()
+	
+	
+	// ATTRIBUTES   ----------------------------
+	
+	implicit val ppi: Ppi = Screen.ppi
+	
+	val primaryColors = ColorSet.fromHexes("#455a64", "#718792", "#1c313a").get
+	val secondaryColors = ColorSet.fromHexes("#ffc400", "#fff64f", "#c79400").get
+	val grayColors = ColorSet.fromHexes("#424242", "#6d6d6d", "#1b1b1b").get
+	val colorScheme = ColorScheme(primaryColors, secondaryColors, grayColors)
+	
+	val margins = Margins(3.mm.toPixels)
+	val standardFieldWidth = 5.cm.toPixels
 	
 	val actorHandler = ActorHandler()
+	val standardFontSize = 0.5.cm.toPixels.toInt
 	val baseContext = BaseContext(actorHandler,
-		Font.load(resourceDirectory/"fonts/RobotoCondensed-Regular.ttf", 16).getOrElse(Font("Arial", 16)) * 2,
-		colorScheme, margins)
+		Font.load(resourceDirectory/"fonts/RobotoCondensed-Regular.ttf", standardFontSize)
+			.getOrElse(Font("Arial", standardFontSize)), colorScheme, margins)
 	
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
-	implicit val scrollingContext: ScrollingContext = ScrollingContext.withDarkRoundedBar(actorHandler,
+	implicit val scrollingContext: ScrollingContext = ScrollingContext.withLightRoundedBar(actorHandler,
 		margins.medium.toInt, margins.medium * 6)
-	
-	implicit val localizer: Localizer = NoLocalization
 	
 	
 	// COMPUTED --------------------------------

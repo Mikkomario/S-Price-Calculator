@@ -4,6 +4,7 @@ import spadi.controller.Globals._
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.async.Volatile
 import utopia.flow.datastructure.immutable.Value
+import utopia.flow.event.Changing
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 
@@ -53,11 +54,16 @@ abstract class LocalContainer[A](fileName: String)
 	 * @return The currently stored data
 	 */
 	def current = _current.get
-	def current_=(newPrices: A) =
+	def current_=(newData: A) =
 	{
-		_current.set(newPrices)
+		_current.set(newData)
 		saveStatus()
 	}
+	
+	/**
+	 * @return A pointer to the currently stored data
+	 */
+	def contentPointer: Changing[A] = _current
 	
 	
 	// OTHER	-------------------------------

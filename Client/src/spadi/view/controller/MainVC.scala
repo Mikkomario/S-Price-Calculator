@@ -1,24 +1,21 @@
 package spadi.view.controller
 
-import spadi.controller.{Log, ReadProducts}
 import spadi.model.Product
 import spadi.view.component.{ProductsView, SearchField}
 import spadi.view.util.Setup._
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.StringExtensions._
+import utopia.genesis.util.Screen
 import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.{AwtContainerRelated, Stack}
-import utopia.reflection.util.Screen
 import utopia.reflection.shape.LengthExtensions._
-
-import scala.util.{Failure, Success}
 
 /**
  * The main view controller in the client app
  * @author Mikko Hilpinen
  * @since 9.5.2020, v1
  */
-class MainVC extends StackableAwtComponentWrapperWrapper with AwtContainerRelated
+class MainVC(allProducts: Vector[Product]) extends StackableAwtComponentWrapperWrapper with AwtContainerRelated
 {
 	// ATTRIBUTES   -----------------------
 	
@@ -26,11 +23,12 @@ class MainVC extends StackableAwtComponentWrapperWrapper with AwtContainerRelate
 	
 	//private val producerProductOrdering = Ordering.by[Product, Option[String]] { _.producer }
 	//private val productNameOrdering = Ordering.by[Product, String] { _.displayName }
-	private implicit val productIdOrdering: Ordering[Product] = Ordering.by[Product, String] { _.id }
+	// private implicit val productIdOrdering: Ordering[Product] = Ordering.by[Product, String] { _.id }
 	//private implicit val productOrdering: Ordering[Product] = new CombinedOrdering[Product](
 	//	Vector(producerProductOrdering, productNameOrdering, productIdOrdering))
 	
 	// Reads and orders product data
+	/*
 	private val allProducts = ReadProducts() match
 	{
 		case Success(data) =>
@@ -39,7 +37,7 @@ class MainVC extends StackableAwtComponentWrapperWrapper with AwtContainerRelate
 		case Failure(error) =>
 			Log(error, "Failed to read product data")
 			Vector()
-	}
+	}*/
 	private val productsPointer = new PointerWithEvents[Vector[Product]](allProducts)
 	
 	// Won't display more than 100 items at once

@@ -1,14 +1,14 @@
 package spadi.model
 
 import utopia.flow.datastructure.immutable.{ModelDeclaration, PropertyDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, StringType}
+import utopia.flow.generic.{FromModelFactoryWithSchema, ModelConvertible, StringType}
 
 /**
  * A common trait for key mapping implementations, which are used for excel reading
  * @author Mikko Hilpinen
  * @since 9.5.2020, v1
  */
-trait KeyMapping[+A] extends FromModelFactoryWithSchema[A]
+trait KeyMapping[+A] extends FromModelFactoryWithSchema[A] with ModelConvertible
 {
 	// ABSTRACT -------------------------------
 	
