@@ -2,8 +2,11 @@ package spadi.view.util
 
 import java.nio.file.Path
 
-import spadi.controller.Globals
+import spadi.controller.{Globals, ScreenSizeOverrideSetup}
+import utopia.bunnymunch.jawn.JsonBunny
+import utopia.flow.parse.JsonParser
 import utopia.flow.util.FileExtensions._
+import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.{Ppi, Screen}
 import utopia.genesis.util.DistanceExtensions._
@@ -22,6 +25,18 @@ import scala.concurrent.ExecutionContext
  */
 object Setup
 {
+	// INITIAL CODE ----------------------------
+	
+	GenesisDataType.setup()
+	
+	implicit val localizer: Localizer = NoLocalization
+	implicit val jsonParser: JsonParser = JsonBunny
+	
+	val resourceDirectory: Path = "resources"
+	
+	ScreenSizeOverrideSetup.load()
+	
+	
 	// ATTRIBUTES   ----------------------------
 	
 	implicit val ppi: Ppi = Screen.ppi
@@ -31,10 +46,8 @@ object Setup
 	val grayColors = ColorSet.fromHexes("#424242", "#6d6d6d", "#1b1b1b").get
 	val colorScheme = ColorScheme(primaryColors, secondaryColors, grayColors)
 	
-	val resourceDirectory: Path = "resources"
-	
 	val margins = Margins(3.mm.toPixels)
-	val standardFieldWidth = 320
+	val standardFieldWidth = 5.cm.toPixels
 	
 	val actorHandler = ActorHandler()
 	val standardFontSize = 0.5.cm.toPixels.toInt
@@ -45,8 +58,6 @@ object Setup
 	implicit val animationContext: AnimationContext = AnimationContext(actorHandler)
 	implicit val scrollingContext: ScrollingContext = ScrollingContext.withLightRoundedBar(actorHandler,
 		margins.medium.toInt, margins.medium * 6)
-	
-	implicit val localizer: Localizer = NoLocalization
 	
 	
 	// COMPUTED --------------------------------

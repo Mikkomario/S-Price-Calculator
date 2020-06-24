@@ -21,7 +21,7 @@ trait InputDialog[+A] extends interaction.InputDialog[A]
 	
 	private implicit val languageCode: String = "fi"
 	
-	protected val backgroundContext = baseContext.inContextWithBackground(primaryColors.light)
+	protected val backgroundContext = baseContext.inContextWithBackground(primaryColors.dark)
 	protected val inputContext = baseContext.inContextWithBackground(primaryColors).forTextComponents()
 	
 	

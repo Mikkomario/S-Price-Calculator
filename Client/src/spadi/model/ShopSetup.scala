@@ -71,4 +71,32 @@ case class ShopSetup(shop: Shop, dataSource: Either[(DataSource[ProductBasePrice
 		val allProperties: Vector[(String, Value)] = ("shop" -> (shop.toModel: Value)) +: dataSourceProperties
 		Model(allProperties)
 	}
+	
+	
+	// OTHER    --------------------------
+	
+	/**
+	 * Maps the data source of this setup if this setup uses a single data source
+	 * @param f Mapping function
+	 * @return Mapped setup
+	 */
+	def mapDataSourceIfCombo(f: DataSource[ProductPrice] => DataSource[ProductPrice]) = dataSource match {
+		case Right(combo) => copy(dataSource = Right(f(combo)))
+		case Left(_) => this
+	}
+	
+	/**
+	 * Maps the data sources of this seutp if this setup uses two data sources
+	 * @param f Mapping function
+	 * @return Mapped setup
+	 */
+	def mapDataSourceIfSplit(
+		f: (DataSource[ProductBasePrice], DataSource[SalesGroup]) => (DataSource[ProductBasePrice], DataSource[SalesGroup])) =
+	{
+		dataSource match
+		{
+			case Right(_) => this
+			case Left((price, sale)) => copy(dataSource = Left(f(price, sale)))
+		}
+	}
 }

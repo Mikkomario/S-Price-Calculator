@@ -4,7 +4,7 @@ import java.nio.file.Path
 
 import spadi.controller.{Log, ReadExcel, SheetTarget, ShopData}
 import spadi.model.{BasePriceKeyMappingFromFieldsFactory, DataSource, FileReadSetting, KeyMappingFactory, ProductPriceKeyMappingFromFieldsFactory, SalesGroupKeyMappingFromFieldsFactory, ShopSetup}
-import spadi.model.PriceInputType.{BasePrice, SalePrice}
+import spadi.model.PriceInputType.{BasePrice, SaleGroup, SalePrice}
 import spadi.view.util.Setup._
 import spadi.view.dialog.{DataSourceDialogLike, DataSourceDialogWithSelections, DataSourceDialogWithTextFields, FileReadSettingsFrame}
 import utopia.flow.async.AsyncExtensions._
@@ -105,17 +105,47 @@ object NewFileConfigurationUI
 									.map { saleDS => ShopSetup(shop, Left(baseDS -> saleDS)) }
 							}
 					}
-					val allComboSetups = mergeSetups(existingSetupsByType.getOrElse(true, Vector()), newComboSetups)
-					val allSplitSetups = mergeSetups(existingSetupsByType.getOrElse(false, Vector()), newSplitSetups)
+					// Merges some data directly into already existing setups
+					val mergedComboSetups = merged.get(true).map { _._2 }.getOrElse(Vector()).groupMap { _._2 } { _._1 }
+						.map { case (original, settings) =>
+							original.mapDataSourceIfCombo { _.copy(filePath = settings.head.path) }
+						}
+					val mergedSplitSetups = merged.get(false).map { _._2 }.getOrElse(Vector()).groupMap { _._2 } { _._1 }
+						.map { case (original, settings) =>
+							original.mapDataSourceIfSplit { (oldBase, oldSale) =>
+								val newBase = settings.find { _.inputType == BasePrice } match
+								{
+									case Some(setting) => oldBase.copy(filePath = setting.path)
+									case None => oldBase
+								}
+								val newSale = settings.find { _.inputType == SaleGroup } match
+								{
+									case Some(setting) => oldSale.copy(filePath = setting.path)
+									case None => oldSale
+								}
+								newBase -> newSale
+							}
+						}
+					
+					// FIXME: Handle merged setups as well
+					val allComboSetups = mergeSetups(existingSetupsByType.getOrElse(true, Vector()), mergedComboSetups,
+						newComboSetups)
+					val allSplitSetups = mergeSetups(existingSetupsByType.getOrElse(false, Vector()), mergedSplitSetups,
+						newSplitSetups)
+					println(s"Updating shop setups to ${allComboSetups.size} combo setups and ${allSplitSetups.size} split setups")
+					allComboSetups.foreach { s => println(s"\t- ${s._2.dataSource.toOption.map { _.filePath }}") }
+					// FIXME: Sets wrong setups
 					ShopData.shopSetups = allComboSetups.values.toVector ++ allSplitSetups.values
 				}
 			}
 		}
 	}
 	
-	private def mergeSetups(existing: IterableOnce[ShopSetup], newSetups: IterableOnce[ShopSetup]) =
+	private def mergeSetups(existing: IterableOnce[ShopSetup], merged: Iterable[ShopSetup],
+	                        newSetups: IterableOnce[ShopSetup]) =
 		existing.iterator.map { setup => setup.shop.id -> setup }.toMap ++
-		newSetups.iterator.map { setup => setup.shop.id -> setup }.toMap
+			merged.iterator.map { setup => setup.shop.id -> setup }.toMap ++
+			newSetups.iterator.map { setup => setup.shop.id -> setup }.toMap
 	
 	
 	// NESTED   ---------------------------

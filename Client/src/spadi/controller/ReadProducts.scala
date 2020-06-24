@@ -45,15 +45,20 @@ object ReadProducts
 	{
 		// Checks the input files, whether there were any new, removed or modified cases
 		targetFiles.map { allFiles =>
-				// Checks for new (unmapped) files first
-				val setups = ShopData.shopSetups
-				val mappedPaths = setups.flatMap { _.paths }.toSet
-				val unmappedPaths = allFiles.filterNot(mappedPaths.contains)
-				if (unmappedPaths.nonEmpty)
-					Left(unmappedPaths)
-				else
-					Right(readFiles(allFiles, setups))
-			}
+			println(s"${allFiles.size} input files available")
+			allFiles.foreach { f => println(s"\t- $f") }
+			// Checks for new (unmapped) files first
+			val setups = ShopData.shopSetups
+			val mappedPaths = setups.flatMap { _.paths }.toSet
+			println(s"Mapped paths (${mappedPaths.size}):")
+			mappedPaths.foreach { f => println(s"\t- $f")  }
+			val unmappedPaths = allFiles.filterNot(mappedPaths.contains)
+			println(s"${unmappedPaths.size} unmapped files")
+			if (unmappedPaths.nonEmpty)
+				Left(unmappedPaths)
+			else
+				Right(readFiles(allFiles, setups))
+		}
 	}
 	
 	/**
@@ -72,10 +77,13 @@ object ReadProducts
 	{
 		// Next checks whether any of the files were modified, deleted or added since last read
 		if (FileReads.current.exists { case (path, lastReadTime) => files.find { _ == path }.forall {
-			_.lastModified.toOption.forall { _ > lastReadTime } } } ||
-			files.exists { !FileReads.contains(_) })
+			_.lastModified.toOption.forall { _ > lastReadTime } } } || files.exists { !FileReads.contains(_) })
 		{
+			println("Some files were modified, deleted or added")
+			
 			val setupsToUse = setups.filter { _.paths.forall { _.exists } }
+			
+			println(s"Reading data from ${setupsToUse.size} setups")
 			
 			// In which case re-reads all data
 			val result = setupsToUse.map { setup =>

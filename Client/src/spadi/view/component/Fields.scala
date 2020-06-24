@@ -108,4 +108,17 @@ object Fields
 			}
 		}
 	}
+	
+	/**
+	 * Creates a new message dialog
+	 * @param title Dialog title
+	 * @param text Text to display
+	 * @return New dialog
+	 */
+	def messageDialog(title: LocalizedString, text: LocalizedString) =
+	{
+		val context = baseContext.inContextWithBackground(primaryColors.dark).forTextComponents()
+		new MessageDialog(context.mapFont { _ * 0.8 }, context.forSecondaryColorButtons, title, text, "OK",
+			Some(Icons.close), Some(Icons.info))
+	}
 }

@@ -14,7 +14,7 @@ object Icons
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val cache = new SingleColorIconCache(Setup.resourceDirectory/"icons", Some(Size.square(1.5.cm.toScreenPixels)))
+	private val cache = new SingleColorIconCache(Setup.resourceDirectory/"icons", Some(Size.square(1.cm.toScreenPixels)))
 	
 	
 	// COMPUTED ---------------------------
@@ -73,4 +73,9 @@ object Icons
 	 * @return A warning icon
 	 */
 	def warning = cache("warning.png")
+	
+	/**
+	 * @return An info icon
+	 */
+	def info = cache("info.png")
 }

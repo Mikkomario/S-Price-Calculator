@@ -1,10 +1,11 @@
 package spadi.view.main
 
-import spadi.controller.{ReadProducts, ShopData}
+import spadi.controller.{ReadProducts, ScreenSizeOverrideSetup, ShopData}
 import spadi.model.{ProductBasePrice, ProductPrice, SalesGroup, Shop}
 import spadi.view.controller.{MainVC, NewFileConfigurationUI}
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.generic.GenesisDataType
+import utopia.genesis.util.Screen
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.Alignment
@@ -19,6 +20,8 @@ import scala.util.{Failure, Success, Try}
  */
 object SPriceApp extends App
 {
+	System.setProperty("prism.allowhidpi", "false")
+	
 	GenesisDataType.setup()
 	
 	import spadi.view.util.Setup._
@@ -28,14 +31,23 @@ object SPriceApp extends App
 	private val setup = new MultiFrameSetup(actorHandler)
 	setup.start()
 	
+	// Makes sure the screen size is read correctly
+	ScreenSizeOverrideSetup.prepareBlocking()
+	
+	println(s"Using screen size: ${Screen.size}")
+	
 	// Reads / updates product data
+	println("Reading product data")
 	val products = ReadProducts() match
 	{
 		case Success(result) =>
 			result match
 			{
-				case Right(readData) => handleReadResult(readData)
+				case Right(readData) =>
+					println("Product data read")
+					handleReadResult(readData)
 				case Left(filesWithoutMappings) =>
+					println(s"${filesWithoutMappings.size} files need mappings")
 					// Configures settings and then reads data again
 					NewFileConfigurationUI.configureBlocking(Left(filesWithoutMappings))
 					ReadProducts.ignoringUnmappedFiles() match
