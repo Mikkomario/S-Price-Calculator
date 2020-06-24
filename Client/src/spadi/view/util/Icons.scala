@@ -1,6 +1,8 @@
 package spadi.view.util
 
 import utopia.flow.util.FileExtensions._
+import utopia.genesis.shape.shape2D.Size
+import utopia.genesis.util.DistanceExtensions._
 import utopia.reflection.image.SingleColorIconCache
 
 /**
@@ -12,7 +14,7 @@ object Icons
 {
 	// ATTRIBUTES   -----------------------
 	
-	private val cache = new SingleColorIconCache(Setup.resourceDirectory/"icons")
+	private val cache = new SingleColorIconCache(Setup.resourceDirectory/"icons", Some(Size.square(1.5.cm.toScreenPixels)))
 	
 	
 	// COMPUTED ---------------------------

@@ -10,6 +10,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.WaitUtils
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.shape.shape2D.{Direction2D, Point, Size}
+import utopia.genesis.util.Screen
 import utopia.reflection.component.{Area, ComponentLike, Focusable}
 import utopia.reflection.component.swing.{AwtComponentRelated, MultiLineTextView}
 import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton}
@@ -21,7 +22,6 @@ import utopia.reflection.container.swing.{AnimatedStack, SegmentGroup, Stack}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.StackLength
-import utopia.reflection.util.Screen
 
 object FileReadSettingsFrame
 {

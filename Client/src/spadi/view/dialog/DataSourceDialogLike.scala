@@ -11,6 +11,7 @@ import utopia.flow.datastructure.template
 import utopia.flow.datastructure.template.Property
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
+import utopia.genesis.util.Screen
 import utopia.reflection.component.Focusable
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.MultiLineTextView
@@ -22,7 +23,6 @@ import utopia.reflection.localization.LocalString
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.Alignment.BottomLeft
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.util.Screen
 
 import scala.util.{Failure, Success}
 
