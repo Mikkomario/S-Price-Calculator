@@ -14,7 +14,8 @@ object ProductBasePrice extends FromModelFactory[ProductBasePrice]
 	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		priceSchema.validate(valid("price").getModel).toTry.map { priceModel =>
 			ProductBasePrice(valid("id").getString, valid("group_id").getString,
-				valid("names").getVector.flatMap { _.string }, priceModel("amount").getDouble, priceModel("unit").getString)
+				valid("names").getVector.flatMap { _.string }, priceModel("amount").getDouble,
+				valid("item_count").intOr(1), priceModel("unit").getString)
 		}
 	}
 }
@@ -26,10 +27,12 @@ object ProductBasePrice extends FromModelFactory[ProductBasePrice]
  * @param productId Product identifier id
  * @param salesGroupId Id of the sales group this product belongs to
  * @param names Names for this product
- * @param price Price of this product
+ * @param totalPrice Price of this product package
+ * @param unitsSold Number of items sold as a package
  * @param priceUnit Unit describing the price of this product
  */
-case class ProductBasePrice(productId: String, salesGroupId: String, names: Vector[String], price: Double, priceUnit: String)
+case class ProductBasePrice(productId: String, salesGroupId: String, names: Vector[String], totalPrice: Double,
+                            unitsSold: Int, priceUnit: String)
 	extends ModelConvertible with KeywordSearchable with ProductPriceLike
 {
 	// IMPLEMENTED  ----------------------------------
@@ -40,7 +43,8 @@ case class ProductBasePrice(productId: String, salesGroupId: String, names: Vect
 	
 	override def toModel =
 	{
-		val priceModel = Model(Vector("amount" -> price, "unit" -> priceUnit))
-		Model(Vector("id" -> productId, "group_id" -> salesGroupId, "names" -> names, "price" -> priceModel))
+		val priceModel = Model(Vector("amount" -> totalPrice, "unit" -> priceUnit))
+		Model(Vector("id" -> productId, "group_id" -> salesGroupId, "names" -> names, "price" -> priceModel,
+			"item_count" -> unitsSold))
 	}
 }

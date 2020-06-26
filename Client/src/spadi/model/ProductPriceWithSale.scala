@@ -14,15 +14,17 @@ case class ProductPriceWithSale(basePrice: ProductBasePrice, sale: Option[SalesG
 	
 	override def productId = basePrice.productId
 	
-	def price =
+	override def totalPrice =
 	{
-		val base = basePrice.price
+		val base = basePrice.totalPrice
 		sale match
 		{
 			case Some(sale) => base * sale.priceModifier
 			case None => base
 		}
 	}
+	
+	override def unitsSold = basePrice.unitsSold
 	
 	override def priceUnit = basePrice.priceUnit
 	

@@ -78,7 +78,7 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product)(parentCo
 		idLabel.text = content.id.noLanguageLocalizationSkipped
 		nameLabel.text = content.displayName.noLanguageLocalizationSkipped
 		priceLabel.text = content.standardPriceString.noLanguageLocalizationSkipped
-		val profitsPercentage = ProfitsPercentage.forPrice(content.price)
+		val profitsPercentage = ProfitsPercentage.forPrice(content.totalPrice)
 		profitLabel.text = percentString(profitsPercentage).noLanguageLocalizationSkipped
 		finalPriceLabel.text = content.priceString(1 + profitsPercentage / 100.0).noLanguageLocalizationSkipped
 	}

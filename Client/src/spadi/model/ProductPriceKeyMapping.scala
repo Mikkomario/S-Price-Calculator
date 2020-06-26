@@ -31,8 +31,8 @@ case class ProductPriceKeyMapping(idKey: String, nameKeys: Vector[String], price
 	{
 		val perUnit = model(perUnitKey).stringOr("kpl")
 		val perAmount = model(perAmountKey).intOr(1)
-		val unit = s"€/${if (perAmount == 1) "" else perAmount}$perUnit"
-		ProductPrice(model(idKey), nameKeys.flatMap { nameKey => model(nameKey).string }, model(priceKey), unit)
+		ProductPrice(model(idKey), nameKeys.flatMap { nameKey => model(nameKey).string }, model(priceKey),
+			perAmount, perUnit)
 	}
 	
 	override def toModel = Model(Vector("id_key" -> idKey, "name_keys" -> nameKeys,

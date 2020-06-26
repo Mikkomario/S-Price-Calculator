@@ -13,7 +13,7 @@ case class Product(id: String, prices: Map[Shop, ProductPriceLike with Searchabl
 {
 	// ATTRIBUTES   --------------------------
 	
-	private val (cheapestShop, cheapestProduct) = prices.minBy { _._2.price }
+	private val (cheapestShop, cheapestProduct) = prices.minBy { _._2.pricePerUnit }
 	
 	
 	// IMPLEMENTED ---------------------------
@@ -24,7 +24,9 @@ case class Product(id: String, prices: Map[Shop, ProductPriceLike with Searchabl
 	
 	def displayName = s"${cheapestProduct.displayName} (${cheapestShop.name})"
 	
-	def price = cheapestProduct.price
+	override def totalPrice = cheapestProduct.totalPrice
+	
+	override def unitsSold = cheapestProduct.unitsSold
 	
 	def matches(search: Set[String]) = prices.valuesIterator.map { _.matches(search) }.max
 }

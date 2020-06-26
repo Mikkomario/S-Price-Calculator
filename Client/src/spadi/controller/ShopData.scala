@@ -43,7 +43,7 @@ object ShopData
 			.groupBy { _._2.productId }
 			.map { case (productId, prices) =>
 				val pricesByShop = prices.groupMap { _._1 } { _._2 }
-				val cheapestPriceByShop = pricesByShop.view.mapValues { _.minBy { _.price } }.toMap
+				val cheapestPriceByShop = pricesByShop.view.mapValues { _.minBy { _.pricePerUnit } }.toMap
 				Product(productId, cheapestPriceByShop)
 			}.toVector
 	}

@@ -154,6 +154,7 @@ object NewFileConfigurationUI
 	{
 		// ATTRIBUTES   -------------------
 		
+		// TODO: Log possible errors
 		private lazy val sampleRows = ReadExcel.withoutHeadersFrom(setting.path, testReadTarget).toOption
 			.filter { _.exists { _.nonEmpty } }
 		

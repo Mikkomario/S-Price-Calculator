@@ -1,7 +1,7 @@
 package spadi.model
 
 import utopia.flow.datastructure.immutable.{Constant, Model, ModelDeclaration}
-import utopia.flow.generic.{FromModelFactoryWithSchema, ModelConvertible, StringType}
+import utopia.flow.generic.{FromModelFactoryWithSchema, StringType}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
 
@@ -41,8 +41,7 @@ case class ProductBasePriceKeyMapping(idKey: String, groupIdKey: String, nameKey
 	{
 		val perUnit = model(perUnitKey).stringOr("kpl")
 		val perAmount = model(perAmountKey).intOr(1)
-		val unit = s"€/${if (perAmount == 1) "" else perAmount}$perUnit"
 		ProductBasePrice(model(idKey), model(groupIdKey), nameKeys.flatMap { nameKey => model(nameKey).string },
-			model(priceKey), unit)
+			model(priceKey), perAmount, perUnit)
 	}
 }

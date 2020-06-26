@@ -19,7 +19,7 @@ object SalesGroupKeyMappingFromFieldsFactory extends KeyMappingFactory[SalesGrou
 	// IMPLEMENTED  -----------------------------
 	
 	override val fieldNames = Vector("ID".local -> true, "Nimi".local -> true, "Alennusprosentti".local -> true,
-		"Valmistaja".local -> true)
+		"Valmistaja".local -> false)
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = SalesGroupKeyMapping(model("ID"), model("Nimi"),
 		model("Alennusprosentti"), model("Valmistaja"))
