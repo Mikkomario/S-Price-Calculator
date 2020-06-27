@@ -35,7 +35,7 @@ case class ProductBasePriceKeyMapping(idKey: String, groupIdKey: String, nameKey
 	override def toModel = Model(Vector("id_key" -> idKey, "group_id_key" -> groupIdKey,
 		"name_keys" -> nameKeys, "price_key" -> priceKey, "per_amount_key" -> perAmountKey, "per_unit_key" -> perUnitKey))
 	
-	override def requiredKeys = Set(idKey, groupIdKey, priceKey)
+	override def requiredKeys = Set(idKey, priceKey)
 	
 	override protected def fromValidatedModel(model: Model[Constant]) =
 	{

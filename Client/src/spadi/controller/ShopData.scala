@@ -172,7 +172,8 @@ object ShopData
 		def prices =
 		{
 			val sales = salesGroups.map { g => g.salesGroupId -> g }.toMap
-			val basesWithSales = basePrices.map { base => ProductPriceWithSale(base, sales.get(base.salesGroupId)) }
+			val basesWithSales = basePrices.map { base =>
+				ProductPriceWithSale(base, base.salesGroupId.flatMap(sales.get)) }
 			basesWithSales ++ fullPrices
 		}
 		
