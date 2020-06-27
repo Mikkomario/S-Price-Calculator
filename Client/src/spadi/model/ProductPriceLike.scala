@@ -15,9 +15,14 @@ trait ProductPriceLike
 	def productId: String
 	
 	/**
-	 * @return Product's price
+	 * @return Selling price for all units sold at once
 	 */
-	def price: Double
+	def totalPrice: Double
+	
+	/**
+	 * @return Number of units sold at once (in specified unit)
+	 */
+	def unitsSold: Int
 	
 	/**
 	 * @return Unit describing the product's price
@@ -31,6 +36,11 @@ trait ProductPriceLike
 	
 	
 	// COMPUTED --------------------------
+	
+	/**
+	 * @return Price of a single unit of this item
+	 */
+	def pricePerUnit = totalPrice / unitsSold
 	
 	/**
 	 * @return A string representation of this product's price (unit included)
@@ -47,8 +57,9 @@ trait ProductPriceLike
 	 */
 	def priceString(priceModifier: Double) =
 	{
-		val roundedPrice = math.round(price * priceModifier * 10) / 10.0
+		val roundedPrice = math.round(totalPrice * priceModifier * 10) / 10.0
 		val displayPrice = if (roundedPrice > 10) roundedPrice.toInt.toString else roundedPrice.toString
-		s"$displayPrice $priceUnit"
+		val unit = if (unitsSold == 1) priceUnit else s"$unitsSold$priceUnit"
+		s"$displayPrice €/$unit"
 	}
 }

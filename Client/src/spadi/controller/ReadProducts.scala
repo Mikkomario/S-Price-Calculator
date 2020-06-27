@@ -110,7 +110,12 @@ object ReadProducts
 	{
 		val target = SheetTarget.sheetAtIndex(0, source.firstDataRowIndex -> 0,
 			cellHeadersRowIndex = source.headerRowIndex)
-		ReadExcel.from(source.filePath, target).flatMap { models => models.tryMap(source.mapping.apply) }
+		ReadExcel.from(source.filePath, target).flatMap { models =>
+			println(s"Parsing ${models.size} items from ${source.filePath.fileName}")
+			println(s"First item: ${models.headOption.map { _.toJson }.getOrElse("No content")}")
+			println(s"Expecting keys: [${source.mapping.requiredKeys.mkString(", ")}]")
+			models.tryMap(source.mapping.apply)
+		}
 	}
 	
 	
