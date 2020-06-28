@@ -10,12 +10,13 @@ import spadi.view.util.Icons
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.context.TextContext
-import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.button.ImageAndTextButton
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.{SegmentGroup, Stack}
-import utopia.reflection.container.swing.window.dialog.interaction.ButtonColor.Fixed
-import utopia.reflection.container.swing.window.dialog.interaction.YesNoDialog
+import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.container.swing.layout.SegmentGroup
+import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.window.interaction.ButtonColor.Fixed
+import utopia.reflection.container.swing.window.interaction.YesNoWindow
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.LengthExtensions._
@@ -46,10 +47,10 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 		val deleteFileButton = ImageAndTextButton.contextual(Icons.delete.inButton, "Poista") {
 			parentWindow.foreach { window =>
 				val dialogContext = baseContext.inContextWithBackground(colorScheme.gray.light).forTextComponents()
-				new YesNoDialog(dialogContext, "Tiedoston poisto",
+				new YesNoWindow(dialogContext, "Tiedoston poisto",
 					"Haluatko varmasti poistaa tämän tiedoston koneeltasi.\nTätä toimintoa ei voi peruuttaa.",
 					Map(true -> Icons.delete, false -> Icons.close), Map(true -> Fixed(colorScheme.error)))({ (color, _) =>
-					dialogContext.forButtons(color) }).display(window)
+					dialogContext.forButtons(color) }).displayOver(window)
 					.foreach { shouldDelete =>
 						if (shouldDelete)
 						{

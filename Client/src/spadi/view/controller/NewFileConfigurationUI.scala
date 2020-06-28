@@ -6,7 +6,7 @@ import spadi.controller.{Log, ReadExcel, SheetTarget, ShopData}
 import spadi.model.{BasePriceKeyMappingFromFieldsFactory, DataSource, FileReadSetting, KeyMappingFactory, ProductPriceKeyMappingFromFieldsFactory, SalesGroupKeyMappingFromFieldsFactory, ShopSetup}
 import spadi.model.PriceInputType.{BasePrice, SaleGroup, SalePrice}
 import spadi.view.util.Setup._
-import spadi.view.dialog.{DataSourceDialogLike, DataSourceDialogWithSelections, DataSourceDialogWithTextFields, FileReadSettingsFrame}
+import spadi.view.dialog.{DataSourceWindowLike, DataSourceWindowWithSelections, DataSourceWindowWithTextFields, FileReadSettingsFrame}
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.shape.Direction1D.{Negative, Positive}
@@ -158,7 +158,7 @@ object NewFileConfigurationUI
 		private lazy val sampleRows = ReadExcel.withoutHeadersFrom(setting.path, testReadTarget).toOption
 			.filter { _.exists { _.nonEmpty } }
 		
-		private var lastDialog: Option[DataSourceDialogLike[A, _, _]] = None
+		private var lastDialog: Option[DataSourceWindowLike[A, _, _]] = None
 		private var lastResult: Option[DataSource[A]] = None
 		
 		
@@ -170,6 +170,7 @@ object NewFileConfigurationUI
 		// OTHER    -----------------------
 		
 		// Returns next display direction. None if user cancelled process.
+		// TODO: Remove parent window requirement
 		def displayBlocking(parentWindow: java.awt.Window) =
 		{
 			// Creates a new dialog
@@ -177,15 +178,15 @@ object NewFileConfigurationUI
 			val newDialog = sampleRows match
 			{
 				case Some(sampleRows) =>
-					new DataSourceDialogWithSelections[A](setting.path, setting.shop, mappingFactory, sampleRows)
-				case None => new DataSourceDialogWithTextFields[A](setting.path, setting.shop, mappingFactory)
+					new DataSourceWindowWithSelections[A](setting.path, setting.shop, mappingFactory, sampleRows)
+				case None => new DataSourceWindowWithTextFields[A](setting.path, setting.shop, mappingFactory)
 			}
 			
 			// Pre-fills some content, if possible
 			lastDialog.foreach { d => newDialog.input = d.input }
 			lastDialog = Some(newDialog)
 			// Displays the dialog and waits for a result
-			newDialog.display(parentWindow).waitFor() match
+			newDialog.displayOver(parentWindow).waitFor() match
 			{
 				case Success(result) =>
 					result match

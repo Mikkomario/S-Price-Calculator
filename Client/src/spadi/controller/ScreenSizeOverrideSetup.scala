@@ -1,7 +1,7 @@
 package spadi.controller
 
 import spadi.view.component.Fields
-import spadi.view.dialog.RealResolutionDialog
+import spadi.view.dialog.RealResolutionWindow
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.container.ObjectFileContainer
 import utopia.flow.datastructure.immutable.Model
@@ -49,9 +49,10 @@ object ScreenSizeOverrideSetup
 			status.current.sizeOverride.foreach(Screen.registerRealScreenSize)
 		else
 		{
+			// TODO: Remove invisible background frame
 			val frame = Frame.invisible()
 			frame.startEventGenerators(actorHandler)
-			val (shouldClose, shouldPrompt) = new RealResolutionDialog().display(frame.component).waitFor().getOrElse(Left(false)) match
+			val (shouldClose, shouldPrompt) = new RealResolutionWindow().displayOver(frame.component).waitFor().getOrElse(Left(false)) match
 			{
 				case Right(sizeOverride) =>
 					status.current = SizeOverrideSettings(areConfigured = true, Some(sizeOverride))
@@ -66,7 +67,7 @@ object ScreenSizeOverrideSetup
 			{
 				if (shouldPrompt)
 					Fields.messageDialog("Tarvitaan uudelleenkäynnistys",
-						"Käynnistäisitkö ohjelman uudelleen muutosten viimeistelemiseksi?").display(frame.component)
+						"Käynnistäisitkö ohjelman uudelleen muutosten viimeistelemiseksi?").displayOver(frame.component)
 						.waitFor()
 				frame.close()
 				System.exit(0)

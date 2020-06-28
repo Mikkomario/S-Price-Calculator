@@ -2,12 +2,13 @@ package spadi.view.dialog
 
 import spadi.view.component.Fields
 import utopia.genesis.shape.shape2D.Size
-import utopia.reflection.component.swing.{MultiLineTextView, Switch, TextField}
 import utopia.reflection.shape.LengthExtensions._
 import spadi.view.util.Setup._
 import utopia.genesis.util.Screen
 import utopia.genesis.util.DistanceExtensions._
-import utopia.reflection.container.swing.window.dialog.interaction.{InputRowBlueprint, RowGroup, RowGroups}
+import utopia.reflection.component.swing.display.MultiLineTextView
+import utopia.reflection.component.swing.input.{Switch, TextField}
+import utopia.reflection.container.swing.window.interaction.{InputRowBlueprint, RowGroup, RowGroups}
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.localization.LocalString._
 
@@ -16,7 +17,7 @@ import utopia.reflection.localization.LocalString._
  * @author Mikko Hilpinen
  * @since 24.6.2020, v1.1
  */
-class RealResolutionDialog extends InputDialog[Either[Boolean, Size]]
+class RealResolutionWindow extends InputWindow[Either[Boolean, Size]]
 {
 	// ATTRIBUTES   -----------------------------------
 	

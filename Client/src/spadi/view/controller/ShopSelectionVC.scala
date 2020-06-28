@@ -3,17 +3,17 @@ package spadi.view.controller
 import spadi.controller.ShopData
 import spadi.model.Shop
 import spadi.view.component.Fields
-import spadi.view.dialog.EditShopDialog
+import spadi.view.dialog.EditShopWindow
 import spadi.view.util.Icons
 import spadi.view.util.Setup._
 import utopia.flow.event.{ChangeEvent, ChangeListener}
-import utopia.reflection.component.Focusable
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.input.Interaction
-import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
+import utopia.reflection.component.template.input.Interaction
 import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.Stack
+import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.component.template.Focusable
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.DisplayFunction
 
 /**
@@ -36,7 +36,7 @@ class ShopSelectionVC(implicit context: ButtonContextLike) extends StackableAwtC
 	private val editButton = ImageButton.contextual(Icons.edit.asIndividualButtonWithColor(primaryColors)) {
 		dd.parentWindow.foreach { window =>
 			dd.selected.foreach { shopToEdit =>
-				new EditShopDialog(shopToEdit.name).display(window)
+				new EditShopWindow(shopToEdit.name).displayOver(window)
 					.foreach { _.filterNot { _ == shopToEdit.name }.foreach { newName =>
 						ShopData.renameShopWithId(shopToEdit.id, newName)
 					} }
@@ -45,7 +45,7 @@ class ShopSelectionVC(implicit context: ButtonContextLike) extends StackableAwtC
 	}
 	private val addButton = ImageButton.contextual(Icons.plus.asIndividualButtonWithColor(primaryColors)) {
 		dd.parentWindow.foreach { window =>
-			new EditShopDialog().display(window).foreach { _.foreach { newShopName =>
+			new EditShopWindow().displayOver(window).foreach { _.foreach { newShopName =>
 				val newShop = ShopData.addShop(newShopName)
 				dd.selectOne(newShop)
 			} }

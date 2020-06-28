@@ -1,8 +1,8 @@
 package spadi.view.dialog
 
 import spadi.view.util.Setup._
-import utopia.reflection.component.swing.TextField
-import utopia.reflection.container.swing.window.dialog.interaction.{InputRowBlueprint, RowGroups}
+import utopia.reflection.component.swing.input.TextField
+import utopia.reflection.container.swing.window.interaction.{InputRowBlueprint, RowGroups}
 import utopia.reflection.shape.LengthExtensions._
 
 /**
@@ -10,7 +10,7 @@ import utopia.reflection.shape.LengthExtensions._
  * @author Mikko Hilpinen
  * @since 26.5.2020, v1.1
  */
-class EditShopDialog(initialName: String = "") extends InputDialog[Option[String]]
+class EditShopWindow(initialName: String = "") extends InputWindow[Option[String]]
 {
 	// ATTRIBUTES   -------------------------
 	

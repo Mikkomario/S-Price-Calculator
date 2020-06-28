@@ -8,7 +8,7 @@ import spadi.view.util.Setup._
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.generic.ValueConversions._
-import utopia.reflection.component.swing.{DropDown, SearchFrom}
+import utopia.reflection.component.swing.input.{DropDown, SearchFrom}
 import utopia.reflection.localization.DisplayFunction
 import utopia.reflection.localization.LocalString._
 
@@ -17,9 +17,9 @@ import utopia.reflection.localization.LocalString._
  * @author Mikko Hilpinen
  * @since 7.6.2020, v1.1
  */
-class DataSourceDialogWithSelections[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A],
+class DataSourceWindowWithSelections[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A],
                                          firstDocumentRows: Vector[Vector[Value]])
-	extends DataSourceDialogLike[A, DropDown[Int, _], SearchFrom[String, _]](path, shop, mappingFactory)
+	extends DataSourceWindowLike[A, DropDown[Int, _], SearchFrom[String, _]](path, shop, mappingFactory)
 {
 	// ATTRIBUTES   -----------------------------------
 	
