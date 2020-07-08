@@ -1,8 +1,13 @@
 package spadi.view.util
 
+import utopia.flow.caching.multi.ReleasingCache
 import utopia.flow.util.FileExtensions._
+import utopia.flow.util.TimeExtensions._
+import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Size
 import utopia.genesis.util.DistanceExtensions._
+import utopia.reflection.color.TextColorStandard.{Dark, Light}
+import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
 import utopia.reflection.image.SingleColorIconCache
 
 /**
@@ -13,12 +18,19 @@ import utopia.reflection.image.SingleColorIconCache
 object Icons
 {
 	// ATTRIBUTES   -----------------------
-	
-	private val cache = new SingleColorIconCache(Setup.resourceDirectory/"icons", Some(Size.square(1.cm.toScreenPixels)))
+
+	private val iconsDirectory = Setup.resourceDirectory/"icons"
+
+	private val cache = new SingleColorIconCache(iconsDirectory, Some(Size.square(1.cm.toScreenPixels)))
 	
 	
 	// COMPUTED ---------------------------
-	
+
+	/**
+	 * @return An access point to larger icons
+	 */
+	def large = Large
+
 	/**
 	 * @return A closing cross icon
 	 */
@@ -78,4 +90,61 @@ object Icons
 	 * @return An info icon
 	 */
 	def info = cache("info.png")
+
+
+	// NESTED   ----------------------------
+
+	object Large
+	{
+		// ATTRIBUTES   --------------------
+		
+		private val sizeLimit = Size.square(2.cm.toScreenPixels)
+		
+		private val imageCache = ReleasingCache[String, Image](3.minutes) { fileName =>
+			Image.readOrEmpty(iconsDirectory/fileName).smallerThan(sizeLimit)
+		}
+		
+		private val iconCache = new SingleColorIconCache(iconsDirectory, Some(sizeLimit))
+
+		
+		// COMPUTED -----------------------
+		
+		/**
+		 * @return An info icon (large)
+		 */
+		def info = iconCache("info.png")
+		
+		/**
+		 * @return A warning icon (large)
+		 */
+		def warning = iconCache("warning.png")
+		
+		/**
+		 * @return A light loading icon (multi-color)
+		 */
+		def loadingLight = imageCache("loading-blue.png")
+
+		/**
+		 * @return A darker loading icon (multi-color)
+		 */
+		def loadingDark = imageCache("loading-blue-dark.png")
+		
+		/**
+		 * @param context Component context (implicit)
+		 * @return A loading icon suitable for the specified context
+		 */
+		def loading(implicit context: ColorContextLike) =
+		{
+			val background = context match
+			{
+				case btnC: ButtonContextLike => btnC.buttonColor
+				case _ => context.containerBackground
+			}
+			background.textColorStandard match
+			{
+				case Light => loadingLight
+				case Dark => loadingDark
+			}
+		}
+	}
 }

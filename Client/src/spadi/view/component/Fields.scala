@@ -119,6 +119,18 @@ object Fields
 	{
 		val context = baseContext.inContextWithBackground(primaryColors.dark).forTextComponents()
 		new MessageWindow(context.mapFont { _ * 0.8 }, context.forSecondaryColorButtons, title, text, "OK",
-			Some(Icons.close), Some(Icons.info))
+			Some(Icons.close), Some(Icons.large.info))
+	}
+	
+	/**
+	 * Creates a new error message dialog
+	 * @param text Text to display
+	 * @return New dialog
+	 */
+	def errorDialog(text: LocalizedString) =
+	{
+		val context = baseContext.inContextWithBackground(colorScheme.error).forTextComponents()
+		new MessageWindow(context.mapFont { _ * 0.8 }, context.forSecondaryColorButtons, "Virhe", text,
+			"OK", Some(Icons.close), Some(Icons.large.warning))
 	}
 }

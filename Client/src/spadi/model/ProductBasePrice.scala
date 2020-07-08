@@ -10,7 +10,7 @@ import utopia.flow.generic.ValueUnwraps._
 object ProductBasePrice extends FromModelFactory[ProductBasePrice]
 {
 	private val priceSchema = ModelDeclaration("amount" -> DoubleType, "unit" -> StringType)
-	private val schema = ModelDeclaration("id" -> StringType, "group_id" -> StringType, "price" -> ModelType)
+	private val schema = ModelDeclaration("id" -> StringType, "price" -> ModelType)
 	
 	override def apply(model: template.Model[Property]) = schema.validate(model).toTry.flatMap { valid =>
 		priceSchema.validate(valid("price").getModel).toTry.map { priceModel =>

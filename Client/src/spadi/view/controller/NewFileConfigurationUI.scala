@@ -3,14 +3,17 @@ package spadi.view.controller
 import java.nio.file.Path
 
 import spadi.controller.{Log, ReadExcel, SheetTarget, ShopData}
-import spadi.model.{BasePriceKeyMappingFromFieldsFactory, DataSource, FileReadSetting, KeyMappingFactory, ProductPriceKeyMappingFromFieldsFactory, SalesGroupKeyMappingFromFieldsFactory, ShopSetup}
+import spadi.model.{BasePriceKeyMappingFromFieldsFactory, DataSource, FileReadSetting, KeyMappingFactory, ProductPriceKeyMappingFromFieldsFactory, ProgressState, SalesGroupKeyMappingFromFieldsFactory, ShopSetup}
 import spadi.model.PriceInputType.{BasePrice, SaleGroup, SalePrice}
 import spadi.view.util.Setup._
-import spadi.view.dialog.{DataSourceWindowLike, DataSourceWindowWithSelections, DataSourceWindowWithTextFields, FileReadSettingsFrame}
+import spadi.view.dialog.{DataSourceWindowLike, DataSourceWindowWithSelections, DataSourceWindowWithTextFields, FileReadSettingsFrame, LoadingView}
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.FileExtensions._
 import utopia.genesis.shape.Direction1D.{Negative, Positive}
 import utopia.reflection.container.swing.window.Frame
+import utopia.reflection.localization.LocalString._
 
 import scala.util.{Failure, Success}
 
@@ -23,6 +26,8 @@ object NewFileConfigurationUI
 {
 	// ATTRIBUTES   ------------------------
 	
+	private implicit val languageCode: String = "fi"
+	
 	private val testReadTarget = SheetTarget.sheetAtIndex(0, maxRowsRead = Some(10))
 	
 	
@@ -34,9 +39,7 @@ object NewFileConfigurationUI
 		// Displays a settings dialog for the new paths
 		val readSettingsFrame = new FileReadSettingsFrame(target)
 		val settings = readSettingsFrame.display().waitFor().getOrElse(Vector())
-		if (settings.isEmpty)
-			println("No settings configured")
-		else
+		if (settings.nonEmpty)
 		{
 			// Checks which of the settings still require key mappings
 			val existingSetups = ShopData.shopSetups
@@ -67,15 +70,13 @@ object NewFileConfigurationUI
 			
 			val allInputs = comboInputs ++ baseInputs ++ saleInputs
 			
-			val parentFrame = Frame.invisible()
-			parentFrame.position = readSettingsFrame.bounds.center
 			var nextDisplayIndex = 0
 			var isCancelled = false
 			while (!isCancelled && nextDisplayIndex >= 0 && nextDisplayIndex < allInputs.size)
 			{
-				allInputs(nextDisplayIndex).displayBlocking(parentFrame.component) match
+				allInputs(nextDisplayIndex).displayBlocking() match
 				{
-					case Some(direction) => nextDisplayIndex += 1 * direction.signModifier
+					case Some(direction) => nextDisplayIndex += 1 * direction.modifier
 					case None => isCancelled = true
 				}
 			}
@@ -169,13 +170,17 @@ object NewFileConfigurationUI
 		
 		// OTHER    -----------------------
 		
-		// Returns next display direction. None if user cancelled process.
-		// TODO: Remove parent window requirement
-		def displayBlocking(parentWindow: java.awt.Window) =
+		// Returns next display direction. None if user cancelled process
+		def displayBlocking() =
 		{
 			// Creates a new dialog
 			// Tries to read some data from the excel file in order to present a user-friendly dialog
-			val newDialog = sampleRows match
+			val progressPointer = new PointerWithEvents(ProgressState.initial(
+				"Luetaan tiedostoa %s".autoLocalized.interpolated(Vector(setting.path.fileName))))
+			val loadCompletion = new LoadingView(progressPointer).display()
+			val readRows = sampleRows
+			progressPointer.value = ProgressState(0.85, "Valmistellaan dialogia")
+			val newDialog = readRows match
 			{
 				case Some(sampleRows) =>
 					new DataSourceWindowWithSelections[A](setting.path, setting.shop, mappingFactory, sampleRows)
@@ -185,8 +190,12 @@ object NewFileConfigurationUI
 			// Pre-fills some content, if possible
 			lastDialog.foreach { d => newDialog.input = d.input }
 			lastDialog = Some(newDialog)
+			
+			progressPointer.value = ProgressState.finished("Käyttöliittymä valmis")
+			
 			// Displays the dialog and waits for a result
-			newDialog.displayOver(parentWindow).waitFor() match
+			loadCompletion.waitFor()
+			newDialog.display().waitFor() match
 			{
 				case Success(result) =>
 					result match
