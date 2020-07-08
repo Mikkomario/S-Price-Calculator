@@ -6,8 +6,9 @@ import spadi.view.util.Setup._
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.StringExtensions._
 import utopia.genesis.util.Screen
-import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
-import utopia.reflection.container.swing.{AwtContainerRelated, Stack}
+import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.container.swing.AwtContainerRelated
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.shape.LengthExtensions._
 
 /**

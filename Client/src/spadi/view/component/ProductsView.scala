@@ -5,8 +5,10 @@ import spadi.view.controller.ProductRowVC
 import spadi.view.util.Setup._
 import utopia.flow.event.Changing
 import utopia.reflection.component.context.ColorContext
-import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
-import utopia.reflection.container.swing.{ScrollView, SegmentGroup, Stack}
+import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.container.swing.layout.SegmentGroup
+import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.controller.data.ContainerContentDisplayer
 import utopia.reflection.shape.{StackLength, StackLengthLimit}
 import utopia.reflection.shape.LengthExtensions._

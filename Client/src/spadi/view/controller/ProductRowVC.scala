@@ -3,11 +3,12 @@ package spadi.view.controller
 import spadi.controller.ProfitsPercentage
 import spadi.view.util.Setup._
 import spadi.model.Product
-import utopia.reflection.component.Refreshable
 import utopia.reflection.component.context.{ColorContext, TextContext}
-import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.{SegmentGroup, Stack}
+import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.component.template.display.Refreshable
+import utopia.reflection.container.swing.layout.SegmentGroup
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.LengthExtensions._
 

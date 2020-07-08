@@ -8,10 +8,10 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.swing.{DropDown, SearchFrom}
 import utopia.reflection.component.swing.button.ImageAndTextButton
+import utopia.reflection.component.swing.input.{DropDown, SearchFrom}
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.window.dialog.interaction.MessageDialog
+import utopia.reflection.container.swing.window.interaction.MessageWindow
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.StackLength
@@ -100,11 +100,11 @@ object Fields
 		.contextual(Icons.file.inButton, "Avaa") { path.openInDesktop().failure.foreach { error =>
 			parentWindow.foreach { window =>
 				val dialogContext = baseContext.inContextWithBackground(colorScheme.error).forTextComponents()
-				new MessageDialog(dialogContext, dialogContext.forSecondaryColorButtons,
+				new MessageWindow(dialogContext, dialogContext.forSecondaryColorButtons,
 					"Tiedoston avaaminen epäonnistui",
 					"Tiedoston avaaminen ei onnistunut.\nVirheilmoitus: %s".localized.interpolated(
 						Vector(error.getLocalizedMessage)), "OK", Some(Icons.close), Some(Icons.warning))
-					.display(window)
+					.displayOver(window)
 			}
 		}
 	}
@@ -118,7 +118,19 @@ object Fields
 	def messageDialog(title: LocalizedString, text: LocalizedString) =
 	{
 		val context = baseContext.inContextWithBackground(primaryColors.dark).forTextComponents()
-		new MessageDialog(context.mapFont { _ * 0.8 }, context.forSecondaryColorButtons, title, text, "OK",
-			Some(Icons.close), Some(Icons.info))
+		new MessageWindow(context.mapFont { _ * 0.8 }, context.forSecondaryColorButtons, title, text, "OK",
+			Some(Icons.close), Some(Icons.large.info))
+	}
+	
+	/**
+	 * Creates a new error message dialog
+	 * @param text Text to display
+	 * @return New dialog
+	 */
+	def errorDialog(text: LocalizedString) =
+	{
+		val context = baseContext.inContextWithBackground(colorScheme.error).forTextComponents()
+		new MessageWindow(context.mapFont { _ * 0.8 }, context.forSecondaryColorButtons, "Virhe", text,
+			"OK", Some(Icons.close), Some(Icons.large.warning))
 	}
 }

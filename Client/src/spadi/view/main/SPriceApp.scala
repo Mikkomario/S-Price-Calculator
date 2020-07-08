@@ -1,15 +1,19 @@
 package spadi.view.main
 
-import spadi.controller.{ReadProducts, ScreenSizeOverrideSetup, ShopData}
-import spadi.model.{ProductBasePrice, ProductPrice, SalesGroup, Shop}
+import spadi.controller.{Log, ReadProducts, ScreenSizeOverrideSetup, ShopData}
+import spadi.model.{ProductBasePrice, ProductPrice, ProgressState, SalesGroup, Shop}
+import spadi.view.component.Fields
 import spadi.view.controller.{MainVC, NewFileConfigurationUI}
+import spadi.view.dialog.LoadingView
+import utopia.flow.async.AsyncExtensions._
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.generic.GenesisDataType
-import utopia.genesis.util.Screen
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.Alignment
 import utopia.reflection.util.MultiFrameSetup
+import utopia.reflection.localization.LocalString._
 
 import scala.util.{Failure, Success, Try}
 
@@ -34,62 +38,89 @@ object SPriceApp extends App
 	// Makes sure the screen size is read correctly
 	ScreenSizeOverrideSetup.prepareBlocking()
 	
-	println(s"Using screen size: ${Screen.size}")
-	
-	// Reads / updates product data
-	println("Reading product data")
-	val products = ReadProducts() match
+	// Reads / updates product data. Displays a loading screen while doing so
+	val (asyncReadResult, progressPointer) = ReadProducts.async()
+	val products = new LoadingView(progressPointer).display().waitFor().flatMap { _ => asyncReadResult.waitForResult() } match
 	{
 		case Success(result) =>
 			result match
 			{
-				case Right(readData) =>
-					println("Product data read")
-					handleReadResult(readData)
+				case Right(readData) => handleReadResult(readData)
 				case Left(filesWithoutMappings) =>
-					println(s"${filesWithoutMappings.size} files need mappings")
 					// Configures settings and then reads data again
 					NewFileConfigurationUI.configureBlocking(Left(filesWithoutMappings))
-					ReadProducts.ignoringUnmappedFiles() match
+					val (secondReadFuture, progressPointer) = ReadProducts.asyncIgnoringUnmappedFiles()
+					new LoadingView(progressPointer).display().waitFor().flatMap { _ => secondReadFuture.waitForResult() } match
 					{
 						case Success(readData) => handleReadResult(readData)
 						case Failure(error) =>
-							println("Failed to read products data")
-							error.printStackTrace()
+							Log(error, "Failed to read products data after file configuring")
+							Fields.errorDialog("Tuotetietojen lukeminen epäonnistui.\nVirheilmoitus: %s"
+								.autoLocalized.interpolated(Vector(error.getLocalizedMessage))).display().waitFor()
 							Vector()
 					}
 			}
 		case Failure(error) =>
-			println("Failed to read products data")
-			error.printStackTrace()
+			Log(error, "Failed to read products data")
+			Fields.errorDialog("Tuotetietojen lukeminen epäonnistui.\nVirheilmoitus: %s"
+				.autoLocalized.interpolated(Vector(error.getLocalizedMessage))).display().waitFor()
 			Vector()
 	}
 	
-	val frame = Frame.windowed(new MainVC(products.sortBy { _.productId }), "S-Padi Hintalaskuri",
+	// Displays a loading screen while setting up the VC
+	val frameProgressPointer = new PointerWithEvents(ProgressState.initial("Käsitellään tuotetietoja"))
+	val loadCompletion = new LoadingView(frameProgressPointer).display()
+	val sortedProducts = products.sortBy { _.productId }
+	frameProgressPointer.value = ProgressState(0.1, "Luodaan käyttöliittymäkomponentteja")
+	val frame = Frame.windowed(new MainVC(sortedProducts), "S-Padi Hintalaskuri",
 		resizePolicy = Program, resizeAlignment = Alignment.TopLeft)
 	frame.setToCloseOnEsc()
 	frame.setToExitOnClose()
-	setup.display(frame)
+	frameProgressPointer.value = ProgressState.finished("Käyttöliittymä valmis käyttöön")
+	
+	// When loading screen closes, opens the main view
+	loadCompletion.onComplete { _ => setup.display(frame) }
 	
 	private def handleReadResult(
 		readData: Option[Vector[(Shop, Try[Either[(Vector[ProductBasePrice], Vector[SalesGroup]), Vector[ProductPrice]]])]]) =
 	{
-		readData match
+		val progressPointer = new PointerWithEvents(ProgressState.initial("Käsitellään tuotteita"))
+		val loadCompletion = new LoadingView(progressPointer).display()
+		val products = readData match
 		{
 			case Some(newData) =>
-				val (failures, successes) = newData.divideBy { _._2.isSuccess }
-				if (failures.nonEmpty)
-				{
-					// TODO: Add separate failure handling UI
-					println(s"Failed to read ${failures.size}/${newData.size} shop's data")
-					failures.foreach { case (shop, failure) =>
-						println(s"${shop.name} (${shop.id}):")
-						failure.failure.foreach { _.printStackTrace() }
+				val (failures, successes) = newData.dividedWith { case (shop, readResult) =>
+					readResult match
+					{
+						case Success(success) => Right(shop -> success)
+						case Failure(e) => Left(shop -> e)
 					}
 				}
-				ShopData.updateProducts(successes.map { case (shop, result) => shop -> result.get })
+				if (failures.nonEmpty)
+				{
+					// Displays an error message in case some reads failed
+					failures.foreach { case (shop, e) => Log(e, s"Failed to read data for ${shop.name}") }
+					val failedShopNames = failures.map { _._1.name }.mkString(", ")
+					val failureMessage =
+					{
+						if (failures.size > 1)
+							"Seuraavien tukkujen tietoja ei voitu lukea: ${shops}.\nVirheilmoitus: ${error}"
+								.autoLocalized.interpolated(
+								Map("shops" -> failedShopNames, "error" -> failures.head._2.getLocalizedMessage))
+						else
+							"${shop} tietoja ei voitu lukea.\nVirheilmoitus: ${error}".autoLocalized.interpolated(
+								Map("shop" -> failedShopNames, "error" -> failures.head._2.getLocalizedMessage))
+					}
+					// Blocks while the error message is being displayed
+					Fields.errorDialog(failureMessage).display().waitFor()
+				}
+				ShopData.updateProducts(successes)
+				progressPointer.value = ProgressState(0.9, "Tukkujen tiedot päivitetty")
 				ShopData.products
 			case None => ShopData.products
 		}
+		progressPointer.value = ProgressState.finished("Tuotteet valmiina")
+		loadCompletion.waitFor()
+		products
 	}
 }

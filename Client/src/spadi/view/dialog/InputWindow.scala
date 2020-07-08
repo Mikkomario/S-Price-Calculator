@@ -3,10 +3,10 @@ package spadi.view.dialog
 import spadi.view.util.Icons
 import spadi.view.util.Setup._
 import utopia.genesis.shape.shape2D.Direction2D
-import utopia.reflection.container.swing.window.dialog.interaction
-import utopia.reflection.container.swing.Stack
-import utopia.reflection.container.swing.Stack.AwtStackable
-import utopia.reflection.container.swing.window.dialog.interaction.{ButtonColor, RowGroups}
+import utopia.reflection.container.swing.window.interaction
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
+import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.window.interaction.{ButtonColor, RowGroups}
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.LengthExtensions._
 
@@ -15,7 +15,7 @@ import utopia.reflection.shape.LengthExtensions._
  * @author Mikko Hilpinen
  * @since 26.5.2020, v1.1
  */
-trait InputDialog[+A] extends interaction.InputDialog[A]
+trait InputWindow[+A] extends utopia.reflection.container.swing.window.interaction.InputWindow[A]
 {
 	// ATTRIBUTES   -------------------------
 	

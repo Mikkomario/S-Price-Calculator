@@ -12,13 +12,13 @@ import utopia.flow.datastructure.template.Property
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.genesis.util.Screen
-import utopia.reflection.component.Focusable
+import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.component.swing.MultiLineTextView
+import utopia.reflection.component.template.Focusable
 import utopia.reflection.container.stack.StackLayout.Leading
-import utopia.reflection.container.swing.Stack
-import utopia.reflection.container.swing.Stack.AwtStackable
-import utopia.reflection.container.swing.window.dialog.interaction.{DialogButtonBlueprint, InputRowBlueprint, RowGroups}
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
+import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.window.interaction.{DialogButtonBlueprint, InputRowBlueprint, RowGroups}
 import utopia.reflection.localization.LocalString
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.Alignment.BottomLeft
@@ -32,9 +32,9 @@ import scala.util.{Failure, Success}
  * @author Mikko Hilpinen
  * @since 27.5.2020, v1.1
  */
-abstract class DataSourceDialogLike[+A, HF <: AwtStackable with Focusable, KF <: AwtStackable with Focusable]
+abstract class DataSourceWindowLike[+A, HF <: AwtStackable with Focusable, KF <: AwtStackable with Focusable]
 (path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A])
-	extends InputDialog[Either[Boolean, DataSource[A]]]
+	extends InputWindow[Either[Boolean, DataSource[A]]]
 {
 	// ATTRIBUTES   ------------------------
 	

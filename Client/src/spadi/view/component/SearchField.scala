@@ -4,7 +4,7 @@ import spadi.view.util.Icons
 import spadi.view.util.Setup._
 import utopia.reflection.component.context.{ButtonContextLike, ColorContext}
 import utopia.reflection.component.drawing.immutable.ImageDrawer
-import utopia.reflection.component.swing.TextField
+import utopia.reflection.component.swing.input.TextField
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.LengthExtensions._

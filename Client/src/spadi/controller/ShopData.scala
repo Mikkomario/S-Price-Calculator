@@ -3,6 +3,7 @@ package spadi.controller
 import java.util.UUID
 
 import spadi.model.{Product, ProductBasePrice, ProductPrice, ProductPriceWithSale, SalesGroup, Shop, ShopSetup}
+
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
@@ -19,6 +20,8 @@ import scala.math.Ordering.Double.TotalOrdering
 object ShopData
 {
 	// ATTRIBUTES   -----------------------------
+	
+	private implicit val languageCode: String = "fi"
 	
 	private var _shopData = ShopSetupContainer.shops.map { shop =>
 		shop -> new ProductsContainer(productsFileNameForShop(shop))

@@ -2,9 +2,10 @@ package spadi.view.component
 
 import spadi.view.util.Setup._
 import utopia.reflection.component.context.ColorContext
-import utopia.reflection.component.swing.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.{SegmentGroup, Stack}
+import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.container.swing.layout.SegmentGroup
+import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.shape.LengthExtensions._
 
 object ProductRowsHeader

@@ -11,14 +11,17 @@ import utopia.flow.util.WaitUtils
 import utopia.flow.util.TimeExtensions._
 import utopia.genesis.shape.shape2D.{Direction2D, Point, Size}
 import utopia.genesis.util.Screen
-import utopia.reflection.component.{Area, ComponentLike, Focusable}
-import utopia.reflection.component.swing.{AwtComponentRelated, MultiLineTextView}
 import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton}
+import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.label.TextLabel
+import utopia.reflection.component.swing.template.AwtComponentRelated
+import utopia.reflection.component.template.{ComponentLike, Focusable}
+import utopia.reflection.component.template.layout.Area
 import utopia.reflection.container.stack.StackLayout.Center
+import utopia.reflection.container.swing.layout.SegmentGroup
+import utopia.reflection.container.swing.layout.multi.{AnimatedStack, Stack}
 import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
-import utopia.reflection.container.swing.{AnimatedStack, SegmentGroup, Stack}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.StackLength

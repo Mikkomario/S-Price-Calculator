@@ -7,15 +7,15 @@ import spadi.model.{KeyMappingFactory, Shop}
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.generic.ValueConversions._
-import utopia.reflection.component.swing.TextField
+import utopia.reflection.component.swing.input.TextField
 
 /**
  * This data source dialog variation uses text fields for requesting data
  * @author Mikko Hilpinen
  * @since 27.5.2020, v1.1
  */
-class DataSourceDialogWithTextFields[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A])
-	extends DataSourceDialogLike[A, TextField, TextField](path, shop, mappingFactory)
+class DataSourceWindowWithTextFields[+A](path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A])
+	extends DataSourceWindowLike[A, TextField, TextField](path, shop, mappingFactory)
 {
 	// ATTRIBUTES   ------------------------
 	
