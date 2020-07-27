@@ -11,8 +11,7 @@ import utopia.flow.async.AsyncExtensions._
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
-import utopia.genesis.shape.Direction1D.{Negative, Positive}
-import utopia.reflection.container.swing.window.Frame
+import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.reflection.localization.LocalString._
 
 import scala.util.{Failure, Success}

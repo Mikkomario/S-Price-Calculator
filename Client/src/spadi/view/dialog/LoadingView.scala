@@ -10,7 +10,7 @@ import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.WaitUtils
 import utopia.flow.async.AsyncExtensions._
 import utopia.genesis.animation.Animation
-import utopia.genesis.shape.Rotation
+import utopia.genesis.shape.shape1D.Rotation
 import utopia.genesis.shape.shape2D.Direction2D.Up
 import utopia.reflection.component.swing.display.ProgressBar
 import utopia.reflection.component.swing.label.{AnimationLabel, TextLabel}
