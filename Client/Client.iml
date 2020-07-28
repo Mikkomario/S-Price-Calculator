@@ -15,5 +15,6 @@
     <orderEntry type="module" module-name="Reflection" />
     <orderEntry type="module" module-name="BunnyMunch" />
     <orderEntry type="library" name="scala-sdk-2.13.3" level="application" />
+    <orderEntry type="library" name="ch.vorburger.mariaDB4j:mariaDB4j:2.4.0" level="project" />
   </component>
 </module>
