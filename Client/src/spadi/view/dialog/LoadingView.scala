@@ -2,7 +2,7 @@ package spadi.view.dialog
 
 import java.time.Instant
 
-import spadi.model.ProgressState
+import spadi.model.cached.ProgressState
 import spadi.view.util.Icons
 import spadi.view.util.Setup._
 import utopia.flow.event.Changing

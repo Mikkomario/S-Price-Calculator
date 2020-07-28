@@ -2,7 +2,9 @@ package spadi.view.dialog
 
 import java.nio.file.Path
 
-import spadi.model.{DataSource, KeyMappingFactory, Shop}
+import spadi.model.cached.pricing.shop.Shop
+import spadi.model.cached.read
+import spadi.model.cached.read.{DataSource, KeyMappingFactory}
 import spadi.view.component.Fields
 import spadi.view.util.Icons
 import spadi.view.util.Setup._
@@ -155,7 +157,7 @@ abstract class DataSourceWindowLike[+A, HF <: AwtStackable with Focusable, KF <:
 								{
 									case Success(parsed) =>
 										// Creates a data source based on the provided data
-										Right(Right(DataSource(path, parsed, headerRow - 1, firstDataRow - 1)))
+										Right(Right(read.DataSource(path, parsed, headerRow - 1, firstDataRow - 1)))
 									case Failure(error) =>
 										Left(inputComponents.head._2,
 											"Odottamaton virhe: %s".localized.interpolated(Vector(error.getLocalizedMessage)))

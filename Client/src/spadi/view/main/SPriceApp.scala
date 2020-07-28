@@ -1,7 +1,11 @@
 package spadi.view.main
 
-import spadi.controller.{Log, ReadProducts, ScreenSizeOverrideSetup, ShopData}
-import spadi.model.{ProductBasePrice, ProductPrice, ProgressState, SalesGroup, Shop}
+import spadi.controller.container.ShopData
+import spadi.controller.read.ReadProducts
+import spadi.controller.{Log, ScreenSizeOverrideSetup}
+import spadi.model.cached.ProgressState
+import spadi.model.cached.pricing.product.{ProductBasePrice, ProductPrice, SalesGroup}
+import spadi.model.cached.pricing.shop.Shop
 import spadi.view.component.Fields
 import spadi.view.controller.{MainVC, NewFileConfigurationUI}
 import spadi.view.dialog.LoadingView

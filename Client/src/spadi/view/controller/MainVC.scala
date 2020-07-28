@@ -1,6 +1,6 @@
 package spadi.view.controller
 
-import spadi.model.Product
+import spadi.model.cached.pricing.product.Product
 import spadi.view.component.{ProductsView, SearchField}
 import spadi.view.util.Setup._
 import utopia.flow.datastructure.mutable.PointerWithEvents

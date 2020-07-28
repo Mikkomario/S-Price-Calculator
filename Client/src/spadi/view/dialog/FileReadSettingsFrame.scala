@@ -2,7 +2,7 @@ package spadi.view.dialog
 
 import java.nio.file.Path
 
-import spadi.model.FileReadSetting
+import spadi.model.cached.read.FileReadSetting
 import spadi.view.component.FileReadSettingInputRow
 import spadi.view.util.Icons
 import spadi.view.util.Setup._

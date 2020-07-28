@@ -2,7 +2,7 @@ package spadi.test
 
 import java.time.Instant
 
-import spadi.controller.Prices
+import spadi.controller.container.Prices
 import utopia.bunnymunch.jawn.JsonBunny
 import utopia.flow.generic.DataType
 import utopia.flow.parse.JSONReader

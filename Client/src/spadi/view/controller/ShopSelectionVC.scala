@@ -1,7 +1,7 @@
 package spadi.view.controller
 
-import spadi.controller.ShopData
-import spadi.model.Shop
+import spadi.controller.container.ShopData
+import spadi.model.cached.pricing.shop.Shop
 import spadi.view.component.Fields
 import spadi.view.dialog.EditShopWindow
 import spadi.view.util.Icons

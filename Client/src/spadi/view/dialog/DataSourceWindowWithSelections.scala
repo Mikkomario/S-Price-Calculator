@@ -2,7 +2,8 @@ package spadi.view.dialog
 
 import java.nio.file.Path
 
-import spadi.model.{KeyMappingFactory, Shop}
+import spadi.model.cached.pricing.shop.Shop
+import spadi.model.cached.read.KeyMappingFactory
 import spadi.view.component.Fields
 import spadi.view.util.Setup._
 import utopia.flow.datastructure.immutable.Value

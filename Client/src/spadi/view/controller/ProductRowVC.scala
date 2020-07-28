@@ -1,8 +1,8 @@
 package spadi.view.controller
 
 import spadi.controller.ProfitsPercentage
+import spadi.model.cached.pricing.product.Product
 import spadi.view.util.Setup._
-import spadi.model.Product
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper

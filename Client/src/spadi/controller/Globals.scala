@@ -4,6 +4,7 @@ import java.nio.file.Path
 
 import utopia.flow.async.ThreadPool
 import utopia.flow.util.FileExtensions._
+import utopia.vault.database.ConnectionPool
 
 import scala.concurrent.ExecutionContext
 
@@ -19,5 +20,18 @@ object Globals
 	 */
 	implicit val executionContext: ExecutionContext = new ThreadPool("S-Padi").executionContext
 	
+	/**
+	  * Directory under which local files are stored
+	  */
 	val dataDirectory: Path = "data"
+	
+	/**
+	  * Directory under which database structure changes should be added
+	  */
+	val sqlImportDirectory: Path = "sql"
+	
+	/**
+	  * Connection pool used when creating database connections
+	  */
+	implicit val connectionPool: ConnectionPool = new ConnectionPool()
 }

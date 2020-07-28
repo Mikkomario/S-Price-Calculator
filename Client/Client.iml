@@ -16,5 +16,7 @@
     <orderEntry type="module" module-name="BunnyMunch" />
     <orderEntry type="library" name="scala-sdk-2.13.3" level="application" />
     <orderEntry type="library" name="ch.vorburger.mariaDB4j:mariaDB4j:2.4.0" level="project" />
+    <orderEntry type="library" name="mariadb-java-client-1.5.9" level="project" />
+    <orderEntry type="module" module-name="Vault" />
   </component>
 </module>

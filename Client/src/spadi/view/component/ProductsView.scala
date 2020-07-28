@@ -1,6 +1,6 @@
 package spadi.view.component
 
-import spadi.model.Product
+import spadi.model.cached.pricing.product.Product
 import spadi.view.controller.ProductRowVC
 import spadi.view.util.Setup._
 import utopia.flow.event.Changing

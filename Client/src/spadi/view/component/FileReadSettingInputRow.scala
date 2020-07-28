@@ -4,7 +4,9 @@ import java.nio.file.Path
 
 import spadi.controller.Log
 import spadi.view.util.Setup._
-import spadi.model.{FileReadSetting, PriceInputType}
+import spadi.model.cached.read
+import spadi.model.cached.read.FileReadSetting
+import spadi.model.enumeration.PriceInputType
 import spadi.view.controller.ShopSelectionVC
 import spadi.view.util.Icons
 import utopia.flow.util.FileExtensions._
@@ -90,7 +92,7 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 		case Some(shop) =>
 			typeSelection.value match
 			{
-				case Some(inputType) => Right(FileReadSetting(path, shop, inputType))
+				case Some(inputType) => Right(read.FileReadSetting(path, shop, inputType))
 				case None => Left(typeSelection)
 			}
 		case None => Left(shopSelection)

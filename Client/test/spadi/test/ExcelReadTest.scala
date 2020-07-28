@@ -2,7 +2,8 @@ package spadi.test
 
 import java.nio.file.Path
 
-import spadi.controller.{ReadExcel, SheetTarget}
+import spadi.controller.read.ReadExcel
+import spadi.model.cached.read.SheetTarget
 import utopia.flow.generic.DataType
 import utopia.flow.util.FileExtensions._
 
