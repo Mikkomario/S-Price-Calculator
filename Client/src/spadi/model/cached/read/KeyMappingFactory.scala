@@ -22,9 +22,7 @@ trait KeyMappingFactory[+A] extends FromModelFactoryWithSchema[KeyMapping[A]]
 	
 	// IMPLEMENTED  --------------------------------
 	
-	override def schema = ModelDeclaration(fieldNames.filter
-	{_._2}.map
-	{ case (fName, _) =>
+	override def schema = ModelDeclaration(fieldNames.filter {_._2}.map { case (fName, _) =>
 		PropertyDeclaration(fName.string, StringType)
 	})
 }
