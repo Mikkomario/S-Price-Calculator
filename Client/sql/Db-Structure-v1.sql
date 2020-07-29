@@ -4,6 +4,9 @@
 -- Version: v1.0
 --
 
+CREATE DATABASE s_price;
+USE s_price;
+
 -- Contains database updates
 CREATE TABLE database_version
 (

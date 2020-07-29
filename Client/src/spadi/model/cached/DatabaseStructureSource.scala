@@ -9,4 +9,5 @@ import spadi.model.enumeration.SqlFileType
   * @author Mikko Hilpinen
   * @since 28.7.2020, v1.2
   */
-case class DatabaseStructureSource(path: Path, fileType: SqlFileType, targetVersion: VersionNumber)
+case class DatabaseStructureSource(path: Path, fileType: SqlFileType, targetVersion: VersionNumber,
+								   originVersion: Option[VersionNumber] = None)
