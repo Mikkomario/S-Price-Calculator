@@ -36,6 +36,8 @@ object ScanSourceFiles
 					}.toMap
 				}
 				comments.toOption.flatMap { comments =>
+					// TODO: Remove test print
+					println(comments)
 					comments.get("version").map { versionString =>
 						val fileType = comments.get("type").map(SqlFileType.forString).getOrElse(Full)
 						DatabaseStructureSource(file, fileType, VersionNumber.parse(versionString),

@@ -14,7 +14,7 @@ import spadi.model.enumeration.SqlFileType.Full
 import utopia.genesis.generic.GenesisDataType
 import utopia.vault.database.Connection
 
-import scala.util.{Success, Try}
+import scala.util.Try
 
 /**
   * Used for setting up a local database
@@ -35,6 +35,8 @@ object DbSetup
 		
 		Try
 		{
+			println("Creating database")
+			
 			// Sets up the database
 			val configBuilder = DBConfigurationBuilder.newBuilder()
 			configBuilder.setPort(0)
@@ -42,45 +44,50 @@ object DbSetup
 			val database = DB.newEmbeddedDB(configBuilder.build()) // May throw
 			
 			// Updates Vault connection settings
-			Connection.modifySettings { _.copy(connectionTarget = configBuilder.getURL("")) }
+			Connection.modifySettings { _.copy(
+				connectionTarget = configBuilder.getURL(""),
+				defaultDBName = Some("test")) }
+			
+			println("Starting database")
 			
 			// Starts the database (may throw)
 			database.start()
 			// Closes the database when program closes
-			CloseHook.registerAction { database.stop() }
+			CloseHook.registerAction {
+				println("Stopping database")
+				database.stop()
+			}
 			
-			database
-		}.flatMap { database =>
+		}.flatMap { _ =>
 			// Checks current database version, and whether database has been configured at all
 			connectionPool.tryWith { implicit connection =>
+				println("Checking current DB version")
 				if (connection.existsTable(Tables.databaseName, Tables.versionTableName))
 					DbDatabaseVersion.latest
 				else
 					None
 			}.flatMap { currentDbVersion =>
+				println(s"DB version before update: ${currentDbVersion.map { _.number.toString }.getOrElse("No database")}")
 				ScanSourceFiles(currentDbVersion.map { _.number }).flatMap { sources =>
+					println(s"Found ${sources.size} sources: ${sources.mkString(", ")}")
 					// Fails if database can't be set up
 					if (sources.isEmpty)
 						currentDbVersion.toTry { new FileNotFoundException(
 							"Can't find proper source files for setting up the local database") }
 					else
 					{
-						// Drops the previous database if necessary
-						val dropResult = {
+						connectionPool.tryWith { implicit connection =>
+							// Drops the previous database if necessary
 							if (currentDbVersion.isDefined && sources.exists {_.fileType == Full})
-								connectionPool.tryWith {_.dropDatabase(Tables.databaseName)}
-							else
-								Success(())
-						}
-						
-						// Imports the source files in order
-						dropResult.flatMap { _ =>
-							sources.tryForEach { s => Try { database.source(s.path.absolute.toString) } }
-						}.flatMap { _ =>
+								connection.dropDatabase(Tables.databaseName)
+							
+							println("Executing source updates")
+							// Imports the source files in order
+							sources.foreach { s => connection.executeStatementsFrom(s.path).get }
+							
 							// Records new database version
-							connectionPool.tryWith { implicit connection =>
-								DbDatabaseVersions.insert(sources.last.targetVersion)
-							}
+							println("Recording new database version")
+							DbDatabaseVersions.insert(sources.last.targetVersion)
 						}
 					}
 				}

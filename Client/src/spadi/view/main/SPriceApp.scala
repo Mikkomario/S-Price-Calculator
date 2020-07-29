@@ -1,6 +1,7 @@
 package spadi.view.main
 
 import spadi.controller.container.ShopData
+import spadi.controller.database.DbSetup
 import spadi.controller.read.ReadProducts
 import spadi.controller.{Log, ScreenSizeOverrideSetup}
 import spadi.model.cached.ProgressState
@@ -12,7 +13,6 @@ import spadi.view.dialog.LoadingView
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.generic.GenesisDataType
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.shape.Alignment
@@ -30,7 +30,15 @@ object SPriceApp extends App
 {
 	System.setProperty("prism.allowhidpi", "false")
 	
-	GenesisDataType.setup()
+	// Sets up local database access
+	DbSetup.setup() match
+	{
+		case Success(dbVersion) => println(s"Using database version ${dbVersion.number}")
+		case Failure(error) =>
+			// TODO: Show visual error message
+			error.printStackTrace()
+			System.exit(1)
+	}
 	
 	import spadi.view.util.Setup._
 	

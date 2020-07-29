@@ -21,7 +21,7 @@ object VersionNumber
 	def parse(versionString: String) =
 	{
 		val (front, back) = versionString.splitAtFirst("-")
-		VersionNumber(front.split('.').flatMap { _.int }.toVector, back)
+		VersionNumber(front.split('.').flatMap { s => s.digits.int }.toVector, back)
 	}
 }
 
