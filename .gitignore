@@ -1,5 +1,5 @@
 out/
 .idea/workspace.xml
 data/
-database/
+./database/
 luettavat-tiedostot/

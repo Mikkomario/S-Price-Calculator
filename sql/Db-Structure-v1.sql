@@ -133,7 +133,7 @@ CREATE TABLE shop_product_base_price
     CONSTRAINT spbp_p_product_link_fk FOREIGN KEY spbp_p_product_link_idx (product_id)
         REFERENCES product(id) ON DELETE CASCADE,
 
-    ONSTRAINT spbp_s_shop_link_fk FOREIGN KEY spbp_s_shop_link_idx (shop_id)
+    CONSTRAINT spbp_s_shop_link_fk FOREIGN KEY spbp_s_shop_link_idx (shop_id)
             REFERENCES shop(id) ON DELETE CASCADE
 
 )Engine=innoDB DEFAULT CHARSET=latin1;

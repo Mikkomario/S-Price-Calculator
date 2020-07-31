@@ -31,6 +31,61 @@ object Tables
 	  */
 	def databaseVersion = apply(versionTableName)
 	
+	/**
+	  * @return Table that contains all shops
+	  */
+	def shop = apply("shop")
+	
+	/**
+	  * @return Table that contains all shop sale groups
+	  */
+	def saleGroup = apply("sale_group")
+	
+	/**
+	  * @return Table that contains current & historical amounts of each sale group
+	  */
+	def saleAmount = apply("sale_amount")
+	
+	/**
+	  * @return Table that lists all products
+	  */
+	def product = apply("product")
+	
+	/**
+	  * @return Table that contains the names of all products in each shop
+	  */
+	def productName = apply("shop_product_name")
+	
+	/**
+	  * @return Table that contains product net prices in different shops
+	  */
+	def netPrice = apply("shop_product_net_price")
+	
+	/**
+	  * @return Table that contains product base prices in different shops
+	  */
+	def basePrice = apply("shop_product_base_price")
+	
+	/**
+	  * @return Table that links product base prices with affecting sales groups
+	  */
+	def basePriceSaleLink = apply("base_price_sale_link")
+	
+	/**
+	  * @return Table that contains parse instructions for shop net price documents
+	  */
+	def netPriceKeyMap = apply("net_price_key_map")
+	
+	/**
+	  * @return Table that contains read instructions for shop base price documents
+	  */
+	def basePriceKeyMap = apply("base_price_key_map")
+	
+	/**
+	  * @return Table that contains read instructions for sale group documents
+	  */
+	def saleGroupKeyMap = apply("sale_group_key_map")
+	
 	
 	// OTHER	-------------------------------
 	
