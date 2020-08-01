@@ -22,10 +22,22 @@ object ProductNameModel
 	// OTHER	--------------------------
 	
 	/**
+	  * @param productId Id of described product
+	  * @return A model with only product id set
+	  */
+	def withProductId(productId: Int) = apply(productId = Some(productId))
+	
+	/**
 	  * @param shopId Id of the shop that uses this name
 	  * @return A model with only shop id set
 	  */
 	def withShopId(shopId: Int) = apply(shopId = Some(shopId))
+	
+	/**
+	  * @param productName A product name
+	  * @return A model with only product name set
+	  */
+	def withName(productName: String) = apply(name = Some(productName))
 	
 	/**
 	  * @param productId Id of described product
@@ -50,8 +62,19 @@ case class ProductNameModel(id: Option[Int] = None, productId: Option[Int] = Non
 							name: Option[String] = None, alternativeName: Option[String] = None,
 							deprecatedAfter: Option[Instant] = None) extends StorableWithFactory[ProductName]
 {
+	// IMPLEMENTED	-------------------------------
+	
 	override def factory = ProductNameFactory
 	
 	override def valueProperties = Vector("id" -> id, "productId" -> productId, "shopId" -> shopId,
 		"namePrimary" -> name, "nameAlternative" -> alternativeName, "deprecatedAfter" -> deprecatedAfter)
+	
+	
+	// OTHER	-----------------------------------
+	
+	/**
+	  * @param name An alternative name for this product (may be none)
+	  * @return A copy of this model with alternative name set (if specified)
+	  */
+	def withAlternativeName(name: Option[String]) = copy(alternativeName = name)
 }

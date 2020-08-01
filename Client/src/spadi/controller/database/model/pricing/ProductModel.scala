@@ -23,6 +23,12 @@ object ProductModel
 	// OTHER	-----------------------
 	
 	/**
+	  * @param productId A product id
+	  * @return A model with only id set
+	  */
+	def withId(productId: Int) = apply(Some(productId))
+	
+	/**
 	  * @param electricId Identifier unique to this product
 	  * @return A model with only electric identifier set
 	  */
