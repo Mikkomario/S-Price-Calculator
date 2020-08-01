@@ -63,7 +63,7 @@ CREATE TABLE sale_amount
 CREATE TABLE product
 (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    electric_id INT NOT NULL,
+    electric_id VARCHAR(12) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     INDEX p_electric_idx (electric_id)
@@ -115,44 +115,31 @@ CREATE TABLE shop_product_net_price
 )Engine=InnoDB DEFAULT CHARSET=latin1;
 
 -- Contains base price information for products for which this data is available
+-- NB: sale_group_id should be null only when this base price doesn't list a sale group identifier at all
 CREATE TABLE shop_product_base_price
 (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     product_id INT NOT NULL,
     shop_id INT NOT NULL,
+    sale_group_id INT,
     base_price DOUBLE NOT NULL,
     sale_unit VARCHAR(16) NOT NULL DEFAULT 'kpl',
     sale_count INT NOT NULL DEFAULT 1,
-    sale_group_identifier VARCHAR(12),
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deprecated_after DATETIME,
 
     INDEX spbp_active_price_idx (deprecated_after),
-    INDEX spbp_sale_group_idx (sale_group_identifier),
 
     CONSTRAINT spbp_p_product_link_fk FOREIGN KEY spbp_p_product_link_idx (product_id)
         REFERENCES product(id) ON DELETE CASCADE,
 
     CONSTRAINT spbp_s_shop_link_fk FOREIGN KEY spbp_s_shop_link_idx (shop_id)
-            REFERENCES shop(id) ON DELETE CASCADE
+            REFERENCES shop(id) ON DELETE CASCADE,
 
-)Engine=innoDB DEFAULT CHARSET=latin1;
-
--- Links base prices with affecting sales
-CREATE TABLE base_price_sale_link
-(
-    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    base_price_id INT NOT NULL,
-    sale_id INT NOT NULL,
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT spsl_spbp_price_link_fk FOREIGN KEY spsl_spbp_price_link_idx (base_price_id)
-        REFERENCES shop_product_base_price(id) ON DELETE CASCADE,
-
-    CONSTRAINT spsl_sg_sale_link_fk FOREIGN KEY spsl_sg_sale_link_idx (sale_id)
+    CONSTRAINT spbp_sg_sale_link_fk FOREIGN KEY spbp_sg_sale_link_idx (sale_group_id)
         REFERENCES sale_group(id) ON DELETE CASCADE
 
-)Engine=InnoDB DEFAULT CHARSET=latin1;
+)Engine=innoDB DEFAULT CHARSET=latin1;
 
 -- Instructions for reading net price documents
 CREATE TABLE net_price_key_map

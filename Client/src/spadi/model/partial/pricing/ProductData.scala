@@ -7,4 +7,4 @@ package spadi.model.partial.pricing
   * @param electricId Identifier unique to this product
   * @param shopData Shop specific data, each mapped to their shop's id
   */
-case class ProductData(electricId: Int, shopData: Map[Int, ShopProductData] = Map())
+case class ProductData(electricId: String, shopData: Map[Int, ShopProductData] = Map())

@@ -5,4 +5,4 @@ package spadi.model.stored.pricing
   * @author Mikko Hilpinen
   * @since 31.7.2020, v1.2
   */
-case class SaleGroup(id: Int, shopId: Int, groupIdentifier: String, amount: SaleAmount)
+case class SaleGroup(id: Int, shopId: Int, groupIdentifier: String, amount: Option[SaleAmount])

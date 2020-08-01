@@ -30,20 +30,6 @@ object BasePriceModel
 	def withShopId(shopId: Int) = apply(shopId = Some(shopId))
 	
 	/**
-	  * Inserts a new base price to the DB. Won't connect this price with a sale group.
-	  * @param productId Id of the described product
-	  * @param shopId Id of the shop that gives this price
-	  * @param data Base price data to insert
-	  * @param connection DB Connection (implicit)
-	  * @return Newly inserted base price, including affecting sale if found
-	  */
-	def insertWithoutSale(productId: Int, shopId: Int, data: BasePriceData)(implicit connection: Connection) =
-	{
-		val id = apply(None, Some(productId), Some(shopId), Some(data.price), data.saleGroupIdentifier).insert().getInt
-		BasePrice(id, productId, shopId, data)
-	}
-	
-	/**
 	  * Inserts a new base price to the DB and connects it with a sale group if one can be found
 	  * @param productId Id of the described product
 	  * @param shopId Id of the shop that gives this price
@@ -53,13 +39,14 @@ object BasePriceModel
 	  */
 	def insert(productId: Int, shopId: Int, data: BasePriceData)(implicit connection: Connection) =
 	{
-		// Inserts the base price, then connects it with a sale group if one is found
-		val id = apply(None, Some(productId), Some(shopId), Some(data.price), data.saleGroupIdentifier).insert().getInt
-		val saleGroup = data.saleGroupIdentifier.flatMap { identifier =>
-			DbSaleGroup.inShopWithId(shopId).withIdentifier(identifier).pull }
-		saleGroup.foreach { sale => BasePriceSaleGroupLinkModel.insert(id, sale.id) }
+		// Checks whether targeted sale group already exists, creates one if not
+		val saleGroup = data.saleGroupIdentifier.map { identifier =>
+			DbSaleGroup.inShopWithId(shopId).withIdentifier(identifier).getOrInsert }
 		
-		BasePrice(id, productId, shopId, data, saleGroup)
+		// Inserts the base price, and connects it with a sale group if one was found
+		val id = apply(None, Some(productId), Some(shopId), Some(data.price), saleGroup.map { _.id }).insert().getInt
+		
+		BasePrice(id, productId, shopId, data.price, saleGroup)
 	}
 }
 
@@ -69,7 +56,7 @@ object BasePriceModel
   * @since 1.8.2020, v1.2
   */
 case class BasePriceModel(id: Option[Int] = None, productId: Option[Int] = None, shopId: Option[Int] = None,
-						  price: Option[Price] = None, saleGroupIdentifier: Option[String] = None,
+						  price: Option[Price] = None, saleGroupId: Option[Int] = None,
 						  deprecatedAfter: Option[Instant] = None)
 	extends StorableWithFactory[BasePrice]
 {
@@ -77,6 +64,6 @@ case class BasePriceModel(id: Option[Int] = None, productId: Option[Int] = None,
 	
 	override def valueProperties = Vector("id" -> id, "productId" -> productId, "shopId" -> shopId,
 		"basePrice" -> price.map { _.amount }, "saleUnit" -> price.map { _.unit },
-		"saleCount" -> price.map { _.unitsSold }, "saleGroupIdentifier" -> saleGroupIdentifier,
+		"saleCount" -> price.map { _.unitsSold }, "saleGroupId" -> saleGroupId,
 		"deprecatedAfter" -> deprecatedAfter)
 }

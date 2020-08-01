@@ -31,9 +31,9 @@ object SaleGroupModel
 	  */
 	def insert(data: SaleGroupData)(implicit connection: Connection) =
 	{
-		// Inserts group first, then sale amount
+		// Inserts group first, then sale amount (if known)
 		val id = apply(None, Some(data.shopId), Some(data.groupIdentifier)).insert().getInt
-		val amount = SaleAmountModel.insert(id, data.priceModifier)
+		val amount =  data.priceModifier.map { mod => SaleAmountModel.insert(id, mod) }
 		SaleGroup(id, data.shopId, data.groupIdentifier, amount)
 	}
 }

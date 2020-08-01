@@ -5,4 +5,4 @@ package spadi.model.stored.pricing
   * @author Mikko Hilpinen
   * @since 31.7.2020, v1.2
   */
-case class Product(id: Int, electricId: Int, shopData: Map[Int, ShopProductInfo] = Map())
+case class Product(id: Int, electricId: String, shopData: Map[Int, ShopProductInfo] = Map())

@@ -2,7 +2,9 @@ package spadi.controller.database.access.single
 
 import spadi.controller.database.factory.pricing.SaleGroupFactory
 import spadi.controller.database.model.pricing.SaleGroupModel
+import spadi.model.partial.pricing.SaleGroupData
 import spadi.model.stored.pricing.SaleGroup
+import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleRowModelAccess, UniqueAccess}
 
 /**
@@ -63,6 +65,16 @@ object DbSaleGroup extends SingleRowModelAccess[SaleGroup]
 			override val condition = DbShopSaleGroup.this.mergeCondition(model.withIdentifier(identifier).toCondition)
 			
 			override def factory = DbShopSaleGroup.this.factory
+			
+			
+			// COMPUTED	-----------------------
+			
+			/**
+			  * @param connection Database connection (implicit)
+			  * @return This sale group from the DB or one just inserted
+			  */
+			def getOrInsert(implicit connection: Connection) = pull.getOrElse(
+				SaleGroupModel.insert(SaleGroupData.unknownAmount(shopId, identifier)))
 		}
 	}
 }

@@ -67,11 +67,6 @@ object Tables
 	def basePrice = apply("shop_product_base_price")
 	
 	/**
-	  * @return Table that links product base prices with affecting sales groups
-	  */
-	def basePriceSaleLink = apply("base_price_sale_link")
-	
-	/**
 	  * @return Table that contains parse instructions for shop net price documents
 	  */
 	def netPriceKeyMap = apply("net_price_key_map")
