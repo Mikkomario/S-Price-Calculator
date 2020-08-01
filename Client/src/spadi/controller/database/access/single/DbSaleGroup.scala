@@ -1,7 +1,7 @@
 package spadi.controller.database.access.single
 
 import spadi.controller.database.factory.pricing.SaleGroupFactory
-import spadi.controller.database.model.pricing.SaleGroupModel
+import spadi.controller.database.model.pricing.{SaleAmountModel, SaleGroupModel}
 import spadi.model.partial.pricing.SaleGroupData
 import spadi.model.stored.pricing.SaleGroup
 import utopia.vault.database.Connection
@@ -19,6 +19,13 @@ object DbSaleGroup extends SingleRowModelAccess[SaleGroup]
 	override def factory = SaleGroupFactory
 	
 	override def globalCondition = Some(SaleGroupFactory.nonDeprecatedCondition)
+	
+	
+	// COMPUTED	------------------------------
+	
+	private def model = SaleGroupModel
+	
+	private def amountModel = SaleAmountModel
 	
 	
 	// OTHER	------------------------------
@@ -39,11 +46,6 @@ object DbSaleGroup extends SingleRowModelAccess[SaleGroup]
 		override def factory = DbSaleGroup.factory
 		
 		override val globalCondition = Some(DbSaleGroup.mergeCondition(model.withShopId(shopId).toCondition))
-		
-		
-		// COMPUTED	---------------------------
-		
-		private def model = SaleGroupModel
 		
 		
 		// OTHER	---------------------------
@@ -74,7 +76,48 @@ object DbSaleGroup extends SingleRowModelAccess[SaleGroup]
 			  * @return This sale group from the DB or one just inserted
 			  */
 			def getOrInsert(implicit connection: Connection) = pull.getOrElse(
-				SaleGroupModel.insert(SaleGroupData.unknownAmount(shopId, identifier)))
+				model.insert(SaleGroupData.unknownAmount(shopId, identifier)))
+			
+			
+			// OTHER	-----------------------
+			
+			/**
+			  * Updates the price modifier of this sale
+			  * @param priceModifier New price modifier [0, 1] where 1 keeps the original price and 0 is free
+			  * @param connection DB Connection (implicit)
+			  * @return Newly updated sale group
+			  */
+			def setAmount(priceModifier: Double)(implicit connection: Connection) =
+			{
+				// Checks whether there exists a version to use or overwrite
+				pull match
+				{
+					case Some(existingVersion) =>
+						val groupId = existingVersion.id
+						def insertAmount() =
+						{
+							val newAmount = amountModel.insert(groupId, priceModifier)
+							existingVersion.copy(amount = Some(newAmount))
+						}
+						existingVersion.amount match
+						{
+							// Case: There already exists a specified price modifier. If not equal, overwrites it
+							case Some(previousSaleAmount) =>
+								if (previousSaleAmount.priceModifier == priceModifier)
+									existingVersion
+								else
+								{
+									amountModel.nowDeprecated.updateWhere(
+										amountModel.withSaleGroupId(groupId).toCondition)
+									insertAmount()
+								}
+							// If there exists a sale group without specified amount, simply specifies the amount
+							case None => insertAmount()
+						}
+					// May need to insert the whole sale group
+					case None => model.insert(SaleGroupData(shopId, identifier, priceModifier))
+				}
+			}
 		}
 	}
 }

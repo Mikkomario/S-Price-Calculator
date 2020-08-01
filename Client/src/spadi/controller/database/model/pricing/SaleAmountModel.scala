@@ -21,6 +21,12 @@ object SaleAmountModel
 	// OTHER	----------------------------
 	
 	/**
+	  * @param groupId Id of the described sale group
+	  * @return A model with only sale group id set
+	  */
+	def withSaleGroupId(groupId: Int) = apply(groupId = Some(groupId))
+	
+	/**
 	  * Inserts a new sale amount to the database
 	  * @param groupId Id of affected sale group
 	  * @param priceModifier Modifier applied to product price [0, 1]
