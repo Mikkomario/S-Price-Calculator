@@ -50,5 +50,17 @@ object DbProduct extends SingleModelAccess[Product]
 		  * @return An access point to this product's individual names
 		  */
 		def name = DbProductName.forProductWithId(productId)
+		
+		/**
+		  * @return An access point to this product's net prices in various shops
+		  */
+		def netPrice = DbProductNetPrice.forProductWithId(productId)
+		
+		/**
+		  * @return An access point to this product's base prices in various shops
+		  */
+		def basePrice = DbProductBasePrice.forProductWithId(productId)
+		
+		// TODO: Add a nested class for shop data
 	}
 }

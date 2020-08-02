@@ -6,7 +6,7 @@ import spadi.controller.database.access.single.DbSaleGroup
 import spadi.controller.database.factory.pricing.BasePriceFactory
 import spadi.model.cached.pricing.Price
 import spadi.model.partial.pricing.BasePriceData
-import spadi.model.stored.pricing.BasePrice
+import spadi.model.stored.pricing.{BasePrice, SaleGroup}
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
@@ -24,6 +24,18 @@ object BasePriceModel
 	// OTHER	-------------------------
 	
 	/**
+	  * @param priceId A base price id
+	  * @return A model with only id set
+	  */
+	def withId(priceId: Int) = apply(Some(priceId))
+	
+	/**
+	  * @param productId A described product's id
+	  * @return A model with only product id set
+	  */
+	def withProductId(productId: Int) = apply(productId = Some(productId))
+	
+	/**
 	  * @param shopId Id of associated shop
 	  * @return A model with only shop id set
 	  */
@@ -37,16 +49,28 @@ object BasePriceModel
 	  * @param connection DB Connection (implicit)
 	  * @return Newly inserted base price, including affecting sale if found
 	  */
-	def insert(productId: Int, shopId: Int, data: BasePriceData)(implicit connection: Connection) =
+	def insert(productId: Int, shopId: Int, data: BasePriceData)(implicit connection: Connection): BasePrice =
 	{
 		// Checks whether targeted sale group already exists, creates one if not
 		val saleGroup = data.saleGroupIdentifier.map { identifier =>
 			DbSaleGroup.inShopWithId(shopId).withIdentifier(identifier).getOrInsert }
-		
-		// Inserts the base price, and connects it with a sale group if one was found
-		val id = apply(None, Some(productId), Some(shopId), Some(data.price), saleGroup.map { _.id }).insert().getInt
-		
-		BasePrice(id, productId, shopId, data.price, saleGroup)
+		insert(productId, shopId, data.price, saleGroup)
+	}
+	
+	/**
+	  * Inserts a new base price to the DB
+	  * @param productId Described product's id
+	  * @param shopId Id of the shop that gives this price
+	  * @param price Price given to this product by default
+	  * @param sale Sale group to connect to this price
+	  * @param connection DB Connection (implicit)
+	  * @return Newly inserted base price
+	  */
+	def insert(productId: Int, shopId: Int, price: Price, sale: Option[SaleGroup])(implicit connection: Connection) =
+	{
+		// Inserts the base price
+		val id = apply(None, Some(productId), Some(shopId), Some(price), sale.map { _.id }).insert().getInt
+		BasePrice(id, productId, shopId, price, sale)
 	}
 }
 

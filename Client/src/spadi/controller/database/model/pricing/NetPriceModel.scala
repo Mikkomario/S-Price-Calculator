@@ -22,6 +22,18 @@ object NetPriceModel
 	// OTHER	--------------------------
 	
 	/**
+	  * @param netPriceId A net price id
+	  * @return A model with only id set
+	  */
+	def withId(netPriceId: Int) = apply(Some(netPriceId))
+	
+	/**
+	  * @param productId Id of the described product
+	  * @return A model with only product id set
+	  */
+	def withProductId(productId: Int) = apply(productId = Some(productId))
+	
+	/**
 	  * @param shopId Id of the shop that gives this price
 	  * @return A model with only shop id set
 	  */
