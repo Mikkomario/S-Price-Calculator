@@ -20,6 +20,5 @@ trait KeyMapping[+A] extends FromModelFactoryWithSchema[A] with ModelConvertible
 	
 	// IMPLEMENTED  ---------------------------
 	
-	override def schema = ModelDeclaration(requiredKeys.map
-	{ k => PropertyDeclaration(k, StringType) })
+	override def schema = ModelDeclaration(requiredKeys.map { k => PropertyDeclaration(k, StringType) })
 }
