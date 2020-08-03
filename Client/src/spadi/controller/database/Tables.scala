@@ -67,14 +67,9 @@ object Tables
 	def basePrice = apply("shop_product_base_price")
 	
 	/**
-	  * @return Table that contains parse instructions for shop net price documents
+	  * @return Table that contains parse instructions for shop price documents
 	  */
-	def netPriceKeyMap = apply("net_price_key_map")
-	
-	/**
-	  * @return Table that contains read instructions for shop base price documents
-	  */
-	def basePriceKeyMap = apply("base_price_key_map")
+	def priceKeyMap = apply("price_key_map")
 	
 	/**
 	  * @return Table that contains read instructions for sale group documents

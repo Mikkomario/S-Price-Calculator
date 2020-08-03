@@ -141,40 +141,26 @@ CREATE TABLE shop_product_base_price
 
 )Engine=innoDB DEFAULT CHARSET=latin1;
 
--- Instructions for reading net price documents
-CREATE TABLE net_price_key_map
+-- Common instructions for reading both net and base price price documents
+-- Type 1 refers to net price. Type 2 refers to base price.
+CREATE TABLE price_key_map
 (
     id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     shop_id INT NOT NULL,
+    type_identifier INT NOT NULL,
     electric_id_key VARCHAR(32) NOT NULL,
     product_name_key VARCHAR(32) NOT NULL,
     product_name_key_alternative VARCHAR(32),
-    net_price_key VARCHAR(32) NOT NULL,
+    price_key VARCHAR(32) NOT NULL,
     sale_unit_key VARCHAR(32),
     sale_count_key VARCHAR(32),
-    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-    CONSTRAINT npkm_s_shop_link_fk FOREIGN KEY npkm_s_shop_link_idx (shop_id)
-        REFERENCES shop(id) ON DELETE CASCADE
-
-)Engine=InnoDB DEFAULT CHARSET=latin1;
-
--- Instructions for reading base price documents
-CREATE TABLE base_price_key_map
-(
-    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
-    shop_id INT NOT NULL,
-    electric_id_key VARCHAR(32) NOT NULL,
-    product_name_key VARCHAR(32) NOT NULL,
-    product_name_key_alternative VARCHAR(32),
-    base_price_key VARCHAR(32) NOT NULL,
     sale_group_key VARCHAR(32),
-    sale_unit_key VARCHAR(32),
-    sale_count_key VARCHAR(32),
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    CONSTRAINT bpkm_s_shop_link_fk FOREIGN KEY bpkm_s_shop_link_idx (shop_id)
-            REFERENCES shop(id) ON DELETE CASCADE
+    INDEX pkm_timeline_idx (created),
+
+    CONSTRAINT pkm_s_shop_link_fk FOREIGN KEY pkm_s_shop_link_idx (shop_id)
+        REFERENCES shop(id) ON DELETE CASCADE
 
 )Engine=InnoDB DEFAULT CHARSET=latin1;
 
@@ -186,6 +172,8 @@ CREATE TABLE sale_group_key_map
     group_id_key VARCHAR(32) NOT NULL,
     sale_percent_key VARCHAR(32) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    INDEX sgkm_pkm_timeline_idx (created),
 
     CONSTRAINT sgkm_s_shop_link_fk FOREIGN KEY sgkm_s_shop_link_idx (shop_id)
         REFERENCES shop(id) ON DELETE CASCADE
