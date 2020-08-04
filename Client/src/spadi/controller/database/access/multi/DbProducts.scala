@@ -1,6 +1,7 @@
 package spadi.controller.database.access.multi
 
 import spadi.controller.database.access.id.ProductId
+import spadi.controller.database.access.single.{DbProductBasePrice, DbProductName, DbProductNetPrice}
 import spadi.controller.database.factory.pricing.ProductFactory
 import spadi.model.partial.pricing.ProductData
 import spadi.model.stored.pricing.Product
@@ -23,6 +24,11 @@ object DbProducts extends ManyModelAccess[Product]
 	
 	// OTHER	------------------------------
 	
+	/**
+	  * Inserts new product data
+	  * @param data Product data to insert or update
+	  * @param connection DB Connection (implicit)
+	  */
 	def insertData(data: ProductData)(implicit connection: Connection) =
 	{
 		// First makes sure the product row exists
@@ -30,8 +36,10 @@ object DbProducts extends ManyModelAccess[Product]
 		
 		// Next inserts name, base price and net price data for each shop where applicable
 		data.shopData.foreach { case (shopId, shopData) =>
-			// Checks previous product name. Deprecates and replaces it if necessary
-			
+			DbProductName.forProductWithId(productId).inShopWithId(shopId)
+				.set(shopData.name.name, shopData.name.alternativeName)
+			shopData.basePrice.foreach { DbProductBasePrice.forProductWithId(productId).inShopWithId(shopId).set(_) }
+			shopData.netPrice.foreach { DbProductNetPrice.forProductWithId(productId).inShopWithId(shopId).set(_) }
 		}
 	}
 }

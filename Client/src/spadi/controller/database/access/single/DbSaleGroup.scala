@@ -78,16 +78,13 @@ object DbSaleGroup extends SingleRowModelAccess[SaleGroup]
 			def getOrInsert(implicit connection: Connection) = pull.getOrElse(
 				model.insert(SaleGroupData.unknownAmount(shopId, identifier)))
 			
-			
-			// OTHER	-----------------------
-			
 			/**
 			  * Updates the price modifier of this sale
 			  * @param priceModifier New price modifier [0, 1] where 1 keeps the original price and 0 is free
 			  * @param connection DB Connection (implicit)
 			  * @return Newly updated sale group
 			  */
-			def setAmount(priceModifier: Double)(implicit connection: Connection) =
+			def amount_=(priceModifier: Double)(implicit connection: Connection) =
 			{
 				// Checks whether there exists a version to use or overwrite
 				pull match

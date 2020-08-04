@@ -12,6 +12,7 @@ import spadi.view.util.Setup._
 import utopia.flow.datastructure.immutable.{Model, Value}
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.parse.CsvReader
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.TimeExtensions._
@@ -325,8 +326,20 @@ object ReadProducts2
 	{
 		val target = SheetTarget.sheetAtIndex(0, source.firstDataRowIndex -> 0,
 			cellHeadersRowIndex = source.headerRowIndex)
-		ReadExcel.from(source.filePath, target).flatMap
-		{ models => models.tryMap(source.mapping.apply) }
+		ReadExcel.from(source.filePath, target).flatMap { models => models.tryMap(source.mapping.apply) }
+	}
+	
+	// TODO: Instead of data source + function, use a data processor
+	// TODO: Add a reader that finds out correct header row index
+	private def process[A](source: DataSource[A])(function: A => Unit) =
+	{
+		// Ignores parsing errors but not file read errors
+		source.filePath.fileType.toLowerCase match
+		{
+			case "csv" => CsvReader.foreachLine(source.filePath) { item => source.mapping(item).foreach(function) }
+			case _ => ReadExcel.from(source.filePath, SheetTarget.sheetAtIndex(0, source.firstDataRowIndex -> 0,
+				cellHeadersRowIndex = source.headerRowIndex)).map { _.foreach { source.mapping(_).foreach(function) } }
+		}
 	}
 	
 	
