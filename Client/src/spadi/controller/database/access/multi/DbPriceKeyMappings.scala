@@ -4,7 +4,9 @@ import spadi.controller.database.factory.reading.PriceKeyMappingFactory
 import spadi.controller.database.model.reading.PriceKeyMappingModel
 import spadi.model.enumeration.PriceType
 import spadi.model.enumeration.PriceType.{Base, Net}
+import spadi.model.partial.reading.PriceKeyMappingData
 import spadi.model.stored.reading.PriceKeyMapping
+import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyRowModelAccess
 
 /**
@@ -33,6 +35,14 @@ object DbPriceKeyMappings extends ManyRowModelAccess[PriceKeyMapping]
 	  * @return An access point to that shop's price key mappings
 	  */
 	def forShopWithId(shopId: Int) = DbShopPriceKeyMappings(shopId)
+	
+	/**
+	  * Inserts a new mapping to DB
+	  * @param data Mapping to insert
+	  * @param connection DB Connection (implicit)
+	  * @return Newly inserted mapping
+	  */
+	def insert(data: PriceKeyMappingData)(implicit connection: Connection) = model.insert(data)
 	
 	
 	// NESTED	------------------------------

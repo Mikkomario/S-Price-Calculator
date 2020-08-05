@@ -26,6 +26,16 @@ object Globals
 	val dataDirectory: Path = "data"
 	
 	/**
+	  * A directory that contains the files to import
+	  */
+	val fileInputDirectory: Path = "luettavat-tiedostot"
+	
+	/**
+	  * A directory that contains the files that have already been imported
+	  */
+	val fileHistoryDirectory: Path = "luetut-tiedostot"
+	
+	/**
 	  * Directory under which database structure changes should be added
 	  */
 	val sqlImportDirectory: Path = "sql"

@@ -11,7 +11,7 @@ import utopia.reflection.localization.LocalString._
   * @author Mikko Hilpinen
   * @since 3.8.2020, v1.2
   */
-object SaleKeyMappingFromFieldsFactory extends KeyMappingFactory[SaleGroupData]
+object SaleKeyMappingFromFieldsFactory extends KeyMappingFactory2[SaleGroupData, SaleKeyMappingData]
 {
 	// ATTRIBUTES   -----------------------------
 	

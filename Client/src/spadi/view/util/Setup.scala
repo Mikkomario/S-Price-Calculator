@@ -15,6 +15,7 @@ import utopia.reflection.component.context.{AnimationContext, BaseContext, Scrol
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.Margins
 import utopia.reflection.text.Font
+import utopia.vault.database.ConnectionPool
 
 import scala.concurrent.ExecutionContext
 
@@ -63,4 +64,6 @@ object Setup
 	// COMPUTED --------------------------------
 	
 	implicit def exc: ExecutionContext = Globals.executionContext
+	
+	implicit def connectionPool: ConnectionPool = Globals.connectionPool
 }

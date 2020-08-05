@@ -31,7 +31,7 @@ object PriceInputType
 	 */
 	case object SalePrice extends PriceInputType
 	{
-		override def name = "Alennettu Hinta"
+		override def name = "Nettohinta"
 	}
 	
 	/**
