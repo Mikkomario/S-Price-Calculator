@@ -7,7 +7,12 @@ import spadi.controller.database.access.single.DbSaleGroup
 import spadi.model.cached.read.KeyMapping
 import spadi.model.partial.pricing.{ProductData, SaleGroupData}
 import spadi.model.stored.reading.SaleKeyMapping
+import utopia.flow.datastructure.template.{Model, Property}
+import utopia.flow.parse.CsvReader
+import utopia.flow.util.FileExtensions._
 import utopia.vault.database.Connection
+
+import scala.util.{Failure, Success, Try}
 
 object DataProcessor
 {
@@ -25,6 +30,12 @@ object DataProcessor
 			}
 		}
 	
+	/**
+	  * Creates a new data processor that targets product price documents
+	  * @param filePath Document path
+	  * @param mapping Mapping for reading product data from the documents
+	  * @return A new data processor
+	  */
 	def forPrices(filePath: Path, mapping: KeyMapping[ProductData]) =
 		DataProcessor[ProductData](filePath, mapping) { (price, connection) =>
 			implicit val c: Connection = connection
@@ -43,9 +54,46 @@ object DataProcessor
 case class DataProcessor[A](filePath: Path, mapping: KeyMapping[A])(parse: (A, Connection) => Unit)
 {
 	/**
-	  * Processes the following read item
-	  * @param item Item to process
+	  * Processes the following read model
+	  * @param model Model to parse and process
 	  * @param connection DB Connection
+	  * @return Success on model parse success. Failure otherwise.
 	  */
-	def apply(item: A)(implicit connection: Connection) = parse(item, connection)
+	def apply(model: Model[Property])(implicit connection: Connection) =
+		mapping(model).map { parse(_, connection) }
+	
+	/**
+	  * Reads targeted file and processes its contents
+	  * @param connection Database connection
+	  * @return Success on file read success. Failure otherwise.
+	  */
+	def apply()(implicit connection: Connection): Try[Unit] =
+	{
+		// Collects some data from parsing results
+		var firstParseFailure: Option[Throwable] = None
+		var hadSuccess = false
+		def processModel(model: Model[Property]) = apply(model) match
+		{
+			case Success(_) => hadSuccess = true
+			case Failure(error) => if (firstParseFailure.isEmpty) firstParseFailure = Some(error)
+		}
+		
+		// TODO: Handle csv line separator (now expects ;)
+		// Reads file contents using either csv parsing or excel row processing
+		(filePath.fileType.toLowerCase match
+		{
+			case "csv" => CsvReader.foreachLine(filePath)(processModel)
+			case _ => ReadExcel.foreachRowInSheetAtIndex(filePath, 0, mapping.requiredKeys.size)(processModel)
+		}).flatMap { _ =>
+			// Checks whether all model parsing failed. Returns failure if so.
+			if (hadSuccess)
+				Success(())
+			else
+				firstParseFailure match
+				{
+					case Some(error) => Failure(error)
+					case None => Success(())
+				}
+		}
+	}
 }
