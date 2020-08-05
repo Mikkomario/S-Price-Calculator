@@ -72,10 +72,12 @@ object SPriceApp2 extends App
 					Log(error, "Failed to read shop & product data")
 					Fields.errorDialog("Tuotetietojen lukeminen epäonnistui.\nVirheilmoitus: %s"
 						.autoLocalized.interpolated(Vector(error.getLocalizedMessage))).displayBlocking()
+					System.exit(1)
 			}
 		case Failure(error) =>
 			Log(error, "Failed to set up the database")
 			Fields.errorDialog("Tietokannan alustus epäonnistui.\nVirheilmoitus: %s"
 				.autoLocalized.interpolated(Vector(error.getLocalizedMessage))).displayBlocking()
+			System.exit(1)
 	}
 }

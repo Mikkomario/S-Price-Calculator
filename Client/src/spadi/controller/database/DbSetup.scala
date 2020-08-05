@@ -101,6 +101,34 @@ object DbSetup
 	}
 	
 	/**
+	  * Clears existing data from the database
+	  * @return Success or failure
+	  */
+	def clear() =  Try {
+		// Sets up the database
+		val configBuilder = DBConfigurationBuilder.newBuilder()
+		configBuilder.setPort(0)
+		configBuilder.setDataDir(("database": Path).absolute.toString)
+		val database = DB.newEmbeddedDB(configBuilder.build()) // May throw
+		
+		// Updates Vault connection settings
+		Connection.modifySettings { _.copy(
+			connectionTarget = configBuilder.getURL(""),
+			defaultDBName = Some("test")) }
+		
+		// Starts the database (may throw)
+		database.start()
+		// Closes the database when program closes
+		CloseHook.registerAction {
+			println("Stopping database")
+			database.stop()
+		}
+		
+		// Clears old data
+		connectionPool { _.dropDatabase(Tables.databaseName) }
+	}
+	
+	/**
 	  * Sets up database access and updates the database to the latest version
 	  * @return Current database version on success. Failure if database couldn't be started, created or updated.
 	  */
@@ -138,6 +166,7 @@ object DbSetup
 				else
 					None
 			}.flatMap { currentDbVersion =>
+				println(s"Version before update: ${currentDbVersion.map { _.toString }.getOrElse("No Database") }")
 				ScanSourceFiles(currentDbVersion.map { _.number }).flatMap { sources =>
 					// Fails if database can't be set up
 					if (sources.isEmpty)
@@ -148,11 +177,15 @@ object DbSetup
 					}
 					else
 					{
+						println(s"Updating with sources: $sources")
 						progressPointer.value = ProgressState(0.9, s"Löydettiin ${sources.size} päivitystä")
 						connectionPool.tryWith { implicit connection =>
 							// Drops the previous database if necessary
 							if (currentDbVersion.isDefined && sources.exists {_.fileType == Full})
+							{
+								println("Dropping previous database version")
 								connection.dropDatabase(Tables.databaseName)
+							}
 							
 							// Imports the source files in order
 							val progressPerSource = 0.1 / sources.size

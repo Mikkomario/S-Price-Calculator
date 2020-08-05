@@ -48,6 +48,7 @@ object DbProducts extends ManyModelAccess[Product]
 	{
 		// First makes sure the product row exists
 		val productId = ProductId.forElectricIdentifier(data.electricId)
+		println(s"Inserting data for product $productId (${data.electricId})")
 		
 		// Next inserts name, base price and net price data for each shop where applicable
 		data.shopData.foreach { case (shopId, shopData) =>

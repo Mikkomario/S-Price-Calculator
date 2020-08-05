@@ -36,8 +36,6 @@ object ScanSourceFiles
 					}.toMap
 				}
 				comments.toOption.flatMap { comments =>
-					// TODO: Remove test print
-					println(comments)
 					comments.get("version").map { versionString =>
 						val fileType = comments.get("type").map(SqlFileType.forString).getOrElse(Full)
 						DatabaseStructureSource(file, fileType, VersionNumber.parse(versionString),
@@ -55,15 +53,20 @@ object ScanSourceFiles
 				{
 					case Some(currentVersion) =>
 						val latestVersion = sources.last.targetVersion
-						// Reads only update files, if they form a path to the latest version.
-						// Otherwise reads the full version, if present.
-						val updates = sources.filter { _.fileType == Changes }.dropWhile { s =>
-							s.targetVersion <= currentVersion || s.originVersion.exists { _ < currentVersion } }
-						if (updates.headOption.exists { _.originVersion.forall { _ == currentVersion } } &&
-							updates.lastOption.exists { _.targetVersion == latestVersion })
-							updates
+						if (latestVersion > currentVersion)
+						{
+							// Reads only update files, if they form a path to the latest version.
+							// Otherwise reads the full version, if present.
+							val updates = sources.filter { _.fileType == Changes }.dropWhile { s =>
+								s.targetVersion <= currentVersion || s.originVersion.exists { _ < currentVersion } }
+							if (updates.headOption.exists { _.originVersion.forall { _ == currentVersion } } &&
+								updates.lastOption.exists { _.targetVersion == latestVersion })
+								updates
+							else
+								sources.findLast { _.fileType == Full }.map { Vector(_) }.getOrElse(updates)
+						}
 						else
-							sources.findLast { _.fileType == Full }.map { Vector(_) }.getOrElse(updates)
+							Vector()
 					case None => sources.findLast { _.fileType == Full }.toVector
 				}
 			}

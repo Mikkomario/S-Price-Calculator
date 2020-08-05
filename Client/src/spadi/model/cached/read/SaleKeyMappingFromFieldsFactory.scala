@@ -11,7 +11,7 @@ import utopia.reflection.localization.LocalString._
   * @author Mikko Hilpinen
   * @since 3.8.2020, v1.2
   */
-object SaleKeyMappingFromFieldsFactory extends KeyMappingFactory2[SaleGroupData, SaleKeyMappingData]
+case class SaleKeyMappingFromFieldsFactory(shopId: Int) extends KeyMappingFactory2[SaleGroupData, SaleKeyMappingData]
 {
 	// ATTRIBUTES   -----------------------------
 	
@@ -20,8 +20,8 @@ object SaleKeyMappingFromFieldsFactory extends KeyMappingFactory2[SaleGroupData,
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override val fieldNames = Vector("ID".local -> true, "Nimi".local -> true, "Alennusprosentti".local -> true)
+	override val fieldNames = Vector("ID".local -> true, "Alennusprosentti".local -> true)
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = SaleKeyMappingData(model("ID"), model("Nimi"),
+	override protected def fromValidatedModel(model: Model[Constant]) = SaleKeyMappingData(shopId, model("ID"),
 		model("Alennusprosentti"))
 }

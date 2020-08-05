@@ -3,7 +3,6 @@ package spadi.view.component
 import java.nio.file.Path
 
 import spadi.controller.Log
-import spadi.controller.database.access.multi.DbShops
 import spadi.model.cached.read
 import spadi.model.cached.read.FileReadSetting2
 import spadi.model.enumeration.PriceInputType
@@ -31,15 +30,14 @@ import utopia.reflection.shape.LengthExtensions._
  * @author Mikko Hilpinen
  * @since 26.5.2020, v1.1
  */
-class FileReadSettingInputRow2(group: SegmentGroup, base: Either[Path, FileReadSetting2])
+class FileReadSettingInputRow2(group: SegmentGroup, base: Either[Path, FileReadSetting2],
+							   shopsPointer: PointerWithEvents[Vector[Shop]])
 							  (onDeleteRequested: FileReadSettingInputRow2 => Unit)(implicit context: TextContext)
 	extends StackableAwtComponentWrapperWrapper
 {
 	// ATTRIBUTES   ------------------------------
 	
 	private implicit val languageCode: String = "fi"
-	
-	private val shopsPointer = new PointerWithEvents(Vector[Shop]())
 	
 	private val (shopSelection, typeSelection) = context.forGrayFields.use { implicit ddC =>
 		val shopSelection = new ShopSelectionVC2(shopsPointer)
@@ -79,12 +77,6 @@ class FileReadSettingInputRow2(group: SegmentGroup, base: Either[Path, FileReadS
 	
 	
 	// INITIAL CODE -----------------------------
-	
-	// Reads available shops from the database
-	connectionPool.tryWith { implicit c => shopsPointer.value = DbShops.all.sortBy { _.name } }.failure.foreach { error =>
-		// TODO: Show error in dialog
-		Log(error, "Failed to read shops from the database")
-	}
 	
 	// On edit mode, sets default values
 	base.toOption.foreach { settings =>

@@ -7,7 +7,7 @@ import spadi.controller.database.access.multi.{DbPriceKeyMappings, DbSaleKeyMapp
 import spadi.controller.read.{DataProcessor, ReadExcel}
 import spadi.model.cached.ProgressState
 import spadi.model.cached.read._
-import spadi.model.enumeration.PriceInputType.{BasePrice, SaleGroup, SalePrice}
+import spadi.model.enumeration.PriceInputType.{SaleGroup, SalePrice}
 import spadi.model.partial.pricing.{ProductData, SaleGroupData}
 import spadi.model.partial.reading.{PriceKeyMappingData, SaleKeyMappingData}
 import spadi.view.component.Fields
@@ -99,8 +99,8 @@ object NewFileConfigurationUI2
 			
 			// Creates input dialogs for settings which don't yet have a suitable mapping
 			val saleInputs = saleSettingsWithoutMappings.map { setting =>
-				new DataSourceInput[SaleGroupData, SaleKeyMappingData](setting, SaleKeyMappingFromFieldsFactory)({ case (p, m) =>
-					DataProcessor.forSaleGroups(p, m)})
+				new DataSourceInput[SaleGroupData, SaleKeyMappingData](setting,
+					SaleKeyMappingFromFieldsFactory(setting.shop.id))({ case (p, m) => DataProcessor.forSaleGroups(p, m)})
 			}
 			val priceInputs = priceSettingsWithoutMappings.map { setting =>
 				val factory = setting.inputType match
@@ -139,14 +139,19 @@ object NewFileConfigurationUI2
 					
 					connectionPool.tryWith { implicit connection =>
 						// Inserts new mappings to the database
-						val progressPerInput = 0.1 / (saleInputs.size + priceInputs.size)
-						saleInputs.foreach { input =>
-							input.result.foreach { processor => DbSaleKeyMappings.insert(processor.mapping) }
-							progressPointer.update { p => p.copy(progress = p.progress + progressPerInput) }
-						}
-						priceInputs.foreach { input =>
-							input.result.foreach { processor => DbPriceKeyMappings.insert(processor.mapping) }
-							progressPointer.update { p => p.copy(progress = p.progress + progressPerInput) }
+						if (saleInputs.nonEmpty || priceInputs.nonEmpty)
+						{
+							val progressPerInput = 0.1 / (saleInputs.size + priceInputs.size)
+							println(s"Saving ${saleInputs.size} sale read settings")
+							saleInputs.foreach { input =>
+								input.result.foreach { processor => DbSaleKeyMappings.insert(processor.mapping) }
+								progressPointer.update { p => p.copy(progress = p.progress + progressPerInput) }
+							}
+							println(s"Saving ${priceInputs.size} price read settings")
+							priceInputs.foreach { input =>
+								input.result.foreach { processor => DbPriceKeyMappings.insert(processor.mapping) }
+								progressPointer.update { p => p.copy(progress = p.progress + progressPerInput) }
+							}
 						}
 						
 						// Processes data from all recognized files, then moves the files to the history folder
@@ -159,6 +164,7 @@ object NewFileConfigurationUI2
 						}
 						val allProcessors = allInputs.flatMap { _.result } ++ existingSaleProcessors ++
 							existingPriceProcessors
+						println(s"Using ${allProcessors.size} data processors")
 						
 						val failuresBuilder = new VectorBuilder[(Path, Throwable)]()
 						allProcessors.zipWithIndex.foreach { case (processor, index) =>
@@ -166,9 +172,11 @@ object NewFileConfigurationUI2
 								"Käsitellään tiedostoa ${file} (${current}/${max})".autoLocalized
 									.interpolated(Map("file" -> processor.filePath.fileName,
 										"current" -> (index + 1).toString, "max" -> allProcessors.size.toString)))
+							println(s"Processing ${processor.filePath}")
 							processor().flatMap { _ => processor.filePath.moveTo(Globals.fileHistoryDirectory) }
 								.failure.foreach { failuresBuilder += processor.filePath -> _ }
 						}
+						println("Processing completed")
 						progressPointer.value = ProgressState.finished("Kaikki tiedostot käsitelty")
 						
 						// Shows an error message if some reads failed
@@ -202,18 +210,42 @@ object NewFileConfigurationUI2
 	{
 		// ATTRIBUTES   -------------------
 		
-		// TODO: Log possible errors
 		// Finds the first row in target document that is suitable for serving as the header
 		private lazy val headerRow: Option[Vector[String]] =
 		{
 			val requiredColumnCount = mappingFactory.fieldNames.count { _._2 }
+			println(s"Requires $requiredColumnCount columns in ${setting.path.fileName}")
 			setting.path.fileType.toLowerCase match
 			{
-				case "csv" => CsvReader.iterateRawRowsIn(setting.path) {
-					_.find { _.count { _.nonEmpty } >= requiredColumnCount } }.toOption.flatten
-				case _ => ReadExcel.withoutHeadersFromSheetAtIndex(setting.path, 0).toOption
-					.flatMap { _.find { _.count { _.string.exists { _.nonEmpty } } >= requiredColumnCount } }
-					.map { _.map { _.getString } }
+					// TODO: Remove test prints
+				case "csv" =>
+					println("Csv file")
+					CsvReader.iterateRawRowsIn(setting.path) { rowsIter =>
+						if (rowsIter.isEmpty)
+							println("Empty row iterator")
+						rowsIter.find { _.count { _.nonEmpty } >= requiredColumnCount }
+					} match
+					{
+						case Success(result) =>
+							println(s"Csv headers: $result")
+							result
+						case Failure(error) =>
+							Log(error, s"Headers search failed in ${setting.path}")
+							None
+					}
+				case _ =>
+					println("Excel file")
+					ReadExcel.withoutHeadersFromSheetAtIndex(setting.path, 0) match
+					{
+						case Success(rows) =>
+							println(s"Found ${rows.size} rows")
+							val targetRow = rows.find { _.count { _.string.exists { _.nonEmpty } } >= requiredColumnCount }
+							println(s"Header row: $targetRow")
+							targetRow.map { _.map { _.getString } }
+						case Failure(error) =>
+							Log(error, s"Failed to read headers from ${setting.path}")
+							None
+					}
 			}
 		}
 		

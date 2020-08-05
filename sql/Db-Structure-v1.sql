@@ -4,6 +4,7 @@
 -- Version: v1.0
 --
 
+DROP DATABASE IF EXISTS s_price;
 CREATE DATABASE s_price;
 USE s_price;
 
@@ -31,7 +32,7 @@ CREATE TABLE shop
 -- Contains shop-specific sales groups
 CREATE TABLE sale_group
 (
-    id INT NOT NULL,
+    id INT NOT NULL PRIMARY KEY AUTO_INCREMENT,
     shop_id INT NOT NULL,
     group_identifier VARCHAR(12) NOT NULL,
     created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

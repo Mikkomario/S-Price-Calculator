@@ -74,7 +74,9 @@ case class DataProcessor[A, +M <: KeyMapping[A]](filePath: Path, mapping: M)(par
 		def processModel(model: Model[Property]) = apply(model) match
 		{
 			case Success(_) => hadSuccess = true
-			case Failure(error) => if (firstParseFailure.isEmpty) firstParseFailure = Some(error)
+			case Failure(error) =>
+				error.printStackTrace() // TODO: Remove test prints
+				if (firstParseFailure.isEmpty) firstParseFailure = Some(error)
 		}
 		
 		// TODO: Handle csv line separator (now expects ;)

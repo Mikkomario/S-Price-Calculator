@@ -58,6 +58,7 @@ class ShopSelectionVC2(shopsPointer: PointerWithEvents[Vector[Shop]])(implicit c
 				{
 					case Success(shop) =>
 						// Adds the shop to the list of selectable shops and selects it
+						println(s"Adding shop $shop")
 						shopsPointer.value :+= shop
 						dd.selectOne(shop)
 					case Failure(error) =>
