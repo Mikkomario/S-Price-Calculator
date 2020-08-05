@@ -1,6 +1,15 @@
 package spadi.model.cached.pricing
 
 import utopia.flow.util.RichComparable
+import utopia.genesis.util.Scalable
+
+object Price
+{
+	/**
+	  * Maximum price possible
+	  */
+	val max = apply(Double.MaxValue)
+}
 
 /**
   * Represents a product price. Consists of the total price, a unit and the number of items sold at once
@@ -8,6 +17,7 @@ import utopia.flow.util.RichComparable
   * @since 31.7.2020, v1.2
   */
 case class Price(amount: Double, unit: String = "kpl", unitsSold: Int = 1) extends RichComparable[Price]
+	with Scalable[Price]
 {
 	// COMPUTED	-------------------------
 	
@@ -18,6 +28,10 @@ case class Price(amount: Double, unit: String = "kpl", unitsSold: Int = 1) exten
 	
 	
 	// IMPLEMENTED	---------------------
+	
+	override def repr = this
+	
+	override def *(mod: Double) = copy(amount = amount * mod)
 	
 	override def compareTo(o: Price) = pricePerUnit.compareTo(o.pricePerUnit)
 	
