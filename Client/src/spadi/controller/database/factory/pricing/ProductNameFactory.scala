@@ -14,10 +14,30 @@ import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
   */
 object ProductNameFactory extends FromValidatedRowModelFactory[ProductName] with Deprecatable
 {
+	// ATTRIBUTES	-------------------------------
+	
+	val productIdAttName = "productId"
+	
+	val nameAttName = "namePrimary"
+	
+	val alternativeNameAttName = "nameAlternative"
+	
+	/**
+	  * @return Column that contains the product name
+	  */
+	lazy val productIdColumn = table(productIdAttName)
+	
+	lazy val nameColumn = table(nameAttName)
+	
+	lazy val alternativeNameColumn = table(alternativeNameAttName)
+	
+	
+	// IMPLEMENTED	-------------------------------
+	
 	override lazy val nonDeprecatedCondition = table("deprecatedAfter").isNull
 	
 	override def table = Tables.productName
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = ProductName(model("id"), model("productId"),
-		model("shopId"), ProductNameData(model("namePrimary"), model("nameAlternative")))
+	override protected def fromValidatedModel(model: Model[Constant]) = ProductName(model("id"), model(productIdAttName),
+		model("shopId"), ProductNameData(model(nameAttName), model(alternativeNameAttName)))
 }

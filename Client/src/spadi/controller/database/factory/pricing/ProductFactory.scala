@@ -17,11 +17,23 @@ import scala.util.{Failure, Success}
   */
 object ProductFactory extends FromResultFactory[Product] with Deprecatable
 {
+	// ATTRIBUTES	-------------------------
+	
+	val electricIdAttName = "electricId"
+	
+	lazy val electricIdColumn = table(electricIdAttName)
+	
+	
+	// COMPUTED	-----------------------------
+	
 	private def nameTable = ProductNameFactory.table
 	
 	private def netPriceTable = NetPriceFactory.table
 	
 	private def basePriceTable = BasePriceFactory.table
+	
+	
+	// IMPLEMENTED	-------------------------
 	
 	override def table = Tables.product
 	
@@ -46,7 +58,7 @@ object ProductFactory extends FromResultFactory[Product] with Deprecatable
 				val info = names.groupBy { _.shopId }.map { case (shopId, names) => shopId -> ShopProductInfo(names.last,
 					basePricesByShop.get(shopId), netPricesByShop.get(shopId)) }
 				// Combines all data
-				Product(id, valid("electricId"), info)
+				Product(id, valid(electricIdAttName), info)
 			} match
 			{
 				case Success(product) => Some(product)

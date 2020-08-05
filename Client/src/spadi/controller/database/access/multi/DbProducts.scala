@@ -5,8 +5,10 @@ import spadi.controller.database.access.single.{DbProductBasePrice, DbProductNam
 import spadi.controller.database.factory.pricing.ProductFactory
 import spadi.model.partial.pricing.ProductData
 import spadi.model.stored.pricing.Product
+import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.sql.Extensions._
 
 /**
   * Used for accessing multiple products at once
@@ -19,10 +21,23 @@ object DbProducts extends ManyModelAccess[Product]
 	
 	override def factory = ProductFactory
 	
-	override def globalCondition = None
+	override def globalCondition = Some(factory.nonDeprecatedCondition)
+	
+	
+	// COMPUTED	------------------------------
+	
+	private def idColumn = factory.table.primaryColumn.get
 	
 	
 	// OTHER	------------------------------
+	
+	/**
+	  * @param productIds A set of product ids
+	  * @param connection DB Connection (implicit)
+	  * @return Product data for products with those ids
+	  */
+	def withIds(productIds: Iterable[Int])(implicit connection: Connection) =
+		read(Some(idColumn.in(productIds)))
 	
 	/**
 	  * Inserts new product data
