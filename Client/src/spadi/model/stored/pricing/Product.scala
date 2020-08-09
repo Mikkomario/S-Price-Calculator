@@ -7,7 +7,7 @@ import spadi.model.cached.pricing.Price
   * @author Mikko Hilpinen
   * @since 31.7.2020, v1.2
   */
-case class Product(id: Int, electricId: String, shopData: Set[ShopProductInfo] = Set())
+case class Product(id: Int, electricId: String, shopData: Set[ShopProduct] = Set())
 {
 	// ATTRIBUTES	------------------------
 	

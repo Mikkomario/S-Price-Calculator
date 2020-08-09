@@ -1,7 +1,7 @@
 package spadi.controller.database.factory.pricing
 
 import spadi.controller.database.Tables
-import spadi.model.stored.pricing.ShopProductInfo
+import spadi.model.stored.pricing.ShopProduct
 import utopia.flow.generic.ValueUnwraps._
 import utopia.vault.model.immutable.Row
 import utopia.vault.nosql.factory.{Deprecatable, FromRowFactory}
@@ -12,7 +12,7 @@ import utopia.vault.sql.JoinType
   * @author Mikko Hilpinen
   * @since 9.8.2020, v1.2
   */
-object ShopProductFactory extends FromRowFactory[ShopProductInfo] with Deprecatable
+object ShopProductFactory extends FromRowFactory[ShopProduct] with Deprecatable
 {
 	// ATTRIBUTES	------------------------------
 	
@@ -43,7 +43,7 @@ object ShopProductFactory extends FromRowFactory[ShopProductInfo] with Deprecata
 		val netPrice = NetPriceFactory.parseIfPresent(row)
 		val basePrice = BasePriceFactory.parseIfPresent(row)
 		
-		ShopProductInfo(model("id"), model(productIdAttName), model(shopIdAttName), model(nameAttName),
+		ShopProduct(model("id"), model(productIdAttName), model(shopIdAttName), model(nameAttName),
 			model(alternativeNameAttName), basePrice, netPrice)
 	}
 	

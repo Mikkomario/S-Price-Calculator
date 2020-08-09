@@ -5,9 +5,8 @@ package spadi.model.stored.pricing
   * @author Mikko Hilpinen
   * @since 31.7.2020, v1.2
   */
-// TODO: Rename
-case class ShopProductInfo(id: Int, productId: Int, shopId: Int, name: String, alternativeName: Option[String] = None,
-						   basePrice: Option[BasePrice] = None, netPrice: Option[NetPrice] = None)
+case class ShopProduct(id: Int, productId: Int, shopId: Int, name: String, alternativeName: Option[String] = None,
+					   basePrice: Option[BasePrice] = None, netPrice: Option[NetPrice] = None)
 {
 	/**
 	  * Lowest price introduced in this product info. None if no price is listed.

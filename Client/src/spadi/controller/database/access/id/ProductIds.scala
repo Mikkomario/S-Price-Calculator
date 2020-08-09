@@ -1,9 +1,11 @@
 package spadi.controller.database.access.id
 
 import spadi.controller.database.factory.pricing.{ProductFactory, ShopProductFactory}
+import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.Connection
-import utopia.vault.sql.{Limit, SelectDistinct, Where}
+import utopia.vault.sql.{Limit, Select, SelectDistinct, Where}
+import utopia.vault.sql.Extensions._
 
 /**
   * Used for accessing product ids
@@ -24,6 +26,20 @@ object ProductIds
 	
 	
 	// OTHER	--------------------------
+	
+	/**
+	  * Finds product ids that match electric ids
+	  * @param min First included electric id
+	  * @param max Last included electric id
+	  * @param connection DB Connection (implicit)
+	  * @return An electric id -> product id map containing all recorded electric ids within range
+	  */
+	def forElectricIdsBetween(min: String, max: String)(implicit connection: Connection) =
+	{
+		connection(Select(table, Vector(column, factory.electricIdColumn)) +
+			Where(factory.electricIdColumn.isBetween(min, max)))
+			.rows.map { row => row(factory.electricIdColumn).getString -> row(column).getInt }.toMap
+	}
 	
 	/**
 	  * Finds ids of products based on product electric id match

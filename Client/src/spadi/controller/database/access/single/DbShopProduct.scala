@@ -2,7 +2,7 @@ package spadi.controller.database.access.single
 
 import spadi.controller.database.factory.pricing.ShopProductFactory
 import spadi.controller.database.model.pricing.ShopProductModel
-import spadi.model.stored.pricing.ShopProductInfo
+import spadi.model.stored.pricing.ShopProduct
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleRowModelAccess, UniqueAccess}
 import utopia.vault.sql.{Limit, Select, Where}
@@ -12,7 +12,7 @@ import utopia.vault.sql.{Limit, Select, Where}
   * @author Mikko Hilpinen
   * @since 9.8.2020, v1.2
   */
-object DbShopProduct extends SingleRowModelAccess[ShopProductInfo]
+object DbShopProduct extends SingleRowModelAccess[ShopProduct]
 {
 	// IMPLEMENTED	------------------------------------
 	
@@ -43,8 +43,8 @@ object DbShopProduct extends SingleRowModelAccess[ShopProductInfo]
 	
 	// NESTED	----------------------------------------
 	
-	case class DbSingleShopProduct(shopProductId: Int) extends SingleRowModelAccess[ShopProductInfo]
-		with UniqueAccess[ShopProductInfo]
+	case class DbSingleShopProduct(shopProductId: Int) extends SingleRowModelAccess[ShopProduct]
+		with UniqueAccess[ShopProduct]
 	{
 		// IMPLEMENTED	--------------------------------
 		
@@ -73,7 +73,7 @@ object DbShopProduct extends SingleRowModelAccess[ShopProductInfo]
 		def netPrice = DbProductNetPrice.forShopProductWithId(shopProductId)
 	}
 	
-	case class DbSpecifiedShopProduct(shopId: Int) extends SingleRowModelAccess[ShopProductInfo]
+	case class DbSpecifiedShopProduct(shopId: Int) extends SingleRowModelAccess[ShopProduct]
 	{
 		// IMPLEMENTED	--------------------------------
 		
@@ -93,8 +93,8 @@ object DbShopProduct extends SingleRowModelAccess[ShopProductInfo]
 		
 		// NESTED	-----------------------------------
 		
-		case class DbSingleSpecifiedShopProduct(productId: Int) extends SingleRowModelAccess[ShopProductInfo]
-			with UniqueAccess[ShopProductInfo]
+		case class DbSingleSpecifiedShopProduct(productId: Int) extends SingleRowModelAccess[ShopProduct]
+			with UniqueAccess[ShopProduct]
 		{
 			// IMPLEMENTED	---------------------------
 			

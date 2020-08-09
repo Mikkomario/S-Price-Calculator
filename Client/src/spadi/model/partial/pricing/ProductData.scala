@@ -1,5 +1,6 @@
 package spadi.model.partial.pricing
 
+@deprecated("Replaced with shopProductData", "v1.2")
 object ProductData
 {
 	/**
@@ -20,4 +21,5 @@ object ProductData
   * @param electricId Identifier unique to this product
   * @param shopData Shop specific data, each mapped to their shop's id
   */
+@deprecated("Replaced with shopProductData", "v1.2")
 case class ProductData(electricId: String, shopData: Map[Int, ShopProductData] = Map())

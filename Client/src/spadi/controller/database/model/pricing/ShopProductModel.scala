@@ -4,7 +4,7 @@ import java.time.Instant
 
 import spadi.controller.database.factory.pricing.ShopProductFactory
 import spadi.model.partial.pricing.ShopProductData
-import spadi.model.stored.pricing.ShopProductInfo
+import spadi.model.stored.pricing.ShopProduct
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
@@ -30,6 +30,12 @@ object ShopProductModel
 	def withProductId(productId: Int) = apply(productId = Some(productId))
 	
 	/**
+	  * @param name Product name
+	  * @return A model with name set
+	  */
+	def withName(name: String) = apply(name = Some(name))
+	
+	/**
 	  * Inserts a new shop product row to the DB
 	  * @param productId Id of the described product
 	  * @param shopId Id of the shop that owns this description
@@ -43,23 +49,23 @@ object ShopProductModel
 			   updateTime: Instant = Instant.now())(implicit connection: Connection) =
 	{
 		val id = apply(None, Some(productId), Some(shopId), Some(name), alternativeName, Some(updateTime)).insert().getInt
-		ShopProductInfo(id, productId, shopId, name, alternativeName)
+		ShopProduct(id, productId, shopId, name, alternativeName)
 	}
 	
 	/**
 	  * Inserts a new shop product to the DB, including possible price data
 	  * @param productId Id of the described product
-	  * @param shopId Id of the shop that owns this description
 	  * @param data Product data to insert
 	  * @param connection DB Connection (implicit)
 	  * @return Newly inserted product info
 	  */
-	def insert(productId: Int, shopId: Int, data: ShopProductData)(implicit connection: Connection): ShopProductInfo =
+	// TODO: Possibly remove this method
+	def insert(productId: Int, data: ShopProductData)(implicit connection: Connection): ShopProduct =
 	{
 		// Inserts the base row first, then price rows
-		val base = insert(productId, shopId, data.name, data.alternativeName)
+		val base = insert(productId, data.shopId, data.name, data.alternativeName)
 		val netPrice = data.netPrice.map { p => NetPriceModel.insert(base.id, p) }
-		val basePrice = data.basePrice.map { p => BasePriceModel.insert(shopId, base.id, p) }
+		val basePrice = data.basePrice.map { p => BasePriceModel.insert(data.shopId, base.id, p) }
 		
 		base.copy(basePrice = basePrice, netPrice = netPrice)
 	}
@@ -73,10 +79,29 @@ object ShopProductModel
 case class ShopProductModel(id: Option[Int] = None, productId: Option[Int] = None, shopId: Option[Int] = None,
 							name: Option[String] = None, alternativeName: Option[String] = None,
 							updated: Option[Instant] = None)
-	extends StorableWithFactory[ShopProductInfo]
+	extends StorableWithFactory[ShopProduct]
 {
+	// IMPLEMENTED	---------------------------
+	
 	override def factory = ShopProductFactory
 	
 	override def valueProperties = Vector("id" -> id, "productId" -> productId, "shopId" -> shopId, "name" -> name,
 		"nameAlternative" -> alternativeName, "updated" -> updated)
+	
+	
+	// COMPUTED	-------------------------------
+	
+	/**
+	  * @return A copy of this model that has just been marked as updated
+	  */
+	def nowUpdated = copy(updated = Some(Instant.now()))
+	
+	
+	// OTHER	-------------------------------
+	
+	/**
+	  * @param alternativeName An alternative product name
+	  * @return A copy of this model with specified name
+	  */
+	def withAlternativeName(alternativeName: Option[String]) = copy(alternativeName = alternativeName)
 }
