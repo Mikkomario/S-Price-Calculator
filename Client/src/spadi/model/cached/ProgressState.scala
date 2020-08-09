@@ -25,3 +25,6 @@ object ProgressState
  * @param description Displayable progress description
  */
 case class ProgressState(progress: Double, description: LocalizedString)
+{
+	override def toString = s"${(progress * 100).toInt}%: $description"
+}

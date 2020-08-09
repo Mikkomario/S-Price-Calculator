@@ -27,54 +27,59 @@ object Tables
 	// COMPUTED	-------------------------------
 	
 	/**
+	  * @return All tables in this database
+	  */
+	def all = tables.all(databaseName).toVector
+	
+	/**
 	  * @return Table that contains database version recordings
 	  */
-	def databaseVersion = apply(versionTableName)
+	lazy val databaseVersion = apply(versionTableName)
 	
 	/**
 	  * @return Table that contains all shops
 	  */
-	def shop = apply("shop")
+	lazy val shop = apply("shop")
 	
 	/**
 	  * @return Table that contains all shop sale groups
 	  */
-	def saleGroup = apply("sale_group")
+	lazy val saleGroup = apply("sale_group")
 	
 	/**
 	  * @return Table that contains current & historical amounts of each sale group
 	  */
-	def saleAmount = apply("sale_amount")
+	lazy val saleAmount = apply("sale_amount")
 	
 	/**
 	  * @return Table that lists all products
 	  */
-	def product = apply("product")
+	lazy val product = apply("product")
 	
 	/**
 	  * @return Table that contains the names of all products in each shop
 	  */
-	def productName = apply("shop_product_name")
+	lazy val productName = apply("shop_product_name")
 	
 	/**
 	  * @return Table that contains product net prices in different shops
 	  */
-	def netPrice = apply("shop_product_net_price")
+	lazy val netPrice = apply("shop_product_net_price")
 	
 	/**
 	  * @return Table that contains product base prices in different shops
 	  */
-	def basePrice = apply("shop_product_base_price")
+	lazy val basePrice = apply("shop_product_base_price")
 	
 	/**
 	  * @return Table that contains parse instructions for shop price documents
 	  */
-	def priceKeyMap = apply("price_key_map")
+	lazy val priceKeyMap = apply("price_key_map")
 	
 	/**
 	  * @return Table that contains read instructions for sale group documents
 	  */
-	def saleGroupKeyMap = apply("sale_group_key_map")
+	lazy val saleGroupKeyMap = apply("sale_group_key_map")
 	
 	
 	// OTHER	-------------------------------
