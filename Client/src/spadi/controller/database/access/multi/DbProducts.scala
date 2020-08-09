@@ -39,23 +39,29 @@ object DbProducts extends ManyModelAccess[Product]
 	def withIds(productIds: Iterable[Int])(implicit connection: Connection) =
 		read(Some(idColumn.in(productIds)))
 	
-	/**
+	/*
 	  * Inserts new product data
 	  * @param data Product data to insert or update
 	  * @param connection DB Connection (implicit)
 	  */
+	// TODO: Replace this with a version that inserts multiple products
+	/*
 	def insertData(data: ProductData)(implicit connection: Connection) =
 	{
 		// First makes sure the product row exists
 		val productId = ProductId.forElectricIdentifier(data.electricId)
+		// TODO: Remove test prints. Also, create a more optimized version of this method
+		//  (inserting multiple products at once with minimal queries)
 		println(s"Inserting data for product $productId (${data.electricId})")
 		
 		// Next inserts name, base price and net price data for each shop where applicable
 		data.shopData.foreach { case (shopId, shopData) =>
+			// FIXME: Insert or find the shop product first, then update prices
+			
 			DbProductName.forProductWithId(productId).inShopWithId(shopId)
 				.set(shopData.name.name, shopData.name.alternativeName)
 			shopData.basePrice.foreach { DbProductBasePrice.forProductWithId(productId).inShopWithId(shopId).set(_) }
 			shopData.netPrice.foreach { DbProductNetPrice.forProductWithId(productId).inShopWithId(shopId).set(_) }
 		}
-	}
+	}*/
 }

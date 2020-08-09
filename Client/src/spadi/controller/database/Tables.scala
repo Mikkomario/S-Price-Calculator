@@ -59,7 +59,13 @@ object Tables
 	/**
 	  * @return Table that contains the names of all products in each shop
 	  */
-	lazy val productName = apply("shop_product_name")
+	@deprecated("This table was removed and replaced with shopProduct table", "v1.2")
+	def productName = apply("shop_product_name")
+	
+	/**
+	  * A table that contains shop-specific product descriptions
+	  */
+	lazy val shopProduct = apply("shop_product")
 	
 	/**
 	  * @return Table that contains product net prices in different shops

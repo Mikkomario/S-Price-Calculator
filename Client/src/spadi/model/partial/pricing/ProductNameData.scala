@@ -5,4 +5,5 @@ package spadi.model.partial.pricing
   * @author Mikko Hilpinen
   * @since 31.7.2020, v1.2
   */
+@deprecated("Integrated into shop product", "v1.2")
 case class ProductNameData(name: String, alternativeName: Option[String] = None)

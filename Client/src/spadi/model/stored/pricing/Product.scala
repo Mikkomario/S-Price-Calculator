@@ -7,11 +7,11 @@ import spadi.model.cached.pricing.Price
   * @author Mikko Hilpinen
   * @since 31.7.2020, v1.2
   */
-case class Product(id: Int, electricId: String, shopData: Map[Int, ShopProductInfo] = Map())
+case class Product(id: Int, electricId: String, shopData: Set[ShopProductInfo] = Set())
 {
 	// ATTRIBUTES	------------------------
 	
-	private val cheapestInfo = shopData.minByOption { case (_, info) => info.price.getOrElse(Price.max) }
+	private val cheapestData = shopData.minByOption { _.price.getOrElse(Price.max) }
 	
 	
 	// COMPUTED	----------------------------
@@ -19,15 +19,15 @@ case class Product(id: Int, electricId: String, shopData: Map[Int, ShopProductIn
 	/**
 	  * @return Cheapest available price for this product. None if no price is listed.
 	  */
-	def cheapestPrice = cheapestInfo.flatMap { _._2.price }
+	def cheapestPrice = cheapestData.flatMap { _.price }
 	
 	/**
 	  * @return Id of the shop that offers the cheapest price for this product. None if no shop data is known.
 	  */
-	def cheapestShopId = cheapestInfo.map { _._1 }
+	def cheapestShopId = cheapestData.map { _.shopId }
 	
 	/**
 	  * @return This product's name
 	  */
-	def name = cheapestInfo.map { _._2.name.name }.getOrElse("Nimeämätön tuote")
+	def name = cheapestData.map { _.name }.getOrElse("Nimeämätön tuote")
 }

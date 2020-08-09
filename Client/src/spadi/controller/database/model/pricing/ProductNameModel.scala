@@ -9,6 +9,7 @@ import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
 
+@deprecated("Replaced with ShopProductModel", "v1.2")
 object ProductNameModel
 {
 	// COMPUTED	--------------------------
@@ -58,6 +59,7 @@ object ProductNameModel
   * @author Mikko Hilpinen
   * @since 1.8.2020, v1.2
   */
+@deprecated("Replaced with ShopProductModel", "v1.2")
 case class ProductNameModel(id: Option[Int] = None, productId: Option[Int] = None, shopId: Option[Int] = None,
 							name: Option[String] = None, alternativeName: Option[String] = None,
 							deprecatedAfter: Option[Instant] = None) extends StorableWithFactory[ProductName]

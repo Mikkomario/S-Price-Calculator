@@ -42,23 +42,5 @@ object DbProduct extends SingleModelAccess[Product]
 		override lazy val condition = DbProduct.mergeCondition(model.withId(productId).toCondition)
 		
 		override def factory = DbProduct.factory
-		
-		
-		// COMPUTED	------------------------
-		
-		/**
-		  * @return An access point to this product's individual names
-		  */
-		def name = DbProductName.forProductWithId(productId)
-		
-		/**
-		  * @return An access point to this product's net prices in various shops
-		  */
-		def netPrice = DbProductNetPrice.forProductWithId(productId)
-		
-		/**
-		  * @return An access point to this product's base prices in various shops
-		  */
-		def basePrice = DbProductBasePrice.forProductWithId(productId)
 	}
 }

@@ -30,47 +30,40 @@ object BasePriceModel
 	def withId(priceId: Int) = apply(Some(priceId))
 	
 	/**
-	  * @param productId A described product's id
-	  * @return A model with only product id set
+	  * @param shopProductId Id of a shop's product description
+	  * @return A model with only shop product id set
 	  */
-	def withProductId(productId: Int) = apply(productId = Some(productId))
-	
-	/**
-	  * @param shopId Id of associated shop
-	  * @return A model with only shop id set
-	  */
-	def withShopId(shopId: Int) = apply(shopId = Some(shopId))
+	def withShopProductId(shopProductId: Int) = apply(shopProductId = Some(shopProductId))
 	
 	/**
 	  * Inserts a new base price to the DB and connects it with a sale group if one can be found
-	  * @param productId Id of the described product
 	  * @param shopId Id of the shop that gives this price
+	  * @param shopProductId Id of that shop's product description
 	  * @param data Base price data to insert
 	  * @param connection DB Connection (implicit)
 	  * @return Newly inserted base price, including affecting sale if found
 	  */
-	def insert(productId: Int, shopId: Int, data: BasePriceData)(implicit connection: Connection): BasePrice =
+	def insert(shopId: Int, shopProductId: Int, data: BasePriceData)(implicit connection: Connection): BasePrice =
 	{
 		// Checks whether targeted sale group already exists, creates one if not
 		val saleGroup = data.saleGroupIdentifier.map { identifier =>
 			DbSaleGroup.inShopWithId(shopId).withIdentifier(identifier).getOrInsert }
-		insert(productId, shopId, data.price, saleGroup)
+		insert(shopProductId, data.price, saleGroup)
 	}
 	
 	/**
 	  * Inserts a new base price to the DB
-	  * @param productId Described product's id
-	  * @param shopId Id of the shop that gives this price
+	  * @param shopProductId Id of the shop specific product description this price is attached to
 	  * @param price Price given to this product by default
 	  * @param sale Sale group to connect to this price
 	  * @param connection DB Connection (implicit)
 	  * @return Newly inserted base price
 	  */
-	def insert(productId: Int, shopId: Int, price: Price, sale: Option[SaleGroup])(implicit connection: Connection) =
+	def insert(shopProductId: Int, price: Price, sale: Option[SaleGroup])(implicit connection: Connection) =
 	{
 		// Inserts the base price
-		val id = apply(None, Some(productId), Some(shopId), Some(price), sale.map { _.id }).insert().getInt
-		BasePrice(id, productId, shopId, price, sale)
+		val id = apply(None, Some(shopProductId), Some(price), sale.map { _.id }).insert().getInt
+		BasePrice(id, shopProductId, price, sale)
 	}
 }
 
@@ -79,14 +72,13 @@ object BasePriceModel
   * @author Mikko Hilpinen
   * @since 1.8.2020, v1.2
   */
-case class BasePriceModel(id: Option[Int] = None, productId: Option[Int] = None, shopId: Option[Int] = None,
-						  price: Option[Price] = None, saleGroupId: Option[Int] = None,
-						  deprecatedAfter: Option[Instant] = None)
+case class BasePriceModel(id: Option[Int] = None, shopProductId: Option[Int] = None, price: Option[Price] = None,
+						  saleGroupId: Option[Int] = None, deprecatedAfter: Option[Instant] = None)
 	extends StorableWithFactory[BasePrice]
 {
 	override def factory = BasePriceFactory
 	
-	override def valueProperties = Vector("id" -> id, "productId" -> productId, "shopId" -> shopId,
+	override def valueProperties = Vector("id" -> id, "shopProductId" -> shopProductId,
 		"basePrice" -> price.map { _.amount }, "saleUnit" -> price.map { _.unit },
 		"saleCount" -> price.map { _.unitsSold }, "saleGroupId" -> saleGroupId,
 		"deprecatedAfter" -> deprecatedAfter)

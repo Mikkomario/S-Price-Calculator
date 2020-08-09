@@ -38,7 +38,8 @@ object DataProcessor
 	def forPrices[M <: KeyMapping[ProductData]](filePath: Path, mapping: M) =
 		DataProcessor[ProductData, M](filePath, mapping) { (price, connection) =>
 			implicit val c: Connection = connection
-			DbProducts.insertData(price)
+			// DbProducts.insertData(price)
+			// FIXME: Update this method (data processor should process multiple lines at once)
 		}
 }
 

@@ -7,4 +7,4 @@ import spadi.model.cached.pricing.Price
   * @author Mikko Hilpinen
   * @since 31.7.2020, v1.2
   */
-case class NetPrice(id: Int, productId: Int, shopId: Int, price: Price)
+case class NetPrice(id: Int, shopProductId: Int, price: Price)

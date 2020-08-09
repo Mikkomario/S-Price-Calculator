@@ -12,6 +12,7 @@ import utopia.vault.nosql.access.{SingleRowModelAccess, UniqueAccess}
   * @author Mikko Hilpinen
   * @since 1.8.2020, v1.2
   */
+@deprecated("Replaced with DbShopProduct", "v1.2")
 object DbProductName extends SingleRowModelAccess[ProductName]
 {
 	// IMPLEMENTED	-------------------------

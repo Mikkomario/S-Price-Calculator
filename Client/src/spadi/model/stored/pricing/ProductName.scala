@@ -8,4 +8,5 @@ import spadi.model.stored.Stored
   * @author Mikko Hilpinen
   * @since 31.7.2020, v1.2
   */
+@deprecated("Merged into ShopProduct", "v1.2")
 case class ProductName(id: Int, productId: Int, shopId: Int, data: ProductNameData) extends Stored[ProductNameData]

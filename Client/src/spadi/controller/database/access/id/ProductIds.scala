@@ -1,6 +1,6 @@
 package spadi.controller.database.access.id
 
-import spadi.controller.database.factory.pricing.{ProductFactory, ProductNameFactory}
+import spadi.controller.database.factory.pricing.{ProductFactory, ShopProductFactory}
 import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.sql.{Limit, SelectDistinct, Where}
@@ -20,7 +20,7 @@ object ProductIds
 	
 	private def factory = ProductFactory
 	
-	private def nameFactory = ProductNameFactory
+	private def shopProductFactory = ShopProductFactory
 	
 	
 	// OTHER	--------------------------
@@ -48,8 +48,8 @@ object ProductIds
 	def forProductsMatching(searchFilters: Set[String], maxResultSize: Int = 100)(implicit connection: Connection) =
 	{
 		val (nameFilters, electricIdFilters) = searchFilters.divideBy { _.forall { _.isDigit } }
-		val nameConditions = nameFilters.map { filter => nameFactory.nameColumn.contains(filter) ||
-			nameFactory.alternativeNameColumn.contains(filter) }.toVector
+		val nameConditions = nameFilters.map { filter => shopProductFactory.nameColumn.contains(filter) ||
+			shopProductFactory.alternativeNameColumn.contains(filter) }.toVector
 		val electricIdConditions = electricIdFilters.map { filter => factory.electricIdColumn.contains(filter) }.toVector
 		
 		if (nameConditions.nonEmpty)
@@ -58,7 +58,7 @@ object ProductIds
 			if (electricIdConditions.nonEmpty)
 			{
 				// When both name and search key conditions are given, tries first by applying one or more of both
-				val target = nameFactory.table join factory.table
+				val target = shopProductFactory.table join factory.table
 				val electricIdCondition = electricIdConditions.head || electricIdConditions.tail
 				
 				val combinationResults = connection(SelectDistinct(target, column) +
@@ -75,14 +75,14 @@ object ProductIds
 					else
 					{
 						// If no results were still found, searches with product names only
-						connection(SelectDistinct(nameFactory.table, nameFactory.productIdColumn) +
+						connection(SelectDistinct(shopProductFactory.table, shopProductFactory.productIdColumn) +
 							Where(nameCondition) + Limit(maxResultSize)).rowIntValues
 					}
 				}
 			}
 			else
-				connection(SelectDistinct(nameFactory.table, nameFactory.productIdColumn) + Where(nameCondition) +
-					Limit(maxResultSize)).rowIntValues
+				connection(SelectDistinct(shopProductFactory.table, shopProductFactory.productIdColumn) +
+					Where(nameCondition) + Limit(maxResultSize)).rowIntValues
 		}
 		else if (electricIdConditions.nonEmpty)
 		{

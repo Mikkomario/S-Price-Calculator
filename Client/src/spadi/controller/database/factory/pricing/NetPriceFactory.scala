@@ -16,9 +16,8 @@ object NetPriceFactory extends FromValidatedRowModelFactory[NetPrice] with Depre
 {
 	override def table = Tables.netPrice
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = NetPrice(model("id"), model("productId"),
-		model("shopId"), Price(model("netPrice"), model("saleUnit").stringOr("kpl"),
-			model("saleCount").intOr(1)))
+	override protected def fromValidatedModel(model: Model[Constant]) = NetPrice(model("id"), model("shopProductId"),
+		Price(model("netPrice"), model("saleUnit").stringOr("kpl"), model("saleCount").intOr(1)))
 	
 	override lazy val nonDeprecatedCondition = table("deprecatedAfter").isNull
 }

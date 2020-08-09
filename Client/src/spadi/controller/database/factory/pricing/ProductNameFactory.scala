@@ -12,6 +12,7 @@ import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
   * @author Mikko Hilpinen
   * @since 1.8.2020, v1.2
   */
+@deprecated("Replaced with ShopProductFactory", "v1.2")
 object ProductNameFactory extends FromValidatedRowModelFactory[ProductName] with Deprecatable
 {
 	// ATTRIBUTES	-------------------------------

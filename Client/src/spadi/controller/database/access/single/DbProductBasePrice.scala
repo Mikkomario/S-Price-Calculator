@@ -29,79 +29,66 @@ object DbProductBasePrice extends SingleRowModelAccess[BasePrice]
 	// OTHER	----------------------------
 	
 	/**
-	  * @param productId Id of the described product
-	  * @return An access point to that product's base prices
+	  * @param shopProductId Id of a shop's product description
+	  * @return An access point to that description's base price
 	  */
-	def forProductWithId(productId: Int) = DbSingleProductBasePrice(productId)
+	def forShopProductWithId(shopProductId: Int) = DbSingleShopProductBasePrice(shopProductId)
 	
 	
 	// NESTED	----------------------------
 	
-	case class DbSingleProductBasePrice(productId: Int) extends SingleRowModelAccess[BasePrice]
+	case class DbSingleShopProductBasePrice(shopProductId: Int) extends SingleRowModelAccess[BasePrice]
+		with UniqueAccess[BasePrice]
 	{
-		// IMPLEMENTED	--------------------
+		// IMPLEMENTED	----------------
+		
+		override val condition = DbProductBasePrice.mergeCondition(model.withShopProductId(shopProductId))
 		
 		override def factory = DbProductBasePrice.factory
 		
-		override lazy val globalCondition = Some(DbProductBasePrice.mergeCondition(
-			model.withProductId(productId)))
 		
-		
-		// OTHER	------------------------
+		// OTHER	-------------------
 		
 		/**
-		  * @param shopId Id of the targeted shop
-		  * @return An access point to this product's base price in that shop
+		  * Updates the base price of this product in this shop
+		  * @param newPriceData Data for the new base price
+		  * @param connection DB Connection (implicit)
+		  * @return Newly updated price data
 		  */
-		def inShopWithId(shopId: Int) = DbSingleShopProductBasePrice(shopId)
-		
-		
-		// NESTED	------------------------
-		
-		case class DbSingleShopProductBasePrice(shopId: Int) extends SingleRowModelAccess[BasePrice]
-			with UniqueAccess[BasePrice]
+		// TODO: Optimize this method (heavily) - possibly handling multiple prices at a time
+		// Checks for existing price data
+		def set(newPriceData: BasePriceData)(implicit connection: Connection) = pull match
 		{
-			// IMPLEMENTED	----------------
-			
-			override val condition = DbSingleProductBasePrice.this.mergeCondition(model.withShopId(shopId))
-			
-			override def factory = DbSingleProductBasePrice.this.factory
-			
-			
-			// OTHER	-------------------
-			
-			/**
-			  * Updates the base price of this product in this shop
-			  * @param newPriceData Data for the new base price
-			  * @param connection DB Connection (implicit)
-			  * @return Newly updated price data
-			  */
-			// Checks for existing price data
-			def set(newPriceData: BasePriceData)(implicit connection: Connection) = pull match
-			{
-				case Some(existingVersion) =>
-					// Uses existing sale, if possible
-					val sale =
-					{
-						if (existingVersion.sale.map { _.groupIdentifier } == newPriceData.saleGroupIdentifier)
-							existingVersion.sale
-						else
-							newPriceData.saleGroupIdentifier.map { saleIdentifier =>
+			case Some(existingVersion) =>
+				// Uses existing sale, if possible
+				val sale =
+				{
+					if (existingVersion.sale.map { _.groupIdentifier } == newPriceData.saleGroupIdentifier)
+						existingVersion.sale
+					else
+						newPriceData.saleGroupIdentifier.flatMap { saleIdentifier =>
+							DbShopProduct(shopProductId).shopId.map { shopId =>
 								DbSaleGroup.inShopWithId(shopId).withIdentifier(saleIdentifier).getOrInsert
 							}
-					}
-					// If previous data was identical, won't change it
-					if (newPriceData.price == existingVersion.price && sale == existingVersion.sale)
-						existingVersion
-					else
-					{
-						// Otherwise deprecates old data and inserts a new version
-						model.nowDeprecated.updateWhere(model.withId(existingVersion.id).toCondition)
-						model.insert(productId, shopId, newPriceData.price, sale)
-					}
-				// Id no data existed previously, simply inserts a new version
-				case None => model.insert(productId, shopId, newPriceData)
-			}
+						}
+				}
+				// If previous data was identical, won't change it
+				if (newPriceData.price == existingVersion.price && sale == existingVersion.sale)
+					existingVersion
+				else
+				{
+					// Otherwise deprecates old data and inserts a new version
+					model.nowDeprecated.updateWhere(model.withId(existingVersion.id).toCondition)
+					model.insert(shopProductId, newPriceData.price, sale)
+				}
+			// Id no data existed previously, simply inserts a new version
+			case None =>
+				DbShopProduct(shopProductId).shopId match
+				{
+					case Some(shopId) => model.insert(shopId, shopProductId, newPriceData)
+					case None => throw new NoSuchElementException(
+						s"There doesn't exist a shop product with id $shopProductId, therefore can't set it's price either")
+				}
 		}
 	}
 }
