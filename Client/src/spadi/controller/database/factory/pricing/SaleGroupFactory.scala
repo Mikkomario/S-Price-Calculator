@@ -13,11 +13,20 @@ import utopia.vault.nosql.factory.{Deprecatable, PossiblyLinkedFactory}
   */
 object SaleGroupFactory extends PossiblyLinkedFactory[SaleGroup, SaleAmount] with Deprecatable
 {
+	// ATTRIBUTES	------------------------------
+	
+	val groupIdentifierAttName = "groupIdentifier"
+	
+	lazy val groupIdentifierColumn = table(groupIdentifierAttName)
+	
+	
+	// IMPLEMENTED	------------------------------
+	
 	override def childFactory = SaleAmountFactory
 	
 	override def apply(model: Model[Constant], child: Option[SaleAmount]) =
 		table.requirementDeclaration.validate(model).toTry.map { valid =>
-			SaleGroup(valid("id"), valid("shopId"), valid("groupIdentifier"), child)
+			SaleGroup(valid("id"), valid("shopId"), valid(groupIdentifierAttName), child)
 		}
 	
 	override def table = Tables.saleGroup

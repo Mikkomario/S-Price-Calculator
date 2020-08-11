@@ -1,12 +1,12 @@
 package spadi.controller.database.access.multi
 
-import spadi.controller.database.access.id.{ProductId, ProductIds, ShopProductIds}
+import spadi.controller.database.access.id.{ProductId, ProductIds, SaleGroupIds, ShopProductIds}
 import spadi.controller.database.access.single.{DbProductBasePrice, DbProductName, DbProductNetPrice, DbShopProduct}
 import spadi.controller.database.factory.pricing.{NetPriceFactory, ProductFactory}
-import spadi.controller.database.model.pricing.{BasePriceModel, NetPriceModel, ProductModel, ShopProductModel}
+import spadi.controller.database.model.pricing.{BasePriceModel, NetPriceModel, ProductModel, SaleGroupModel, ShopProductModel}
 import spadi.model.enumeration.PriceType.{Base, Net}
 import spadi.model.enumeration.{PriceInputType, PriceType}
-import spadi.model.partial.pricing.{ProductData, ShopProductData}
+import spadi.model.partial.pricing.{ProductData, SaleGroupData, ShopProductData}
 import spadi.model.stored.pricing.Product
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
@@ -104,7 +104,23 @@ object DbProducts extends ManyModelAccess[Product]
 					data.foreach { product => product.netPrice.foreach { newPrice =>
 						DbNetPrices.insert(shopProductIds(product.electricId), newPrice)
 					} }
-				case Base => // TODO: Implement
+				case Base =>
+					// Makes sure all sale groups exist in the DB
+					val saleGroupIdentifiers = data.flatMap { _.basePrice.flatMap { _.saleGroupIdentifier } }.sorted
+					// TODO: Handle case where there are no sale group ids listed
+					val existingSaleGroupIds = SaleGroupIds.forShopWithId(shopId)
+						.forIdentifiersBetween(saleGroupIdentifiers.head, saleGroupIdentifiers.last)
+					
+					// Inserts missing sale group ids
+					// TODO: Handle case where no ids require inserting
+					val unregisteredSaleGroupIdentifiers = saleGroupIdentifiers.toSet -- existingSaleGroupIds.keySet
+					val insertedSaleGroupIds = unregisteredSaleGroupIdentifiers.map { identifier =>
+						identifier -> SaleGroupModel.insert(SaleGroupData(shopId, identifier, None)).id
+					}
+					val saleGroupIds = existingSaleGroupIds ++ insertedSaleGroupIds
+					
+					// Deprecates previous base prices for the specified products
+					// TODO: Add an alternative cersion that works even when electric ids are not ordered
 			}
 		}
 	}
