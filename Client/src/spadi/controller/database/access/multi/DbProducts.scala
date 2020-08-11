@@ -2,14 +2,19 @@ package spadi.controller.database.access.multi
 
 import spadi.controller.database.access.id.{ProductId, ProductIds, ShopProductIds}
 import spadi.controller.database.access.single.{DbProductBasePrice, DbProductName, DbProductNetPrice, DbShopProduct}
-import spadi.controller.database.factory.pricing.ProductFactory
-import spadi.controller.database.model.pricing.{ProductModel, ShopProductModel}
+import spadi.controller.database.factory.pricing.{NetPriceFactory, ProductFactory}
+import spadi.controller.database.model.pricing.{BasePriceModel, NetPriceModel, ProductModel, ShopProductModel}
+import spadi.model.enumeration.PriceType.{Base, Net}
+import spadi.model.enumeration.{PriceInputType, PriceType}
 import spadi.model.partial.pricing.{ProductData, ShopProductData}
 import spadi.model.stored.pricing.Product
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.CollectionExtensions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
 import utopia.vault.sql.Extensions._
+
+import scala.collection.immutable.VectorBuilder
 
 /**
   * Used for accessing multiple products at once
@@ -31,6 +36,12 @@ object DbProducts extends ManyModelAccess[Product]
 	
 	private def shopProductModel = ShopProductModel
 	
+	private def netPriceModel = NetPriceModel
+	
+	private def basePriceModel = BasePriceModel
+	
+	private def netPriceFactory = NetPriceFactory
+	
 	private def idColumn = factory.table.primaryColumn.get
 	
 	
@@ -44,13 +55,15 @@ object DbProducts extends ManyModelAccess[Product]
 	def withIds(productIds: Iterable[Int])(implicit connection: Connection) =
 		read(Some(idColumn.in(productIds)))
 	
-	def insertData(data: Vector[ShopProductData])(implicit connection: Connection) =
+	def insertData(data: Vector[ShopProductData], contentType: PriceType)(implicit connection: Connection) =
 	{
 		// In case there are multiple shops, handles each one separately
 		data.groupBy { _.shopId }.foreach { case (shopId, data) =>
 			val electricIds = data.map { _.electricId }.sorted
+			val firstElectricId = electricIds.head
+			val lastElectricId = electricIds.last
 			// Finds existing shop product ids matching specified electric ids
-			val existingShopProductIds = ShopProductIds.forElectricIdsBetween(shopId, electricIds.head, electricIds.last)
+			val existingShopProductIds = ShopProductIds.forElectricIdsBetween(shopId, firstElectricId, lastElectricId)
 			
 			// TODO: Handle case where no new electric id inserts are required
 			// Finds electric ids that don't have a matching shop product id yet
@@ -77,9 +90,22 @@ object DbProducts extends ManyModelAccess[Product]
 						product.electricId -> shopProductModel.insert(productIds(product.electricId), shopId,
 							product.name, product.alternativeName).id
 				}
-			}
+			}.toMap
 			
-			// TODO: Split into base and net prices. Insert or update each (deprecating old rows first).
+			// Deprecates old prices and inserts new ones
+			contentType match
+			{
+				case Net =>
+					// Deprecates all existing net prices for the specified products
+					// TODO: Add an alternative version that works even when electric ids are not ordered
+					DbNetPrices.deprecateElectricIdRange(shopId, firstElectricId, lastElectricId)
+					
+					// Inserts new net prices
+					data.foreach { product => product.netPrice.foreach { newPrice =>
+						DbNetPrices.insert(shopProductIds(product.electricId), newPrice)
+					} }
+				case Base => // TODO: Implement
+			}
 		}
 	}
 	

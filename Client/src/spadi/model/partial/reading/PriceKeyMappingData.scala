@@ -35,8 +35,9 @@ case class PriceKeyMappingData(priceType: PriceType, shopId: Int, electricIdKey:
 		
 		val shopProductData = priceType match
 		{
-			case Net => ShopProductData.netPrice(name, altName, price)
-			case Base => ShopProductData.basePrice(name, altName, BasePriceData(price, saleGroupKey.flatMap { model(_) }))
+			case Net => ShopProductData.netPrice(model(electricIdKey), shopId, name, altName, price)
+			case Base => ShopProductData.basePrice(model(electricIdKey), shopId, name, altName,
+				BasePriceData(price, saleGroupKey.flatMap { model(_) }))
 		}
 		
 		ProductData(model(electricIdKey), shopId, shopProductData)
