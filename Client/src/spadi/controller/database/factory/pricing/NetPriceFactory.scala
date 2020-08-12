@@ -14,9 +14,18 @@ import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
   */
 object NetPriceFactory extends FromValidatedRowModelFactory[NetPrice] with Deprecatable
 {
+	// ATTRIBUTES	----------------------------
+	
+	val shopProductIdAttName = "shopProductId"
+	
+	lazy val shopProductIdColumn = table(shopProductIdAttName)
+	
+	
+	// IMPLEMENTED	----------------------------
+	
 	override def table = Tables.netPrice
 	
-	override protected def fromValidatedModel(model: Model[Constant]) = NetPrice(model("id"), model("shopProductId"),
+	override protected def fromValidatedModel(model: Model[Constant]) = NetPrice(model("id"), model(shopProductIdAttName),
 		Price(model("netPrice"), model("saleUnit").stringOr("kpl"), model("saleCount").intOr(1)))
 	
 	override lazy val nonDeprecatedCondition = table("deprecatedAfter").isNull

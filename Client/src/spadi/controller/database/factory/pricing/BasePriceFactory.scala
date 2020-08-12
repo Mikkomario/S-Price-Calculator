@@ -16,7 +16,11 @@ object BasePriceFactory extends PossiblyLinkedFactory[BasePrice, SaleGroup] with
 {
 	// ATTRIBUTES	-------------------------
 	
+	val shopProductIdAttName = "shopProductId"
+	
 	lazy val deprecationColumn = table("deprecatedAfter")
+	
+	lazy val shopProductIdColumn = table(shopProductIdAttName)
 	
 	
 	// IMPLEMENTED	-------------------------
@@ -26,7 +30,7 @@ object BasePriceFactory extends PossiblyLinkedFactory[BasePrice, SaleGroup] with
 	override def apply(model: Model[Constant], child: Option[SaleGroup]) =
 	{
 		table.requirementDeclaration.validate(model).toTry.map { valid =>
-			BasePrice(valid("id"), valid("shopProductId"), Price(valid("basePrice"),
+			BasePrice(valid("id"), valid(shopProductIdAttName), Price(valid("basePrice"),
 				valid("saleUnit").stringOr("kpl"), valid("saleCount").intOr(1)), child)
 		}
 	}

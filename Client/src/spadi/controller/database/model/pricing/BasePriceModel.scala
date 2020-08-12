@@ -36,6 +36,17 @@ object BasePriceModel
 	def withShopProductId(shopProductId: Int) = apply(shopProductId = Some(shopProductId))
 	
 	/**
+	  * Inserts a new base price to the database
+	  * @param shopProductId Id of targeted shop product description
+	  * @param basePrice New base price for the product
+	  * @param saleGroupId Id of the associated sale group. None if no sale group should be associated.
+	  * @param connection DB Connection (implicit)
+	  * @return Index of the newly inserted base price.
+	  */
+	def insert(shopProductId: Int, basePrice: Price, saleGroupId: Option[Int] = None)(implicit connection: Connection) =
+		apply(None, Some(shopProductId), Some(basePrice), saleGroupId).insert().getInt
+	
+	/**
 	  * Inserts a new base price to the DB and connects it with a sale group if one can be found
 	  * @param shopId Id of the shop that gives this price
 	  * @param shopProductId Id of that shop's product description

@@ -7,7 +7,6 @@ import spadi.model.stored.pricing.NetPrice
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyRowModelAccess
-import utopia.vault.sql.Where
 import utopia.vault.sql.Extensions._
 
 /**
@@ -53,8 +52,17 @@ object DbNetPrices extends ManyRowModelAccess[NetPrice]
 								(implicit connection: Connection) =
 	{
 		// Needs to join into shop product and product tables
-		connection(model.nowDeprecated.toUpdateStatement(Some(table join ShopProductFactory.table join ProductFactory.table)) +
-			Where(mergeCondition(ShopProductModel.withShopId(shopId).toCondition &&
-				ProductFactory.electricIdColumn.isBetween(firstElectricId, lastElectricId)))).updatedRowCount
+		model.nowDeprecated.updateWhere(mergeCondition(ShopProductModel.withShopId(shopId).toCondition &&
+			ProductFactory.electricIdColumn.isBetween(firstElectricId, lastElectricId)),
+			Some(table join ShopProductFactory.table join ProductFactory.table))
 	}
+	
+	/**
+	  * Deprecates a number of shop product prices
+	  * @param shopProductIds Targeted shop product ids
+	  * @param connection DB Connection (implicit)
+	  * @return Number of deprecated prices
+	  */
+	def deprecatePricesForShopProductIds(shopProductIds: Set[Int])(implicit connection: Connection) =
+		model.nowDeprecated.updateWhere(mergeCondition(factory.shopProductIdColumn.in(shopProductIds)))
 }
