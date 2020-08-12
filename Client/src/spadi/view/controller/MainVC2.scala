@@ -102,7 +102,7 @@ class MainVC2(shops: Iterable[Shop], defaultProducts: Vector[Product])
 					// Performs the search
 					connectionPool.tryWith { implicit connection =>
 						val productIds = ProductIds.forProductsMatching(currentSearchWords.toSet, 50)
-						val products = DbProducts.withIds(productIds)
+						val products = if (productIds.nonEmpty) DbProducts.withIds(productIds) else Vector()
 						productsPointer.value = products
 					}.failure.foreach { error => Log(error, "Failed to search for products") }
 				}

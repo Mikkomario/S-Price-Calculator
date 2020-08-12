@@ -81,7 +81,7 @@ CREATE TABLE shop_product
     name_alternative VARCHAR(64),
     updated TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
-    INDEX sp_find_by_name_idx (name_primary, name_alternative),
+    INDEX sp_find_by_name_idx (name, name_alternative),
 
     CONSTRAINT sp_p_product_link_fk FOREIGN KEY sp_p_product_link_idx (product_id)
         REFERENCES product(id) ON DELETE CASCADE,

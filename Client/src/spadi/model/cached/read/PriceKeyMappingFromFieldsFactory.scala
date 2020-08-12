@@ -2,7 +2,7 @@ package spadi.model.cached.read
 
 import spadi.model.enumeration.PriceType
 import spadi.model.enumeration.PriceType.{Base, Net}
-import spadi.model.partial.pricing.ProductData
+import spadi.model.partial.pricing.ShopProductData
 import spadi.model.partial.reading.PriceKeyMappingData
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueUnwraps._
@@ -29,7 +29,7 @@ object PriceKeyMappingFromFieldsFactory
   * @since 3.8.2020, v1.2
   */
 case class PriceKeyMappingFromFieldsFactory(priceType: PriceType, shopId: Int)
-	extends KeyMappingFactory2[ProductData, PriceKeyMappingData]
+	extends KeyMappingFactory2[ShopProductData, PriceKeyMappingData]
 {
 	private implicit val languageCode: String = "fi"
 	
@@ -52,5 +52,5 @@ case class PriceKeyMappingFromFieldsFactory(priceType: PriceType, shopId: Int)
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = PriceKeyMappingData(priceType, shopId,
 		model("Sähkönumero"), model("Nimi"), model("Lisänimi"), model(priceFieldName),
-		model("Ostomäärä"), model("Yksikkö"), model("Alennusryhmä"))
+		model("Yksikkö"), model("Ostomäärä"), model("Alennusryhmä"))
 }

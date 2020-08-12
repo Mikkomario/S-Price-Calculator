@@ -84,7 +84,7 @@ class ProductRowVC2(segmentGroup: SegmentGroup, initialProduct: Product, shops: 
 		val profitsPercentage = content.cheapestPrice.map { p => ProfitsPercentage.forPrice(p.amount) }
 		profitLabel.text = profitsPercentage.map(percentString).getOrElse("?%").noLanguageLocalizationSkipped
 		finalPriceLabel.text = content.cheapestPrice.flatMap { original => profitsPercentage.map { profit =>
-			(original * (1 + profit)).toString } }.getOrElse("? €/kpl").noLanguageLocalizationSkipped
+			(original * (1 + profit / 100.0)).toString } }.getOrElse("? €/kpl").noLanguageLocalizationSkipped
 	}
 	
 	private def displayNameFor(product: Product) =

@@ -21,6 +21,10 @@ object DbDataTest extends App
 	DbSetup.setup()
 	
 	connectionPool { implicit connection =>
+		// Lists all tables first
+		println("Tables:")
+		connection.executeQuery("SHOW TABLES").foreach { println(_) }
+		
 		// Reads a few rows from each table
 		Tables.all.foreach { table =>
 			println(s"\nData for ${table.name}\nExpecting ${table.columns.map { _.name }.mkString(", ")}")

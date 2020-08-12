@@ -63,6 +63,8 @@ object DbProducts extends ManyModelAccess[Product]
 			val electricIdsSet = electricIds.toSet
 			val firstElectricId = electricIds.head
 			val lastElectricId = electricIds.last
+			// TODO: Remove test prints
+			println(s"Inserts products from $firstElectricId to $lastElectricId to shop $shopId")
 			// Finds existing shop product ids matching specified electric ids
 			val existingShopProductIds = ShopProductIds.forElectricIdsBetween(shopId, firstElectricId, lastElectricId)
 			

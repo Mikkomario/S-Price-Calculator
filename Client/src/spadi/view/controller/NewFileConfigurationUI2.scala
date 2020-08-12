@@ -8,7 +8,8 @@ import spadi.controller.read.{DataProcessor, ReadExcel}
 import spadi.model.cached.ProgressState
 import spadi.model.cached.read._
 import spadi.model.enumeration.PriceInputType.{SaleGroup, SalePrice}
-import spadi.model.partial.pricing.{ProductData, SaleGroupData}
+import spadi.model.enumeration.PriceType.{Base, Net}
+import spadi.model.partial.pricing.{SaleGroupData, ShopProductData}
 import spadi.model.partial.reading.{PriceKeyMappingData, SaleKeyMappingData}
 import spadi.view.component.Fields
 import spadi.view.dialog._
@@ -47,7 +48,9 @@ object NewFileConfigurationUI2
 		Globals.fileInputDirectory.allRegularFileChildren.map { _.filter { file =>
 			acceptedFileTypes.contains(file.fileType.toLowerCase) } } match
 		{
-			case Success(inputFiles) => configureBlocking(Left(inputFiles))
+			case Success(inputFiles) =>
+				if (inputFiles.nonEmpty)
+					configureBlocking(Left(inputFiles))
 			case Failure(error) =>
 				Log(error, "Failed to scan through input directory")
 				Fields.errorDialog("Luettavien tiedostojen etsiminen epäonnistui.\nVirheilmoitus: %s"
@@ -103,13 +106,13 @@ object NewFileConfigurationUI2
 					SaleKeyMappingFromFieldsFactory(setting.shop.id))({ case (p, m) => DataProcessor.forSaleGroups(p, m)})
 			}
 			val priceInputs = priceSettingsWithoutMappings.map { setting =>
-				val factory = setting.inputType match
+				val (factory, priceType) = setting.inputType match
 				{
-					case SalePrice => PriceKeyMappingFromFieldsFactory.forNetPricesInShopWithId(setting.shop.id)
-					case _ => PriceKeyMappingFromFieldsFactory.forBasePricesInShopWithId(setting.shop.id)
+					case SalePrice => PriceKeyMappingFromFieldsFactory.forNetPricesInShopWithId(setting.shop.id) -> Net
+					case _ => PriceKeyMappingFromFieldsFactory.forBasePricesInShopWithId(setting.shop.id) -> Base
 				}
-				new DataSourceInput[ProductData, PriceKeyMappingData](setting, factory)({ case (p, m) =>
-					DataProcessor.forPrices(p, m) })
+				new DataSourceInput[ShopProductData, PriceKeyMappingData](setting, factory)({ case (p, m) =>
+					DataProcessor.forPrices(p, m, priceType) })
 			}
 			val allInputs = saleInputs ++ priceInputs
 			
@@ -159,8 +162,10 @@ object NewFileConfigurationUI2
 						//  (now uses the most recent mapping)
 						val existingSaleProcessors = saleSettingsWithMappings.map { case (setting, mappings) =>
 							DataProcessor.forSaleGroups(setting.path, mappings.head: SaleKeyMappingData) }
+						// TODO: Specify whether document is ordered and contains all rows in range (now true)
 						val existingPriceProcessors = priceSettingsWithMappings.map { case (setting, mappings) =>
-							DataProcessor.forPrices(setting.path, mappings.head: PriceKeyMappingData)
+							DataProcessor.forPrices(setting.path, mappings.head: PriceKeyMappingData,
+								if (setting.inputType == SalePrice) Net else Base)
 						}
 						val allProcessors = allInputs.flatMap { _.result } ++ existingSaleProcessors ++
 							existingPriceProcessors

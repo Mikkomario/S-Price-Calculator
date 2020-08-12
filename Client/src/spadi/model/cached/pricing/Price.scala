@@ -36,5 +36,5 @@ case class Price(amount: Double, unit: String = "kpl", unitsSold: Int = 1) exten
 	override def compareTo(o: Price) = pricePerUnit.compareTo(o.pricePerUnit)
 	
 	override def toString = s"${if (amount > 10) amount.toInt else
-		(amount * 10).toInt / 10} €/${if (unitsSold == 1) "" else unitsSold}$unit"
+		(amount * 10).toInt / 10.0} €/${if (unitsSold == 1) "" else unitsSold}$unit"
 }

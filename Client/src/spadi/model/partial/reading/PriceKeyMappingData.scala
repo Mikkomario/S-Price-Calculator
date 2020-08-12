@@ -4,7 +4,7 @@ import spadi.model.cached.pricing.Price
 import spadi.model.cached.read.KeyMapping
 import spadi.model.enumeration.PriceType
 import spadi.model.enumeration.PriceType.{Base, Net}
-import spadi.model.partial.pricing.{BasePriceData, ProductData, ShopProductData}
+import spadi.model.partial.pricing.{BasePriceData, ShopProductData}
 import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.generic.ValueUnwraps._
@@ -17,7 +17,7 @@ import utopia.flow.generic.ValueUnwraps._
 case class PriceKeyMappingData(priceType: PriceType, shopId: Int, electricIdKey: String, nameKey: String,
 							   alternativeNameKey: Option[String], priceKey: String, saleUnitKey: Option[String],
 							   saleCountKey: Option[String], saleGroupKey: Option[String])
-	extends KeyMapping[ProductData]
+	extends KeyMapping[ShopProductData]
 {
 	override def toModel = Model(Vector("type_id" -> priceType.id, "shop_id" -> shopId,
 		"electric_id_key" -> electricIdKey, "name_key" -> nameKey, "alternative_name_key" -> alternativeNameKey,
@@ -33,13 +33,8 @@ case class PriceKeyMappingData(priceType: PriceType, shopId: Int, electricIdKey:
 		val name = model(nameKey).getString
 		val altName = alternativeNameKey.flatMap { model(_).string }
 		
-		val shopProductData = priceType match
-		{
-			case Net => ShopProductData.netPrice(model(electricIdKey), shopId, name, altName, price)
-			case Base => ShopProductData.basePrice(model(electricIdKey), shopId, name, altName,
-				BasePriceData(price, saleGroupKey.flatMap { model(_) }))
-		}
-		
-		ProductData(model(electricIdKey), shopId, shopProductData)
+		ShopProductData(model(electricIdKey), shopId, name, altName,
+			if (priceType == Base) Some(BasePriceData(price, saleGroupKey.flatMap { model(_) })) else None,
+			if (priceType == Net) Some(price) else None)
 	}
 }
