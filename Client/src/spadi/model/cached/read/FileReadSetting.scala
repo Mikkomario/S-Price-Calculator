@@ -2,8 +2,8 @@ package spadi.model.cached.read
 
 import java.nio.file.Path
 
-import spadi.model.cached.pricing.shop.Shop
 import spadi.model.enumeration.PriceInputType
+import spadi.model.stored.pricing.Shop
 
 /**
   * A model that represents a user-specified setting for reading of a certain file.

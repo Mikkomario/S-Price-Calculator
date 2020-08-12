@@ -1,7 +1,7 @@
 package spadi.view.controller
 
 import spadi.controller.ProfitsPercentage
-import spadi.model.cached.pricing.product.Product
+import spadi.model.stored.pricing.{Product, Shop}
 import spadi.view.util.Setup._
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.swing.label.TextLabel
@@ -15,13 +15,14 @@ import utopia.reflection.shape.LengthExtensions._
 object ProductRowVC
 {
 	/**
-	 * @param group Segmented group used to lay out this row
-	 * @param product First displayed product
-	 * @param context Component creation context (implicit)
-	 * @return New product row
-	 */
-	def apply(group: SegmentGroup, product: Product)(implicit context: ColorContext) =
-		new ProductRowVC(group, product)(context)
+	  * @param group Segmented group used to lay out this row
+	  * @param product First displayed product
+	  * @param shops Known shops
+	  * @param context Component creation context (implicit)
+	  * @return New product row
+	  */
+	def apply(group: SegmentGroup, product: Product, shops: Iterable[Shop])(implicit context: ColorContext) =
+		new ProductRowVC(group, product, shops)(context)
 }
 
 /**
@@ -29,7 +30,8 @@ object ProductRowVC
  * @author Mikko Hilpinen
  * @since 9.5.2020, v1
  */
-class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product)(parentContext: ColorContext)
+class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product, shops: Iterable[Shop])
+				  (parentContext: ColorContext)
 	extends StackableAwtComponentWrapperWrapper with Refreshable[Product]
 {
 	// ATTRIBUTES   -------------------------------
@@ -76,11 +78,19 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product)(parentCo
 	
 	private def updateLabels() =
 	{
-		idLabel.text = content.id.noLanguageLocalizationSkipped
-		nameLabel.text = content.displayName.noLanguageLocalizationSkipped
-		priceLabel.text = content.standardPriceString.noLanguageLocalizationSkipped
-		val profitsPercentage = ProfitsPercentage.forPrice(content.totalPrice)
-		profitLabel.text = percentString(profitsPercentage).noLanguageLocalizationSkipped
-		finalPriceLabel.text = content.priceString(1 + profitsPercentage / 100.0).noLanguageLocalizationSkipped
+		idLabel.text = content.electricId.noLanguageLocalizationSkipped
+		nameLabel.text = displayNameFor(content)
+		priceLabel.text = content.cheapestPrice.map { _.toString }.getOrElse("? €/kpl").noLanguageLocalizationSkipped
+		val profitsPercentage = content.cheapestPrice.map { p => ProfitsPercentage.forPrice(p.amount) }
+		profitLabel.text = profitsPercentage.map(percentString).getOrElse("?%").noLanguageLocalizationSkipped
+		finalPriceLabel.text = content.cheapestPrice.flatMap { original => profitsPercentage.map { profit =>
+			(original * (1 + profit / 100.0)).toString } }.getOrElse("? €/kpl").noLanguageLocalizationSkipped
+	}
+	
+	private def displayNameFor(product: Product) =
+	{
+		val shopName = product.cheapestShopId.flatMap { id => shops.find { _.id == id } }.map { _.name }
+			.getOrElse("Tuntematon Tukku")
+		s"${product.name} ($shopName)".noLanguageLocalizationSkipped
 	}
 }

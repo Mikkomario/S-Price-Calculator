@@ -3,7 +3,7 @@ package spadi.view.dialog
 import java.nio.file.Path
 
 import spadi.controller.read.DataProcessor
-import spadi.model.cached.read.{KeyMapping, KeyMappingFactory2}
+import spadi.model.cached.read.{KeyMapping, KeyMappingFactory}
 import spadi.model.stored.pricing.Shop
 import spadi.view.component.Fields
 import spadi.view.util.Icons
@@ -36,7 +36,7 @@ import scala.util.{Failure, Success}
   * @tparam KF Key field type
  */
 abstract class DataProcessorWindowLike[A, +M <: KeyMapping[A], KF <: AwtStackable with Focusable]
-(path: Path, shop: Shop, mappingFactory: KeyMappingFactory2[A, M])(makeProcessor: (Path, M) => DataProcessor[A, M])
+(path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A, M])(makeProcessor: (Path, M) => DataProcessor[A, M])
 	extends InputWindow[Either[Boolean, DataProcessor[A, M]]]
 {
 	// ATTRIBUTES   ------------------------

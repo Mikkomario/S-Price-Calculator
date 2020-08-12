@@ -3,14 +3,16 @@ package spadi.view.component
 import java.nio.file.Path
 
 import spadi.controller.Log
-import spadi.view.util.Setup._
 import spadi.model.cached.read
 import spadi.model.cached.read.FileReadSetting
 import spadi.model.enumeration.PriceInputType
+import spadi.model.stored.pricing.Shop
 import spadi.view.controller.ShopSelectionVC
 import spadi.view.util.Icons
-import utopia.flow.util.FileExtensions._
+import spadi.view.util.Setup._
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.FileExtensions._
 import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.swing.button.ImageAndTextButton
 import utopia.reflection.component.swing.label.TextLabel
@@ -28,8 +30,9 @@ import utopia.reflection.shape.LengthExtensions._
  * @author Mikko Hilpinen
  * @since 26.5.2020, v1.1
  */
-class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSetting])
-                             (onDeleteRequested: FileReadSettingInputRow => Unit)(implicit context: TextContext)
+class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSetting],
+							  shopsPointer: PointerWithEvents[Vector[Shop]])
+							 (onDeleteRequested: FileReadSettingInputRow => Unit)(implicit context: TextContext)
 	extends StackableAwtComponentWrapperWrapper
 {
 	// ATTRIBUTES   ------------------------------
@@ -37,7 +40,7 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 	private implicit val languageCode: String = "fi"
 	
 	private val (shopSelection, typeSelection) = context.forGrayFields.use { implicit ddC =>
-		val shopSelection = new ShopSelectionVC()
+		val shopSelection = new ShopSelectionVC(shopsPointer)
 		val typeSelection = Fields.dropDown[PriceInputType]("Sisältötyyppejä ei ole määritetty",
 			"Valitse tiedostotyyppi", DisplayFunction.localized[PriceInputType] { _.name })
 		typeSelection.content = PriceInputType.values

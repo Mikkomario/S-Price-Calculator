@@ -29,7 +29,7 @@ object PriceKeyMappingFromFieldsFactory
   * @since 3.8.2020, v1.2
   */
 case class PriceKeyMappingFromFieldsFactory(priceType: PriceType, shopId: Int)
-	extends KeyMappingFactory2[ShopProductData, PriceKeyMappingData]
+	extends KeyMappingFactory[ShopProductData, PriceKeyMappingData]
 {
 	private implicit val languageCode: String = "fi"
 	

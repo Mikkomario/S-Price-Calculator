@@ -21,8 +21,5 @@ trait KeywordSearchable extends Searchable
 	  * @param search Search words
 	  * @return How well this item matches that search
 	  */
-	def matches(search: Set[String]) = search.count
-	{ s => keywords.exists
-	{_.contains(s)}
-	}
+	def matches(search: Set[String]) = search.count { s => keywords.exists {_.contains(s)} }
 }

@@ -11,7 +11,7 @@ import utopia.reflection.localization.LocalString._
   * @author Mikko Hilpinen
   * @since 3.8.2020, v1.2
   */
-case class SaleKeyMappingFromFieldsFactory(shopId: Int) extends KeyMappingFactory2[SaleGroupData, SaleKeyMappingData]
+case class SaleKeyMappingFromFieldsFactory(shopId: Int) extends KeyMappingFactory[SaleGroupData, SaleKeyMappingData]
 {
 	// ATTRIBUTES   -----------------------------
 	

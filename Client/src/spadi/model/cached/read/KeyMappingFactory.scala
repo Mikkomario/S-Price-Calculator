@@ -9,7 +9,7 @@ import utopia.reflection.localization.LocalString
   * @author Mikko Hilpinen
   * @since 27.5.2020, v1.1
   */
-trait KeyMappingFactory[+A] extends FromModelFactoryWithSchema[KeyMapping[A]]
+trait KeyMappingFactory[+A, +M <: KeyMapping[A]] extends FromModelFactoryWithSchema[M]
 {
 	// ABSTRACT ------------------------------------
 	

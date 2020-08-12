@@ -3,7 +3,7 @@ package spadi.view.dialog
 import java.nio.file.Path
 
 import spadi.controller.read.DataProcessor
-import spadi.model.cached.read.{KeyMapping, KeyMappingFactory2}
+import spadi.model.cached.read.{KeyMapping, KeyMappingFactory}
 import spadi.model.stored.pricing.Shop
 import spadi.view.component.Fields
 import spadi.view.util.Setup._
@@ -16,8 +16,8 @@ import utopia.reflection.component.swing.input.SearchFrom
  * @author Mikko Hilpinen
  * @since 7.6.2020, v1.1
  */
-class DataProcessorWindowWithSelections[A, +M <: KeyMapping[A]](path: Path, shop: Shop, mappingFactory: KeyMappingFactory2[A, M],
-											   headerRow: Vector[String])
+class DataProcessorWindowWithSelections[A, +M <: KeyMapping[A]](path: Path, shop: Shop, mappingFactory: KeyMappingFactory[A, M],
+																headerRow: Vector[String])
 										   (makeProcessor: (Path, M) => DataProcessor[A, M])
 	extends DataProcessorWindowLike[A, M, SearchFrom[String, _]](path, shop, mappingFactory)(makeProcessor)
 {
