@@ -4,6 +4,7 @@ import spadi.controller.database.factory.pricing.ProductFactory
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.Storable
+import utopia.vault.sql.Insert
 
 object ProductModel
 {
@@ -42,6 +43,23 @@ object ProductModel
 	  */
 	def insertEmptyProduct(electricId: String)(implicit connection: Connection) =
 		apply(None, Some(electricId)).insert().getInt
+	
+	/**
+	  * Inserts multiple products to the database
+	  * @param electricIds Electric ids to insert
+	  * @param connection DB Connection (implicit)
+	  * @return Range of generated product ids. The order of indices might not match that of specified electric ids.
+	  */
+	def insertMany(electricIds: Vector[String])(implicit connection: Connection) =
+	{
+		if (electricIds.nonEmpty)
+		{
+			val ids = Insert(table, electricIds.map { eId => apply(None, Some(eId)).toModel }).generatedIntKeys
+			ids.min to ids.max
+		}
+		else
+			0 until 0
+	}
 }
 
 /**

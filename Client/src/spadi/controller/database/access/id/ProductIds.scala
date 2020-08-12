@@ -24,6 +24,8 @@ object ProductIds
 	
 	private def shopProductFactory = ShopProductFactory
 	
+	private def electricIdColumn = factory.electricIdColumn
+	
 	
 	// OTHER	--------------------------
 	
@@ -36,9 +38,21 @@ object ProductIds
 	  */
 	def forElectricIdsBetween(min: String, max: String)(implicit connection: Connection) =
 	{
-		connection(Select(table, Vector(column, factory.electricIdColumn)) +
-			Where(factory.electricIdColumn.isBetween(min, max)))
-			.rows.map { row => row(factory.electricIdColumn).getString -> row(column).getInt }.toMap
+		connection(Select(table, Vector(column, electricIdColumn)) +
+			Where(electricIdColumn.isBetween(min, max)))
+			.rows.map { row => row(electricIdColumn).getString -> row(column).getInt }.toMap
+	}
+	
+	/**
+	  * @param min First targeted product id
+	  * @param max Last targeted product id
+	  * @param connection DB Connection (implicit)
+	  * @return Electric id to product id map for that product id range
+	  */
+	def electricIdMapForProductIdsBetween(min: Int, max: Int)(implicit connection: Connection) =
+	{
+		connection(Select(table, Vector(column, electricIdColumn)) + Where(column.isBetween(min, max)))
+			.rows.map { row => row(electricIdColumn).getString -> row(column).getInt }.toMap
 	}
 	
 	/**

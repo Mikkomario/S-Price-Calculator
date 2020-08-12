@@ -8,6 +8,7 @@ import spadi.model.stored.pricing.NetPrice
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.sql.Insert
 
 object NetPriceModel
 {
@@ -17,6 +18,8 @@ object NetPriceModel
 	  * @return A model that has just been marked deprecated
 	  */
 	def nowDeprecated = apply(deprecatedAfter = Some(Instant.now()))
+	
+	def table = NetPriceFactory.table
 	
 	
 	// OTHER	--------------------------
@@ -32,6 +35,16 @@ object NetPriceModel
 	  * @return A model with only product id set
 	  */
 	def withShopProductId(shopProductId: Int) = apply(shopProductId = Some(shopProductId))
+	
+	/**
+	  * Inserts a number of prices to the database
+	  * @param prices Prices to insert. Each pair contains a shop product id and associated net price.
+	  * @param connection DB Connection (implicit)
+	  */
+	def insertMany(prices: Vector[(Int, Price)])(implicit connection: Connection): Unit =
+	{
+		Insert(table, prices.map { case (shopProductId, price) => apply(None, Some(shopProductId), Some(price)).toModel })
+	}
 	
 	/**
 	  * Inserts a new net price to the DB

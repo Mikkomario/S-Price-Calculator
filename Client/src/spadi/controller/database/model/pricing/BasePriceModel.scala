@@ -10,6 +10,7 @@ import spadi.model.stored.pricing.{BasePrice, SaleGroup}
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.sql.Insert
 
 object BasePriceModel
 {
@@ -19,6 +20,8 @@ object BasePriceModel
 	  * @return A model that has just been marked as deprecated
 	  */
 	def nowDeprecated = apply(deprecatedAfter = Some(Instant.now()))
+	
+	def table = BasePriceFactory.table
 	
 	
 	// OTHER	-------------------------
@@ -34,6 +37,17 @@ object BasePriceModel
 	  * @return A model with only shop product id set
 	  */
 	def withShopProductId(shopProductId: Int) = apply(shopProductId = Some(shopProductId))
+	
+	/**
+	  * Inserts a number of new base prices to DB
+	  * @param items base prices to insert. Consist of shop product id, base price and sale group id (optional)
+	  * @param connection DB Connection
+	  */
+	def insertMany(items: Vector[(Int, Price, Option[Int])])(implicit connection: Connection): Unit =
+	{
+		Insert(table, items.map { case (shopProductId, price, saleGroupId) =>
+			apply(None, Some(shopProductId), Some(price), saleGroupId).toModel })
+	}
 	
 	/**
 	  * Inserts a new base price to the database

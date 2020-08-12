@@ -8,9 +8,12 @@ import spadi.model.stored.pricing.ShopProduct
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.model.immutable.StorableWithFactory
+import utopia.vault.sql.Insert
 
 object ShopProductModel
 {
+	def table = ShopProductFactory.table
+	
 	/**
 	  * @param shopProductId A shop product description's id
 	  * @return A model with only id set
@@ -34,6 +37,25 @@ object ShopProductModel
 	  * @return A model with name set
 	  */
 	def withName(name: String) = apply(name = Some(name))
+	
+	/**
+	  * Inserts a number of shop product rows to the database
+	  * @param items Shop products. Each containing product id, shop id, name and alternative name
+	  * @param connection DB Connection (implicit)
+	  * @return Range of generated shop product ids. The order of the ids might not match that of the listed items.
+	  */
+	def insertMany(items: Vector[(Int, Int, String, Option[String])])(implicit connection: Connection) =
+	{
+		if (items.nonEmpty)
+		{
+			val insertTime = Instant.now()
+			val ids = Insert(table, items.map { case (productId, shopId, name, altName) =>
+				apply(None, Some(productId), Some(shopId), Some(name), altName, Some(insertTime)).toModel }).generatedIntKeys
+			ids.min to ids.max
+		}
+		else
+			0 until 0
+	}
 	
 	/**
 	  * Inserts a new shop product row to the DB

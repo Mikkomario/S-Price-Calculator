@@ -51,4 +51,19 @@ object ShopProductIds extends ManyIntIdAccess
 			Where(model.withShopId(shopId).toCondition && electricIdColumn.isBetween(minElectricId, maxElectricId)))
 			.rows.map { row => row(electricIdColumn).getString -> row(column).getInt }.toMap
 	}
+	
+	/**
+	  * @param shopId Id of targeted shop
+	  * @param min First included shop product id
+	  * @param max Last included shop product id
+	  * @param connection DB Connection (implicit)
+	  * @return Electric id to shop product id map for targeted shop product id range
+	  */
+	def electricIdMapForShopProductIdsBetween(shopId: Int, min: Int, max: Int)(implicit connection: Connection) =
+	{
+		val electricIdColumn = ProductFactory.electricIdColumn
+		connection(Select(table join ProductFactory.table, Vector(column, electricIdColumn)) +
+			Where(model.withShopId(shopId).toCondition && column.isBetween(min, max)))
+			.rows.map { row => row(electricIdColumn).getString -> row(column).getInt }.toMap
+	}
 }

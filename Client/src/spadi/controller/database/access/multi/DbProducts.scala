@@ -1,13 +1,18 @@
 package spadi.controller.database.access.multi
 
+import java.time.Instant
+
 import spadi.controller.database.access.id.{ProductIds, SaleGroupIds, ShopProductIds}
 import spadi.controller.database.factory.pricing.ProductFactory
-import spadi.controller.database.model.pricing.{ProductModel, SaleGroupModel, ShopProductModel}
+import spadi.controller.database.model.pricing.{BasePriceModel, NetPriceModel, ProductModel, SaleGroupModel, ShopProductModel}
 import spadi.model.enumeration.PriceType.{Base, Net}
 import spadi.model.enumeration.PriceType
 import spadi.model.partial.pricing.{SaleGroupData, ShopProductData}
 import spadi.model.stored.pricing.Product
 import utopia.flow.generic.ValueConversions._
+import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.TimeExtensions._
+import utopia.flow.util.TimeLogger
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
 import utopia.vault.sql.Extensions._
@@ -19,6 +24,12 @@ import utopia.vault.sql.Extensions._
   */
 object DbProducts extends ManyModelAccess[Product]
 {
+	// ATTRIBUTES	--------------------------
+	
+	private val maxProductInsertCount = 500 // How many new products may be inserted at a time
+	private val maxPriceInsertCount = 250 // How many prices may be inserted at a time
+	
+	
 	// IMPLEMENTED	--------------------------
 	
 	override def factory = ProductFactory
@@ -59,36 +70,87 @@ object DbProducts extends ManyModelAccess[Product]
 	{
 		// In case there are multiple shops, handles each one separately
 		data.groupBy { _.shopId }.foreach { case (shopId, data) =>
+			// TODO: Remove timing tests
+			val logger = new TimeLogger()
+			
 			val electricIds = data.map { _.electricId }.sorted
 			val electricIdsSet = electricIds.toSet
 			val firstElectricId = electricIds.head
 			val lastElectricId = electricIds.last
 			// TODO: Remove test prints
-			println(s"Inserts products from $firstElectricId to $lastElectricId to shop $shopId")
+			logger.checkPoint(s"Inserts products from $firstElectricId to $lastElectricId to shop $shopId (${data.size} prices in total)")
 			// Finds existing shop product ids matching specified electric ids
 			val existingShopProductIds = ShopProductIds.forElectricIdsBetween(shopId, firstElectricId, lastElectricId)
 			
 			// Finds electric ids that don't have a matching shop product id yet
-			val electricIdsMissingProductIdSet = electricIdsSet -- existingShopProductIds.keySet
+			val electricIdsMissingShopProductIdSet = electricIdsSet -- existingShopProductIds.keySet
+			logger.checkPoint(s"Found ${existingShopProductIds.size} existing electric ids. Will insert ${
+				electricIdsMissingShopProductIdSet.size} new ids.")
 			val shopProductIds =
 			{
 				// Might not need to insert any new shop product rows
-				if (electricIdsMissingProductIdSet.isEmpty)
+				if (electricIdsMissingShopProductIdSet.isEmpty)
+				{
+					logger.checkPoint("Didn't need to insert any new shop product ids")
 					existingShopProductIds
+				}
 				else
 				{
-					val electricIdsMissingShopProductId = electricIdsMissingProductIdSet.toVector.sorted
+					val electricIdsMissingShopProductId = electricIdsMissingShopProductIdSet.toVector.sorted
 					// Finds existing product ids for those electric ids
 					val existingProductIds = ProductIds.forElectricIdsBetween(
 						electricIdsMissingShopProductId.head, electricIdsMissingShopProductId.last)
+					val electricIdsMissingProductIdSet = electricIdsMissingShopProductIdSet -- existingProductIds.keySet
 					// Inserts new product rows to make sure all electric ids are covered
+					val productIds =
+					{
+						if (electricIdsMissingProductIdSet.nonEmpty)
+						{
+							val newProductIdsRange = electricIdsMissingProductIdSet.toVector
+								.splitToSegments(maxProductInsertCount).map { electricIds => ProductModel.insertMany(electricIds) }
+								.reduce { (a, b) => (a.min min b.min) to (a.max max b.max) }
+							val insertedProductIds = ProductIds.electricIdMapForProductIdsBetween(
+								newProductIdsRange.head, newProductIdsRange.last)
+							logger.checkPoint(s"Inserted ${newProductIdsRange.size} new products")
+							existingProductIds ++ insertedProductIds
+						}
+						else
+						{
+							logger.checkPoint("Didn't need to insert any new products")
+							existingProductIds
+						}
+					}
+					/*
 					val insertedProductIds = (electricIdsMissingProductIdSet -- existingProductIds.keySet).map { electricId =>
 						electricId -> model.insertEmptyProduct(electricId)
 					}
-					val productIds = existingProductIds ++ insertedProductIds
+					val productIds = existingProductIds ++ insertedProductIds*/
 					
-					// Updates or inserts shop product rows
-					data.map { product =>
+					// Divides data to new inserts and existing updates
+					val (dataToInsert, dataToUpdate) = data.dividedWith { p => existingShopProductIds.get(p.electricId) match
+					{
+						case Some(shopProductId) => Right(shopProductId -> p)
+						case None => Left(p)
+					} }
+					logger.checkPoint(s"Divided new products to ${dataToUpdate.size} updates and ${dataToInsert.size} inserts")
+					// Updates existing shop product rows
+					dataToUpdate.foreach { case (shopProductId, p) =>
+						shopProductModel.withName(p.name).withAlternativeName(p.alternativeName).nowUpdated
+							.updateWhere(shopProductModel.withId(shopProductId).toCondition)
+					}
+					logger.checkPoint(s"Updated ${dataToUpdate.size} shop products")
+					// Inserts new shop product rows
+					val insertedShopProductIdRange = dataToInsert.splitToSegments(maxProductInsertCount).map { newShopProducts =>
+						ShopProductModel.insertMany(newShopProducts.map { p =>
+							(productIds(p.electricId), shopId, p.name, p.alternativeName) })
+					}.reduce { (a, b) => (a.min min b.min) to (a.max max b.max) }
+					val insertedShopProductIds = ShopProductIds.electricIdMapForShopProductIdsBetween(shopId,
+						insertedShopProductIdRange.min, insertedShopProductIdRange.max)
+					logger.checkPoint(s"Inserted ${insertedShopProductIdRange.size} new shop products")
+					
+					// Updates or inserts shop product rows (old version)
+					/*
+					val ids = data.map { product =>
 						existingShopProductIds.get(product.electricId) match
 						{
 							case Some(shopProductId) =>
@@ -99,9 +161,12 @@ object DbProducts extends ManyModelAccess[Product]
 								product.electricId -> shopProductModel.insert(productIds(product.electricId), shopId,
 									product.name, product.alternativeName).id
 						}
-					}.toMap
+					}.toMap*/
+					
+					existingShopProductIds ++ insertedShopProductIds
 				}
 			}
+			
 			
 			// Deprecates old prices and inserts new ones
 			contentType match
@@ -112,11 +177,12 @@ object DbProducts extends ManyModelAccess[Product]
 						DbNetPrices.deprecateElectricIdRange(shopId, firstElectricId, lastElectricId)
 					else
 						DbNetPrices.deprecatePricesForShopProductIds(shopProductIds.valuesIterator.toSet)
+					logger.checkPoint("Deprecated previous net prices")
 					
-					// Inserts new net prices
-					data.foreach { product => product.netPrice.foreach { newPrice =>
-						DbNetPrices.insert(shopProductIds(product.electricId), newPrice)
-					} }
+					// Inserts new net prices (n prices at a time)
+					data.flatMap { p => p.netPrice.map { price => shopProductIds(p.electricId) -> price } }
+						.splitToSegments(maxPriceInsertCount).foreach { prices => NetPriceModel.insertMany(prices) }
+					logger.checkPoint("Inserted new net prices")
 				case Base =>
 					// Makes sure all sale groups exist in the DB
 					val saleGroupIdentifiers = data.flatMap { _.basePrice.flatMap { _.saleGroupIdentifier } }.sorted
@@ -128,6 +194,7 @@ object DbProducts extends ManyModelAccess[Product]
 							SaleGroupIds.forShopWithId(shopId)
 								.forIdentifiersBetween(saleGroupIdentifiers.head, saleGroupIdentifiers.last)
 					}
+					logger.checkPoint(s"Read ${existingSaleGroupIds.size} existing sale group identifiers")
 					
 					// Inserts missing sale group ids
 					val unregisteredSaleGroupIdentifiers = saleGroupIdentifiers.toSet -- existingSaleGroupIds.keySet
@@ -136,18 +203,20 @@ object DbProducts extends ManyModelAccess[Product]
 					}
 					// Sale group identifier -> sale group id
 					val saleGroupIds = existingSaleGroupIds ++ insertedSaleGroupIds
+					logger.checkPoint(s"Inserted ${insertedSaleGroupIds.size} new sale groups")
 					
 					// Deprecates previous base prices for the specified products
 					if (isCompleteElectricIdRange)
 						DbBasePrices.deprecateElectricIdRange(shopId, firstElectricId, lastElectricId)
 					else
 						DbBasePrices.deprecatePricesForShopProductIds(shopProductIds.valuesIterator.toSet)
+					logger.checkPoint("Deprecated previous base prices")
 					
-					// Inserts new base prices
-					data.foreach { product => product.basePrice.foreach { newPrice =>
-						DbBasePrices.insert(shopProductIds(product.electricId), newPrice.price,
-							newPrice.saleGroupIdentifier.map { saleGroupIds(_) })
-					} }
+					// Inserts new base prices (n at a time)
+					data.flatMap { p => p.basePrice.map { price => (shopProductIds(p.electricId), price.price,
+						price.saleGroupIdentifier.map { saleGroupIds(_) }) } }.splitToSegments(maxPriceInsertCount)
+						.foreach { prices => BasePriceModel.insertMany(prices) }
+					logger.checkPoint("Inserted new base prices")
 			}
 		}
 	}
