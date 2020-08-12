@@ -10,4 +10,4 @@ import spadi.model.stored.pricing.Shop
   * @author Mikko Hilpinen
   * @since 26.5.2020, v1.1
   */
-case class FileReadSetting(path: Path, shop: Shop, inputType: PriceInputType)
+case class FileReadSetting(path: Path, shop: Shop, inputType: PriceInputType, isProperlySorted: Boolean = true)

@@ -15,6 +15,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.reflection.component.context.TextContext
 import utopia.reflection.component.swing.button.ImageAndTextButton
+import utopia.reflection.component.swing.input.Switch
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.container.swing.layout.SegmentGroup
@@ -46,6 +47,7 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 		typeSelection.content = PriceInputType.values
 		shopSelection -> typeSelection
 	}
+	private val isSortedSwitch = Switch.contextual(standardSwitchWidth.downscaling, initialState = true)
 	
 	private val (openButton, deleteButton) = context.forPrimaryColorButtons.use { implicit btnC =>
 		val openFileButton = Fields.openFileButton(path, parentWindow)
@@ -71,8 +73,8 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 	private val view =
 	{
 		val pathLabel = TextLabel.contextual(path.fileName.noLanguageLocalizationSkipped)
-		Stack.rowWithItems(group.wrap(Vector(pathLabel, shopSelection, typeSelection, openButton, deleteButton)),
-			margins.medium.downscaling)
+		Stack.rowWithItems(group.wrap(Vector(pathLabel, shopSelection, typeSelection, isSortedSwitch, openButton,
+			deleteButton)), margins.medium.downscaling)
 	}
 	
 	
@@ -95,7 +97,7 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 		case Some(shop) =>
 			typeSelection.value match
 			{
-				case Some(inputType) => Right(read.FileReadSetting(path, shop, inputType))
+				case Some(inputType) => Right(read.FileReadSetting(path, shop, inputType, isSortedSwitch.value))
 				case None => Left(typeSelection)
 			}
 		case None => Left(shopSelection)

@@ -1,7 +1,5 @@
 package spadi.controller.database.access.multi
 
-import java.time.Instant
-
 import spadi.controller.database.access.id.{ProductIds, SaleGroupIds, ShopProductIds}
 import spadi.controller.database.factory.pricing.ProductFactory
 import spadi.controller.database.model.pricing.{BasePriceModel, NetPriceModel, ProductModel, SaleGroupModel, ShopProductModel}
@@ -11,7 +9,6 @@ import spadi.model.partial.pricing.{SaleGroupData, ShopProductData}
 import spadi.model.stored.pricing.Product
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.TimeLogger
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
@@ -39,8 +36,6 @@ object DbProducts extends ManyModelAccess[Product]
 	
 	// COMPUTED	------------------------------
 	
-	private def model = ProductModel
-	
 	private def shopProductModel = ShopProductModel
 	
 	private def idColumn = factory.table.primaryColumn.get
@@ -54,7 +49,7 @@ object DbProducts extends ManyModelAccess[Product]
 	  * @return Product data for products with those ids
 	  */
 	def withIds(productIds: Iterable[Int])(implicit connection: Connection) =
-		read(Some(idColumn.in(productIds)))
+		find(idColumn.in(productIds))
 	
 	/**
 	  * Inserts a number of new product prices to the database
@@ -68,6 +63,8 @@ object DbProducts extends ManyModelAccess[Product]
 	def insertData(data: Vector[ShopProductData], contentType: PriceType, isCompleteElectricIdRange: Boolean = true)
 				  (implicit connection: Connection) =
 	{
+		println(s"Processing data. Sorted: $isCompleteElectricIdRange")
+		
 		// In case there are multiple shops, handles each one separately
 		data.groupBy { _.shopId }.foreach { case (shopId, data) =>
 			// TODO: Remove timing tests

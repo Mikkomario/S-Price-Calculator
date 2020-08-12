@@ -1,9 +1,12 @@
 package spadi.test
 
+import spadi.controller.database.access.multi.{DbShopProducts, DbShops}
+import spadi.controller.database.factory.pricing.ShopProductFactory
+import spadi.controller.database.model.pricing.ShopProductModel
 import spadi.controller.database.{DbSetup, Tables}
 import spadi.model.cached.ProgressState
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.vault.sql.{Limit, SelectAll}
+import utopia.vault.sql.{Limit, SelectAll, Where}
 
 /**
   * Reads some data from the database
@@ -30,6 +33,16 @@ object DbDataTest extends App
 			println(s"\nData for ${table.name}\nExpecting ${table.columns.map { _.name }.mkString(", ")}")
 			println(connection(SelectAll(table) + Limit(3)))
 		}
+		
+		// Reads a few products for each shop
+		DbShops.all.foreach { shop =>
+			println(s"\nData for ${shop.name}")
+			DbShopProducts.forShopWithId(shop.id).take(5).foreach { println(_) }
+		}
+		
+		println()
+		println(connection(SelectAll(ShopProductFactory.target) +
+			Where(ShopProductModel.withId(254709).toCondition && ShopProductFactory.nonDeprecatedCondition)))
 	}
 	
 	println("\nDone")

@@ -49,6 +49,7 @@ object Setup
 	
 	val margins = Margins(3.mm.toPixels)
 	val standardFieldWidth = 5.cm.toPixels
+	val standardSwitchWidth = 1.5.cm.toPixels
 	
 	val actorHandler = ActorHandler()
 	val standardFontSize = 0.5.cm.toPixels.toInt

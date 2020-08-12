@@ -77,7 +77,8 @@ object ProductIds
 	// TODO: Add better product filtering (products matching multiple filter should be prioritized)
 	def forProductsMatching(searchFilters: Set[String], maxResultSize: Int = 100)(implicit connection: Connection) =
 	{
-		val (nameFilters, electricIdFilters) = searchFilters.divideBy { _.forall { _.isDigit } }
+		// Considers all digit-containing search words to be electric ids
+		val (nameFilters, electricIdFilters) = searchFilters.divideBy { _.exists { _.isDigit } }
 		val nameConditions = nameFilters.map { filter => shopProductFactory.nameColumn.contains(filter) ||
 			shopProductFactory.alternativeNameColumn.contains(filter) }.toVector
 		val electricIdConditions = electricIdFilters.map { filter => factory.electricIdColumn.contains(filter) }.toVector
@@ -105,8 +106,12 @@ object ProductIds
 					else
 					{
 						// If no results were still found, searches with product names only
+						// (inserting electric ids to possible product names as well)
+						val electricIdsInNamesCondition = electricIdFilters.map { filter =>
+							shopProductFactory.nameColumn.contains(filter) ||
+							shopProductFactory.alternativeNameColumn.contains(filter) }.toVector
 						connection(SelectDistinct(shopProductFactory.table, shopProductFactory.productIdColumn) +
-							Where(nameCondition) + Limit(maxResultSize)).rowIntValues
+							Where(nameCondition || electricIdsInNamesCondition) + Limit(maxResultSize)).rowIntValues
 					}
 				}
 			}

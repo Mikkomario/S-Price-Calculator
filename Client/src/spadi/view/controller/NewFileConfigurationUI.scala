@@ -112,7 +112,7 @@ object NewFileConfigurationUI
 					case _ => PriceKeyMappingFromFieldsFactory.forBasePricesInShopWithId(setting.shop.id) -> Base
 				}
 				new DataSourceInput[ShopProductData, PriceKeyMappingData](setting, factory)({ case (p, m) =>
-					DataProcessor.forPrices(p, m, priceType) })
+					DataProcessor.forPrices(p, m, priceType, setting.isProperlySorted) })
 			}
 			val allInputs = saleInputs ++ priceInputs
 			

@@ -103,7 +103,18 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 					connectionPool.tryWith { implicit connection =>
 						val productIds = ProductIds.forProductsMatching(currentSearchWords.toSet, 50)
 						val products = if (productIds.nonEmpty) DbProducts.withIds(productIds) else Vector()
-						productsPointer.value = products
+						// Sorts the products based on search match level
+						val sortedProducts = products.sortBy { _.electricId }.sortBy { p =>
+							val electricIdMatchLevel = currentSearchWords.count(p.electricId.containsIgnoreCase)
+							val productNameMatchLevel = currentSearchWords.count { word =>
+								p.shopData.exists { _.name.containsIgnoreCase(word) } }
+							val altNameMatchLevel = currentSearchWords.count { word =>
+								p.shopData.exists { _.alternativeName.exists { _.containsIgnoreCase(word) } } }
+							
+							electricIdMatchLevel * -10 - productNameMatchLevel * 2 - altNameMatchLevel
+						}
+						println(s"Top product: ${sortedProducts.headOption}")
+						productsPointer.value = sortedProducts
 					}.failure.foreach { error => Log(error, "Failed to search for products") }
 				}
 				
