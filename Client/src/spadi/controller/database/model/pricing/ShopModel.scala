@@ -9,6 +9,12 @@ import utopia.vault.model.immutable.StorableWithFactory
 object ShopModel
 {
 	/**
+	  * @param shopId A shop id
+	  * @return A model with only id set
+	  */
+	def withId(shopId: Int) = apply(Some(shopId))
+	
+	/**
 	  * Inserts a new shop to the database
 	  * @param shopName Name of the shop
 	  * @param connection DB Connection

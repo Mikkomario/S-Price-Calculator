@@ -106,11 +106,9 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 		val openFileButton = Fields.openFileButton(path, parentWindow)
 		val deleteFileButton = ImageAndTextButton.contextual(Icons.delete.inButton, "Poista") {
 			parentWindow.foreach { window =>
-				val dialogContext = baseContext.inContextWithBackground(colorScheme.gray.light).forTextComponents()
-				new YesNoWindow(dialogContext, "Tiedoston poisto",
-					"Haluatko varmasti poistaa tämän tiedoston koneeltasi.\nTätä toimintoa ei voi peruuttaa.",
-					Map(true -> Icons.delete, false -> Icons.close), Map(true -> Fixed(colorScheme.error)))({ (color, _) =>
-					dialogContext.forButtons(color) }).displayOver(window)
+				Fields.deletionQuestionDialog(
+					"Haluatko varmasti poistaa tämän tiedoston koneeltasi.\nTätä toimintoa ei voi peruuttaa.")
+					.displayOver(window)
 					.foreach { shouldDelete =>
 						if (shouldDelete)
 						{

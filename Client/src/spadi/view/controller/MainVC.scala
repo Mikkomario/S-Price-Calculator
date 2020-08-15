@@ -6,7 +6,7 @@ import spadi.controller.Log
 import spadi.controller.database.access.id.ProductIds
 import spadi.controller.database.access.multi.DbProducts
 import spadi.model.stored.pricing.{Product, Shop}
-import spadi.view.component.{ProductsView, SearchField}
+import spadi.view.component.{MainViewHeader, ProductsView, SearchField}
 import spadi.view.util.Setup._
 import utopia.flow.async.Volatile
 import utopia.flow.datastructure.mutable.PointerWithEvents
@@ -19,6 +19,7 @@ import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWr
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.StackLength
 
 import scala.concurrent.{Future, Promise}
 
@@ -62,16 +63,20 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 	private val (searchField, view) = baseContext.inContextWithBackground(colorScheme.primary).use { implicit c =>
 		val searchField = SearchField.default("Rajaa tuotteita")
 		val productsView = ProductsView(productsPointer, shops, Screen.height / 2)
-		val view = Stack.buildColumnWithContext(isRelated = true) { s =>
+		val mainView = Stack.buildColumnWithContext(isRelated = true) { s =>
 			s += searchField
 			s += productsView.withAnimatedSize(actorHandler)
 		}.framed(margins.medium.any, c.containerBackground)
+		val stack = Stack.columnWithItems(Vector(new MainViewHeader(shops), mainView), StackLength.fixedZero)
 		
-		searchField -> view
+		searchField -> stack
 	}
 	
 	
 	// INITIAL CODE -----------------------
+	
+	// Focus is initially set to the search field
+	searchField.requestFocusInWindow()
 	
 	// Filters products based on search results
 	searchField.addValueListener { _ =>

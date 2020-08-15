@@ -1,7 +1,7 @@
 package spadi.controller.database.access.multi
 
 import spadi.controller.database.access.id.{ProductIds, SaleGroupIds, ShopProductIds}
-import spadi.controller.database.factory.pricing.ProductFactory
+import spadi.controller.database.factory.pricing.{ProductFactory, ShopProductFactory}
 import spadi.controller.database.model.pricing.{BasePriceModel, NetPriceModel, ProductModel, SaleGroupModel, ShopProductModel}
 import spadi.model.enumeration.PriceType.{Base, Net}
 import spadi.model.enumeration.PriceType
@@ -12,6 +12,7 @@ import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.TimeLogger
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
+import utopia.vault.sql.{Delete, JoinType, Where}
 import utopia.vault.sql.Extensions._
 
 /**
@@ -50,6 +51,14 @@ object DbProducts extends ManyModelAccess[Product]
 	  */
 	def withIds(productIds: Iterable[Int])(implicit connection: Connection) =
 		find(idColumn.in(productIds))
+	
+	/**
+	  * Deletes all products which don't have any shop data linked
+	  * @param connection DB Connection (implicit)
+	  */
+	def deleteProductsWithoutShopData()(implicit connection: Connection): Unit = connection(
+		Delete(table.join(ShopProductFactory.table, JoinType.Left), table) +
+			Where(ShopProductFactory.table.primaryColumn.get.isNull))
 	
 	/**
 	  * Inserts a number of new product prices to the database
@@ -163,7 +172,6 @@ object DbProducts extends ManyModelAccess[Product]
 					existingShopProductIds ++ insertedShopProductIds
 				}
 			}
-			
 			
 			// Deprecates old prices and inserts new ones
 			contentType match
