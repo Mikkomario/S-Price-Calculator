@@ -113,7 +113,7 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 							
 							electricIdMatchLevel * -10 - productNameMatchLevel * 2 - altNameMatchLevel
 						}
-						println(s"Top product: ${sortedProducts.headOption}")
+						// println(s"Top product: ${sortedProducts.headOption}")
 						productsPointer.value = sortedProducts
 					}.failure.foreach { error => Log(error, "Failed to search for products") }
 				}

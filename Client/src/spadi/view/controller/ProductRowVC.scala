@@ -3,6 +3,7 @@ package spadi.view.controller
 import spadi.controller.ProfitsPercentage
 import spadi.model.stored.pricing.{Product, Shop}
 import spadi.view.util.Setup._
+import utopia.flow.util.StringExtensions.ExtendedString
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
@@ -45,9 +46,10 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product, shops: I
 	private val priceLabel = TextLabel.contextual()
 	private val profitLabel = TextLabel.contextual()
 	private val finalPriceLabel = TextLabel.contextual()
+	private val savingsLabel = TextLabel.contextual()
 	
 	private val row = Stack.rowWithItems(segmentGroup.wrap(Vector(idLabel, nameLabel, priceLabel,
-		profitLabel, finalPriceLabel)), margins.medium.any)
+		profitLabel, finalPriceLabel, savingsLabel)), margins.medium.any)
 	
 	
 	// INITIAL CODE -------------------------------
@@ -85,6 +87,34 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product, shops: I
 		profitLabel.text = profitsPercentage.map(percentString).getOrElse("?%").noLanguageLocalizationSkipped
 		finalPriceLabel.text = content.cheapestPrice.flatMap { original => profitsPercentage.map { profit =>
 			(original * (1 + profit / 100.0)).toString } }.getOrElse("? €/kpl").noLanguageLocalizationSkipped
+		// Updates savings label
+		val savingsText = content.cheapestPrice match
+		{
+			case Some(cheapest) =>
+				val alternativePrices = content.alternativePrices
+				if (alternativePrices.isEmpty)
+					"---"
+				else
+				{
+					val sameUnitPrices = alternativePrices.filter { _.unit ~== cheapest.unit }
+					if (sameUnitPrices.isEmpty)
+						s"? €/${cheapest.unit}"
+					else
+					{
+						// Rounds savings to 1 decimal
+						val savings = sameUnitPrices.map { _.pricePerUnit - cheapest.pricePerUnit }
+							.map { amount => math.round(amount * 10) / 10.0 }.filter { _ > 0 }
+						if (savings.size > 1 && savings.last > savings.head)
+							s"${savings.head}-${savings.last} €/${cheapest.unit}"
+						else if (savings.nonEmpty)
+							s"${savings.head} €/${cheapest.unit}"
+						else
+							s"0 €/${cheapest.unit}"
+					}
+				}
+			case None => "? €/kpl"
+		}
+		savingsLabel.text = savingsText.noLanguageLocalizationSkipped
 	}
 	
 	private def displayNameFor(product: Product) =

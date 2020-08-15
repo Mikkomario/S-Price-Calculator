@@ -22,6 +22,18 @@ case class Product(id: Int, electricId: String, shopData: Set[ShopProduct] = Set
 	def cheapestPrice = cheapestData.flatMap { _.price }
 	
 	/**
+	  * @return Prices available for this product besides the cheapest price. May be empty.
+	  */
+	def alternativePrices =
+	{
+		val prices = shopData.flatMap { _.price }.toVector.sorted
+		if (prices.size > 1)
+			prices.tail
+		else
+			Vector()
+	}
+	
+	/**
 	  * @return Id of the shop that offers the cheapest price for this product. None if no shop data is known.
 	  */
 	def cheapestShopId = cheapestData.map { _.shopId }

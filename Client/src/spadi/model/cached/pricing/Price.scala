@@ -26,6 +26,11 @@ case class Price(amount: Double, unit: String = "kpl", unitsSold: Int = 1) exten
 	  */
 	def pricePerUnit = amount / unitsSold
 	
+	/**
+	  * @return A copy of this price where only one unit is sold at a time
+	  */
+	def perSingleUnit = if (unitsSold <= 1) this else copy(amount = amount / unitsSold, unitsSold = 1)
+	
 	
 	// IMPLEMENTED	---------------------
 	
