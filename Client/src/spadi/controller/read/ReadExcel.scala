@@ -403,7 +403,7 @@ object ReadExcel
 	
 	private def parseRows2(rowsIterator: Iterator[Row]) =
 	{
-		rowsIterator.map { row =>
+		rowsIterator.flatMap { row =>
 			val cellValues = row.cellIterator().asScala.map { cell =>
 				val value: Value = cell.getCellType match
 				{
@@ -438,9 +438,14 @@ object ReadExcel
 				}
 				cell.getColumnIndex -> value
 			}.toMap
-			// Fills missing cell values as empty values
-			val lastCellIndex = cellValues.keys.max
-			(0 to lastCellIndex).map { idx => cellValues.getOrElse(idx, Value.empty) }.toVector
+			if (cellValues.nonEmpty)
+			{
+				// Fills missing cell values as empty values
+				val lastCellIndex = cellValues.keys.max
+				Some((0 to lastCellIndex).map { idx => cellValues.getOrElse(idx, Value.empty) }.toVector)
+			}
+			else
+				None
 		}.toVector
 	}
 	
@@ -505,8 +510,7 @@ object ReadExcel
 	private def cellStringValue(cell: Cell) =
 	{
 		val base = cell.getStringCellValue
-		val text = if (base.startsWith("'")) base.drop(1)
-		else base
+		val text = if (base.startsWith("'")) base.drop(1) else base
 		text.trim
 	}
 }

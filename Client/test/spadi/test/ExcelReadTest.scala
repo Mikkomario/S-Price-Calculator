@@ -4,7 +4,8 @@ import java.nio.file.Path
 
 import spadi.controller.read.ReadExcel
 import spadi.model.cached.read.SheetTarget
-import utopia.flow.generic.DataType
+import utopia.flow.datastructure.immutable.{ModelDeclaration, PropertyDeclaration}
+import utopia.flow.generic.{DataType, StringType}
 import utopia.flow.util.FileExtensions._
 
 import scala.util.{Failure, Success}
@@ -19,6 +20,8 @@ object ExcelReadTest extends App
 	DataType.setup()
 	
 	val filesDirectory: Path = "Client/test-data"
+	
+	/*
 	val productsFile = filesDirectory/"products.xlsx"
 	val pricesFile = filesDirectory/"sales.xlsx"
 	
@@ -36,5 +39,12 @@ object ExcelReadTest extends App
 			println(s"Read ${models.size} models from prices:")
 			models.foreach { m => println(s"- $m") }
 		case Failure(error) => error.printStackTrace()
-	}
+	}*/
+	
+	val testSchema = ModelDeclaration(PropertyDeclaration("PARTNO", StringType))
+	ReadExcel.fromSheetAtIndex(filesDirectory/"ahlsell-test-data.xlsx", 0, 4).get
+		.foreach { model =>
+			println(model)
+			println(testSchema.validate(model).isSuccess)
+		}
 }

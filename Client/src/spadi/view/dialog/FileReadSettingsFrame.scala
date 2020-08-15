@@ -68,7 +68,7 @@ class FileReadSettingsFrame(base: Either[Vector[Path], Vector[FileReadSetting]])
 	private val headerRow = backgroundContext.inContextWithBackground(primaryColors.dark).forTextComponents()
 		.expandingToRight
 		.use { implicit c =>
-			val labels = Vector[LocalizedString]("Tiedosto", "Tukkuri", "Tyyppi", "Järjestetty", "Avaa", "Poista")
+			val labels = Vector[LocalizedString]("Tiedosto", "Tukkuri", "Tyyppi", "Avaa", "Poista")
 				.map { TextLabel.contextual(_) }
 			val row = Stack.rowWithItems(segmentedGroup.wrap(labels), margins.medium.downscaling, margins.medium.any)
 			row.background = c.containerBackground

@@ -28,7 +28,7 @@ case class PriceKeyMappingData(priceType: PriceType, shopId: Int, electricIdKey:
 	
 	override protected def fromValidatedModel(model: Model[Constant]) =
 	{
-		val price = Price(model(priceKey), saleUnitKey.flatMap { model(_).string }.getOrElse("kpl"),
+		val price = Price(model(priceKey), saleUnitKey.flatMap { model(_).string.map { _.toLowerCase } }.getOrElse("kpl"),
 			saleCountKey.flatMap { model(_).int }.getOrElse(1))
 		val name = model(nameKey).getString
 		val altName = alternativeNameKey.flatMap { model(_).string }

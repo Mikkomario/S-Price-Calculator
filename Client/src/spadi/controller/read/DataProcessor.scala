@@ -73,7 +73,19 @@ case class DataProcessor[A, +M <: KeyMapping[A]](filePath: Path, mapping: M, sug
 	  * @return Success on model parse success. Failure otherwise.
 	  */
 	def apply(models: Vector[Model[Property]])(implicit connection: Connection) =
-		models.tryMap { mapping(_) }.map { parse(_, connection) }
+	{
+		// Maps the models. Fails if all mappings failed
+		val mapResults = models.map { mapping(_) }
+		val successes = mapResults.flatMap { _.toOption }
+		if (successes.nonEmpty)
+			Success(parse(successes, connection))
+		else
+			mapResults.headOption match
+			{
+				case Some(first) => Failure(first.failure.get)
+				case None => Success(())
+			}
+	}
 	
 	/**
 	  * Reads targeted file and processes its contents

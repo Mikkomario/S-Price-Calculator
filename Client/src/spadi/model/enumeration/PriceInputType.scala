@@ -47,6 +47,6 @@ object PriceInputType
 	 */
 	case object SaleGroup extends PriceInputType
 	{
-		override def name = "Alennus"
+		override def name = "Pelkkä Alennus"
 	}
 }
