@@ -90,6 +90,11 @@ object Icons
 	 * @return An info icon
 	 */
 	def info = cache("info.png")
+	
+	/**
+	  * @return A help icon
+	  */
+	def help = cache("help.png")
 
 
 	// NESTED   ----------------------------

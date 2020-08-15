@@ -14,6 +14,7 @@ import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
 import utopia.reflection.component.context.TextContext
+import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.ImageAndTextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
@@ -21,9 +22,20 @@ import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.interaction.ButtonColor.Fixed
 import utopia.reflection.container.swing.window.interaction.YesNoWindow
-import utopia.reflection.localization.DisplayFunction
+import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.StackSize
+
+import scala.util.{Failure, Success}
+
+object FileReadSettingInputRow
+{
+	private val fileSizeWarningThreshold = 3000000 // 3 Mb
+	private val criticalFileSizeWarningThreshold = 10000000 // 10 Mb
+	
+	private val fileConversionHelpPath: Path = "ohjeet/tiedoston-muuntaminen-csv.pdf"
+}
 
 /**
  * Used for inputting file read settings
@@ -37,6 +49,8 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 {
 	// ATTRIBUTES   ------------------------------
 	
+	import FileReadSettingInputRow._
+	
 	private implicit val languageCode: String = "fi"
 	
 	private val (shopSelection, typeSelection) = context.forGrayFields.use { implicit ddC =>
@@ -47,6 +61,46 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 		shopSelection -> typeSelection
 	}
 	// private val isSortedSwitch = Switch.contextual(standardSwitchWidth.downscaling, initialState = true)
+	// If file size is very large and excel format is used, displays a warning
+	// (program may run out of memory if such files are read)
+	private val warning =
+	{
+		val path = base.mapToSingle { p => p } { _.path }
+		if (path.fileType == "csv")
+			None
+		else
+		{
+			path.size match
+			{
+				case Success(fileSize) =>
+					if (fileSize >= fileSizeWarningThreshold)
+					{
+						val isCritical = fileSize >= criticalFileSizeWarningThreshold
+						val text: LocalizedString = "Tiedosto on hyvin suuri ja ohjelmalta saattaa loppua muisti " +
+							"sitä luettaessa.\nSuosittelen muuttamaan tiedoston .csv muotoon tai pilkkomaan sen osiin."
+						if (fileConversionHelpPath.exists)
+							Some(Warning.actionable(text, isCritical) { implicit c =>
+								ImageAndTextButton.contextual(Icons.help.inButton, "Ohje") {
+									fileConversionHelpPath.openInDesktop().failure.foreach { error =>
+										Log(error, "Failed to open help file")
+										fileConversionHelpPath.openFileLocation().failure.foreach { error2 =>
+											Log(error2, "Failed to open help file location")
+											Fields.errorDialog("Jokin meni mönkään ohjeen avaamisessa :(")
+												.display(parentWindow)
+										}
+									}
+								} }(context.base))
+						else
+							Some(Warning.nonActionable(text, isCritical)(context.base))
+					}
+					else
+						None
+				case Failure(error) =>
+					Log(error, s"Failed to read file size of $path")
+					None
+			}
+		}
+	}
 	
 	private val (openButton, deleteButton) = context.forPrimaryColorButtons.use { implicit btnC =>
 		val openFileButton = Fields.openFileButton(path, parentWindow)
@@ -72,8 +126,9 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 	private val view =
 	{
 		val pathLabel = TextLabel.contextual(path.fileName.noLanguageLocalizationSkipped)
-		Stack.rowWithItems(group.wrap(Vector(pathLabel, shopSelection, typeSelection, /*isSortedSwitch,*/ openButton,
-			deleteButton)), margins.medium.downscaling)
+		Stack.rowWithItems(group.wrap(Vector(pathLabel, shopSelection, typeSelection,
+			warning.map { _.alignedToCenter }.getOrElse(new StackSpace(StackSize.any.withLowPriority)),
+			/*isSortedSwitch,*/ openButton, deleteButton)), margins.medium.downscaling)
 	}
 	
 	

@@ -34,7 +34,7 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 	
 	private implicit val language: String = "fi"
 	
-	private val minSearchDelay = 0.3.seconds
+	private val minSearchDelay = 0.2.seconds
 	
 	private var lastSearchTime = Instant.now()
 	private val currentSearchCompletion = Volatile(Future.successful(()))
