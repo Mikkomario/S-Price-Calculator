@@ -30,7 +30,12 @@ object Icons
 	 * @return An access point to larger icons
 	 */
 	def large = Large
-
+	
+	/**
+	  * @return A burger menu icon
+	  */
+	def menu = cache("menu.png")
+	
 	/**
 	 * @return A closing cross icon
 	 */
@@ -90,6 +95,11 @@ object Icons
 	 * @return An info icon
 	 */
 	def info = cache("info.png")
+	
+	/**
+	  * @return A help icon
+	  */
+	def help = cache("help.png")
 
 
 	// NESTED   ----------------------------

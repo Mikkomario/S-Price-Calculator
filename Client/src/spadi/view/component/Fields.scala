@@ -11,7 +11,8 @@ import utopia.reflection.component.context.ButtonContextLike
 import utopia.reflection.component.swing.button.ImageAndTextButton
 import utopia.reflection.component.swing.input.{DropDown, SearchFrom}
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.window.interaction.MessageWindow
+import utopia.reflection.container.swing.window.interaction.ButtonColor.Fixed
+import utopia.reflection.container.swing.window.interaction.{MessageWindow, YesNoWindow}
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.StackLength
@@ -132,5 +133,18 @@ object Fields
 		val context = baseContext.inContextWithBackground(colorScheme.error).forTextComponents()
 		new MessageWindow(context.mapFont { _ * 0.8 }, context.forSecondaryColorButtons, "Virhe", text,
 			"OK", Some(Icons.close), Some(Icons.large.warning))
+	}
+	
+	/**
+	  * Creates a new yes no window for checking whether an item should be deleted
+	  * @param text Question text
+	  * @return A new window
+	  */
+	def deletionQuestionDialog(text: LocalizedString) =
+	{
+		val dialogContext = baseContext.inContextWithBackground(colorScheme.gray).forTextComponents()
+		new YesNoWindow(dialogContext, "Oletko varma?", text,
+			Map(true -> Icons.delete, false -> Icons.close), Map(true -> Fixed(colorScheme.error)))({ (color, _) =>
+			dialogContext.forButtons(color) })
 	}
 }

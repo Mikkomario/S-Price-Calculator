@@ -2,26 +2,30 @@ package spadi.view.dialog
 
 import java.nio.file.Path
 
-import spadi.model.FileReadSetting
+import spadi.controller.Log
+import spadi.controller.database.access.multi.DbShops
+import spadi.model.cached.read.FileReadSetting
+import spadi.model.stored.pricing.Shop
 import spadi.view.component.FileReadSettingInputRow
 import spadi.view.util.Icons
 import spadi.view.util.Setup._
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.CollectionExtensions._
-import utopia.flow.util.WaitUtils
 import utopia.flow.util.TimeExtensions._
+import utopia.flow.util.WaitUtils
 import utopia.genesis.shape.shape2D.{Direction2D, Point, Size}
 import utopia.genesis.util.Screen
 import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton}
 import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.AwtComponentRelated
-import utopia.reflection.component.template.{ComponentLike, Focusable}
 import utopia.reflection.component.template.layout.Area
+import utopia.reflection.component.template.{ComponentLike, Focusable}
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.{AnimatedStack, Stack}
-import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
+import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.StackLength
@@ -29,17 +33,17 @@ import utopia.reflection.shape.StackLength
 object FileReadSettingsFrame
 {
 	/**
-	 * Creates a new frame for adding new settings
-	 * @param paths Paths to add settings for
-	 * @return A new frame
-	 */
+	  * Creates a new frame for adding new settings
+	  * @param paths Paths to add settings for
+	  * @return A new frame
+	  */
 	def forAdding(paths: Vector[Path]) = new FileReadSettingsFrame(Left(paths))
 	
 	/**
-	 * Creates a new frame for editing existing settings
-	 * @param settings Settings to edit
-	 * @return A new frame
-	 */
+	  * Creates a new frame for editing existing settings
+	  * @param settings Settings to edit
+	  * @return A new frame
+	  */
 	def forEditing(settings: Vector[FileReadSetting]) = new FileReadSettingsFrame(Right(settings))
 }
 
@@ -58,11 +62,13 @@ class FileReadSettingsFrame(base: Either[Vector[Path], Vector[FileReadSetting]])
 	private val backgroundContext = baseContext.inContextWithBackground(primaryColors)
 	private val rowContext = backgroundContext.withLightGrayBackground.forTextComponents()
 	
+	private val shopsPointer = new PointerWithEvents[Vector[Shop]](Vector())
+	
 	private val segmentedGroup = new SegmentGroup()
 	private val headerRow = backgroundContext.inContextWithBackground(primaryColors.dark).forTextComponents()
 		.expandingToRight
 		.use { implicit c =>
-			val labels = Vector[LocalizedString]("Tiedosto", "Tukkuri", "Tyyppi", "Avaa", "Poista")
+			val labels = Vector[LocalizedString]("Tiedosto", "Tukkuri", "Tyyppi", "Huom", "Avaa", "Poista")
 				.map { TextLabel.contextual(_) }
 			val row = Stack.rowWithItems(segmentedGroup.wrap(labels), margins.medium.downscaling, margins.medium.any)
 			row.background = c.containerBackground
@@ -71,8 +77,10 @@ class FileReadSettingsFrame(base: Either[Vector[Path], Vector[FileReadSetting]])
 	private val rowStack = rowContext.use { implicit c =>
 		val rows: Vector[FileReadSettingInputRow] = base match
 		{
-			case Right(settings) => settings.map { s => new FileReadSettingInputRow(segmentedGroup, Right(s))(removeRow) }
-			case Left(paths) => paths.map { p => new FileReadSettingInputRow(segmentedGroup, Left(p))(removeRow) }
+			case Right(settings) => settings.map { s => new FileReadSettingInputRow(segmentedGroup, Right(s),
+				shopsPointer)(removeRow) }
+			case Left(paths) => paths.map { p => new FileReadSettingInputRow(segmentedGroup, Left(p),
+				shopsPointer)(removeRow) }
 		}
 		val stack = AnimatedStack.contextualColumn(rows)
 		stack.background = c.containerBackground
@@ -145,6 +153,14 @@ class FileReadSettingsFrame(base: Either[Vector[Path], Vector[FileReadSetting]])
 	 */
 	def display() =
 	{
+		// Reads available shops from the database
+		connectionPool.tryWith { implicit c => shopsPointer.value = DbShops.all.sortBy { _.name } }.failure
+			.foreach { error =>
+				// TODO: Show error in dialog
+				Log(error, "Failed to read shops from the database")
+			}
+		println(s"Shops initially: ${shopsPointer.value.mkString(", ")}")
+		
 		dialog.display()
 		future
 	}

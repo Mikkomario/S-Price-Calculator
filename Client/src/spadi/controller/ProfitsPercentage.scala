@@ -1,5 +1,6 @@
 package spadi.controller
 
+import spadi.controller.container.LocalContainer
 import utopia.flow.datastructure.immutable.Value
 import utopia.flow.generic.ValueConversions._
 import utopia.genesis.shape.shape2D.Point

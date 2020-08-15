@@ -1,6 +1,7 @@
 out/
 .idea/workspace.xml
 data/
-log/
+./database/
 luettavat-tiedostot/
 luetut-tiedostot/
+log/

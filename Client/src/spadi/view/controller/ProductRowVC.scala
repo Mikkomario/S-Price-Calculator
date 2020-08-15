@@ -1,8 +1,9 @@
 package spadi.view.controller
 
 import spadi.controller.ProfitsPercentage
+import spadi.model.stored.pricing.{Product, Shop}
 import spadi.view.util.Setup._
-import spadi.model.Product
+import utopia.flow.util.StringExtensions.ExtendedString
 import utopia.reflection.component.context.{ColorContext, TextContext}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
@@ -15,13 +16,14 @@ import utopia.reflection.shape.LengthExtensions._
 object ProductRowVC
 {
 	/**
-	 * @param group Segmented group used to lay out this row
-	 * @param product First displayed product
-	 * @param context Component creation context (implicit)
-	 * @return New product row
-	 */
-	def apply(group: SegmentGroup, product: Product)(implicit context: ColorContext) =
-		new ProductRowVC(group, product)(context)
+	  * @param group Segmented group used to lay out this row
+	  * @param product First displayed product
+	  * @param shops Known shops
+	  * @param context Component creation context (implicit)
+	  * @return New product row
+	  */
+	def apply(group: SegmentGroup, product: Product, shops: Iterable[Shop])(implicit context: ColorContext) =
+		new ProductRowVC(group, product, shops)(context)
 }
 
 /**
@@ -29,7 +31,8 @@ object ProductRowVC
  * @author Mikko Hilpinen
  * @since 9.5.2020, v1
  */
-class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product)(parentContext: ColorContext)
+class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product, shops: Iterable[Shop])
+				  (parentContext: ColorContext)
 	extends StackableAwtComponentWrapperWrapper with Refreshable[Product]
 {
 	// ATTRIBUTES   -------------------------------
@@ -43,9 +46,10 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product)(parentCo
 	private val priceLabel = TextLabel.contextual()
 	private val profitLabel = TextLabel.contextual()
 	private val finalPriceLabel = TextLabel.contextual()
+	private val savingsLabel = TextLabel.contextual()
 	
 	private val row = Stack.rowWithItems(segmentGroup.wrap(Vector(idLabel, nameLabel, priceLabel,
-		profitLabel, finalPriceLabel)), margins.medium.any)
+		profitLabel, finalPriceLabel, savingsLabel)), margins.medium.any)
 	
 	
 	// INITIAL CODE -------------------------------
@@ -76,11 +80,47 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product)(parentCo
 	
 	private def updateLabels() =
 	{
-		idLabel.text = content.id.noLanguageLocalizationSkipped
-		nameLabel.text = content.displayName.noLanguageLocalizationSkipped
-		priceLabel.text = content.standardPriceString.noLanguageLocalizationSkipped
-		val profitsPercentage = ProfitsPercentage.forPrice(content.totalPrice)
-		profitLabel.text = percentString(profitsPercentage).noLanguageLocalizationSkipped
-		finalPriceLabel.text = content.priceString(1 + profitsPercentage / 100.0).noLanguageLocalizationSkipped
+		idLabel.text = content.electricId.noLanguageLocalizationSkipped
+		nameLabel.text = displayNameFor(content)
+		priceLabel.text = content.cheapestPrice.map { _.toString }.getOrElse("? €/kpl").noLanguageLocalizationSkipped
+		val profitsPercentage = content.cheapestPrice.map { p => ProfitsPercentage.forPrice(p.amount) }
+		profitLabel.text = profitsPercentage.map(percentString).getOrElse("?%").noLanguageLocalizationSkipped
+		finalPriceLabel.text = content.cheapestPrice.flatMap { original => profitsPercentage.map { profit =>
+			(original * (1 + profit / 100.0)).toString } }.getOrElse("? €/kpl").noLanguageLocalizationSkipped
+		// Updates savings label
+		val savingsText = content.cheapestPrice match
+		{
+			case Some(cheapest) =>
+				val alternativePrices = content.alternativePrices
+				if (alternativePrices.isEmpty)
+					"---"
+				else
+				{
+					val sameUnitPrices = alternativePrices.filter { _.unit ~== cheapest.unit }
+					if (sameUnitPrices.isEmpty)
+						s"? €/${cheapest.unit}"
+					else
+					{
+						// Rounds savings to 1 decimal
+						val savings = sameUnitPrices.map { _.pricePerUnit - cheapest.pricePerUnit }
+							.map { amount => math.round(amount * 10) / 10.0 }.filter { _ > 0 }
+						if (savings.size > 1 && savings.last > savings.head)
+							s"${savings.head}-${savings.last} €/${cheapest.unit}"
+						else if (savings.nonEmpty)
+							s"${savings.head} €/${cheapest.unit}"
+						else
+							s"0 €/${cheapest.unit}"
+					}
+				}
+			case None => "? €/kpl"
+		}
+		savingsLabel.text = savingsText.noLanguageLocalizationSkipped
+	}
+	
+	private def displayNameFor(product: Product) =
+	{
+		val shopName = product.cheapestShopId.flatMap { id => shops.find { _.id == id } }.map { _.name }
+			.getOrElse("Tuntematon Tukku")
+		s"${product.name} ($shopName)".noLanguageLocalizationSkipped
 	}
 }

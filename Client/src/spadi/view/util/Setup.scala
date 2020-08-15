@@ -15,6 +15,7 @@ import utopia.reflection.component.context.{AnimationContext, BaseContext, Scrol
 import utopia.reflection.localization.{Localizer, NoLocalization}
 import utopia.reflection.shape.Margins
 import utopia.reflection.text.Font
+import utopia.vault.database.ConnectionPool
 
 import scala.concurrent.ExecutionContext
 
@@ -44,10 +45,12 @@ object Setup
 	val primaryColors = ColorSet.fromHexes("#455a64", "#718792", "#1c313a").get
 	val secondaryColors = ColorSet.fromHexes("#ffc400", "#fff64f", "#c79400").get
 	val grayColors = ColorSet.fromHexes("#424242", "#6d6d6d", "#1b1b1b").get
+	val warningColors = ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
 	val colorScheme = ColorScheme(primaryColors, secondaryColors, grayColors)
 	
 	val margins = Margins(3.mm.toPixels)
 	val standardFieldWidth = 5.cm.toPixels
+	val standardSwitchWidth = 1.5.cm.toPixels
 	
 	val actorHandler = ActorHandler()
 	val standardFontSize = 0.5.cm.toPixels.toInt
@@ -63,4 +66,6 @@ object Setup
 	// COMPUTED --------------------------------
 	
 	implicit def exc: ExecutionContext = Globals.executionContext
+	
+	implicit def connectionPool: ConnectionPool = Globals.connectionPool
 }
