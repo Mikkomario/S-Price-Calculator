@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
 Main-Class: spadi.view.main.SPriceApp
-Class-Path: Dependencies.jar scala-library-2.13.1.jar scala-reflect-2.13
- .1.jar scala-library-2.13.1-sources.jar
+Class-Path: Dependencies.jar scala-library-2.13.3.jar scala-reflect-2.13
+ .3.jar scala-library-2.13.3-sources.jar
 
