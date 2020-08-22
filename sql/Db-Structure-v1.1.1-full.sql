@@ -1,7 +1,7 @@
 --
 -- S-Price Database Structure
 -- Type: Full
--- Version: v1.1
+-- Version: v1.1.1-beta-1
 --
 
 DROP DATABASE IF EXISTS s_price;
@@ -175,7 +175,7 @@ CREATE TABLE sale_group_key_map
 CREATE TABLE receipt
 (
 	id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
-	created TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP, 
+	created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	marked_purchased DATETIME, 
 	
 	INDEX r_grouping_idx (marked_purchased, created)
@@ -188,7 +188,7 @@ CREATE TABLE receipt_edit
 	id INT NOT NULL PRIMARY KEY AUTO_INCREMENT, 
 	receipt_id INT NOT NULL, 
 	name VARCHAR(64) NOT NULL, 
-	created TIMESTAMP NOT NULL DEFAULT CURRENT TIMESTAMP, 
+	created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, 
 	deprecated_after DATETIME, 
 	
 	INDEX re_versioning_idx (deprecated_after, created), 
@@ -216,4 +216,4 @@ CREATE TABLE receipt_product
 	CONSTRAINT rp_sp_referred_product_link_fk FOREIGN KEY rp_sp_referred_product_link_idx (shop_product_id) 
 		REFERENCES shop_product(id) ON DELETE CASCADE
 
-)Engine=InnoDB DEFAULT_CHARSET=latin1;
+)Engine=InnoDB DEFAULT CHARSET=latin1;

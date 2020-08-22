@@ -42,7 +42,7 @@ case class PriceKeyMappingFromFieldsFactory(priceType: PriceType, shopId: Int)
 	override val fieldNames =
 	{
 		val base = Vector("Sähkönumero".local -> true, "Nimi".local -> true,
-			"Lisänimi".local -> false, priceFieldName.local -> true, "Yksikkö".local -> true, "Ostomäärä".local -> true)
+			"Lisänimi".local -> false, priceFieldName.local -> true, "Yksikkö".local -> true, "Ostomäärä".local -> false)
 		priceType match
 		{
 			case Net => base

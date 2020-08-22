@@ -7,7 +7,7 @@ import spadi.model.stored.pricing.BasePrice
 import utopia.flow.generic.ValueConversions._
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyRowModelAccess
-import utopia.vault.sql.Where
+import utopia.vault.sql.{Delete, Where}
 import utopia.vault.sql.Extensions._
 
 /**
@@ -72,4 +72,11 @@ object DbBasePrices extends ManyRowModelAccess[BasePrice]
 		model.nowDeprecated.updateWhere(factory.deprecationColumn.isNull &&
 			factory.shopProductIdColumn.in(shopProductIds))
 	}
+	
+	/**
+	  * Deletes all deprecated base price data
+	  * @param connection DB Connection (implicit)
+	  */
+	def deleteDeprecatedData()(implicit connection: Connection): Unit =
+		connection(Delete(table) + Where(factory.deprecationColumn.isNotNull))
 }

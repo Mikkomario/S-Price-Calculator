@@ -6,6 +6,7 @@ import spadi.view.util.Setup._
 import utopia.flow.event.Changing
 import utopia.reflection.component.context.ColorContext
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
@@ -39,8 +40,7 @@ class ProductsView(productsPointer: Changing[Vector[Product]], shops: Iterable[S
 	
 	private val stackContext: ColorContext = parentContext.withLightGrayBackground
 	
-	// TODO: When rows get removed, they should be removed from the group as well (deprecated problem?)
-	private val segmentGroup = new SegmentGroup()
+	private val segmentGroup = new SegmentGroup(layouts = Vector(Trailing, Leading, Leading, Leading, Leading, Leading))
 	private val scrollView = stackContext.use { implicit c =>
 		val stack = Stack.column[ProductRowVC](margins.medium.any)
 		// Registers a content displayer for the stack

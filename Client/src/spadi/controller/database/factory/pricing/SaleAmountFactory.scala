@@ -13,10 +13,19 @@ import utopia.vault.nosql.factory.{Deprecatable, FromValidatedRowModelFactory}
   */
 object SaleAmountFactory extends FromValidatedRowModelFactory[SaleAmount] with Deprecatable
 {
+	// ATTRIBUTES	-----------------------------
+	
+	val deprecationAttName = "deprecatedAfter"
+	
+	lazy val deprecationColumn = table(deprecationAttName)
+	
+	
+	// IMPLEMENTED	-----------------------------
+	
 	override def table = Tables.saleAmount
 	
 	override protected def fromValidatedModel(model: Model[Constant]) =
 		SaleAmount(model("id"), model("groupId"), model("priceModifier"))
 	
-	override lazy val nonDeprecatedCondition = table("deprecatedAfter").isNull
+	override lazy val nonDeprecatedCondition = deprecationColumn.isNull
 }

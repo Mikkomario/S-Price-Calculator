@@ -1,5 +1,6 @@
 package spadi.model.enumeration
 
+import spadi.model.enumeration.PriceInputType.{BasePrice, SalePrice}
 import utopia.flow.util.CollectionExtensions._
 
 /**
@@ -13,6 +14,12 @@ sealed trait PriceType
 	  * @return A unique id for this price type
 	  */
 	def id: Int
+	
+	/**
+	  * @param inputType An content input type
+	  * @return Whether this price type matches specified input type
+	  */
+	def matches(inputType: PriceInputType): Boolean
 }
 
 object PriceType
@@ -43,6 +50,8 @@ object PriceType
 	case object Net extends PriceType
 	{
 		override def id = 1
+		
+		override def matches(inputType: PriceInputType) = inputType == SalePrice
 	}
 	
 	/**
@@ -51,5 +60,7 @@ object PriceType
 	case object Base extends PriceType
 	{
 		override def id = 2
+		
+		override def matches(inputType: PriceInputType) = inputType == BasePrice
 	}
 }
