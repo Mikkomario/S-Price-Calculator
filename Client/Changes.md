@@ -1,4 +1,12 @@
 # S-Price Calculator - List of Changes
+#v1.2.1
+### New Features
+- Added a new button for comparing shop prices
+- Added clear history feature to menu
+- Sale count information is now optional when reading product input data
+### Bugfixes
+- Refactored shop deletion feature so that it won't get stuck anymore
+
 ## v1.2
 ### Major Changes
 - Completely refactored internal data handling. All data needs to be re-imported. 
