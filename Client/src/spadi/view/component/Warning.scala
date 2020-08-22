@@ -9,6 +9,8 @@ import utopia.reflection.localization.LocalizedString
 import spadi.view.util.Setup._
 import utopia.genesis.shape.shape2D.{Direction2D, Point}
 import utopia.genesis.util.Screen
+import utopia.reflection.color.ColorRole
+import utopia.reflection.color.ColorRole.Error
 import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.layout.multi.Stack
@@ -54,7 +56,7 @@ class Warning(text: LocalizedString, makeButton: Option[ButtonContext => AwtStac
 	
 	private implicit val languageCode: String = "fi"
 	
-	private val color = if (isCritical) colorScheme.error else warningColors.forBackground(context.containerBackground)
+	private val color = colorScheme(if (isCritical) Error else ColorRole.Warning).forBackground(context.containerBackground)
 	private val button = context.use { implicit c =>
 		ImageButton.contextual(Icons.warning.asIndividualButtonWithColor(color)) { displayPopup() } }
 	

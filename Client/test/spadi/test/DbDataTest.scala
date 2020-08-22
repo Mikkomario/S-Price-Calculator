@@ -1,8 +1,8 @@
 package spadi.test
 
 import spadi.controller.database.access.multi.{DbShopProducts, DbShops}
-import spadi.controller.database.factory.pricing.ShopProductFactory
-import spadi.controller.database.model.pricing.ShopProductModel
+import spadi.controller.database.factory.pricing.ProductFactory
+import spadi.controller.database.model.pricing.ProductModel
 import spadi.controller.database.{DbSetup, Tables}
 import spadi.model.cached.ProgressState
 import utopia.flow.datastructure.mutable.PointerWithEvents
@@ -40,9 +40,14 @@ object DbDataTest extends App
 			DbShopProducts.forShopWithId(shop.id).take(5).foreach { println(_) }
 		}
 		
+		/*
 		println()
 		println(connection(SelectAll(ShopProductFactory.target) +
 			Where(ShopProductModel.withId(254709).toCondition && ShopProductFactory.nonDeprecatedCondition)))
+		 */
+		
+		println()
+		println(connection(SelectAll(ProductFactory.target) + Where(ProductModel.withId(58739).toCondition)))
 	}
 	
 	println("\nDone")

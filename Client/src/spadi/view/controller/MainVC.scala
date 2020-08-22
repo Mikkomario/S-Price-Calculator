@@ -65,7 +65,7 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 		val productsView = ProductsView(productsPointer, shops, Screen.height / 2)
 		val mainView = Stack.buildColumnWithContext(isRelated = true) { s =>
 			s += searchField
-			s += productsView.withAnimatedSize(actorHandler)
+			s += productsView.withAnimatedSize
 		}.framed(margins.medium.any, c.containerBackground)
 		val stack = Stack.columnWithItems(Vector(new MainViewHeader(shops), mainView), StackLength.fixedZero)
 		
@@ -118,7 +118,8 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 							
 							electricIdMatchLevel * -10 - productNameMatchLevel * 2 - altNameMatchLevel
 						}
-						// println(s"Top product: ${sortedProducts.headOption}")
+						// TODO: Remove test print
+						println(s"Top product: ${sortedProducts.headOption}")
 						productsPointer.value = sortedProducts
 					}.failure.foreach { error => Log(error, "Failed to search for products") }
 				}
