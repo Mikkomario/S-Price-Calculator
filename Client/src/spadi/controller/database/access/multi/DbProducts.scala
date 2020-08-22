@@ -3,17 +3,23 @@ package spadi.controller.database.access.multi
 import spadi.controller.database.access.id.{ProductIds, SaleGroupIds, ShopProductIds}
 import spadi.controller.database.factory.pricing.{ProductFactory, ShopProductFactory}
 import spadi.controller.database.model.pricing.{BasePriceModel, NetPriceModel, ProductModel, SaleGroupModel, ShopProductModel}
+import spadi.model.cached.ProgressState
 import spadi.model.enumeration.PriceType.{Base, Net}
 import spadi.model.enumeration.PriceType
 import spadi.model.partial.pricing.{SaleGroupData, ShopProductData}
 import spadi.model.stored.pricing.Product
+import spadi.view.util.Setup._
+import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.generic.ValueConversions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.TimeLogger
+import utopia.reflection.localization.LocalizedString
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyModelAccess
 import utopia.vault.sql.{Delete, JoinType, Where}
 import utopia.vault.sql.Extensions._
+
+import scala.concurrent.Future
 
 /**
   * Used for accessing multiple products at once
@@ -26,6 +32,8 @@ object DbProducts extends ManyModelAccess[Product]
 	
 	private val maxProductInsertCount = 500 // How many new products may be inserted at a time
 	private val maxPriceInsertCount = 250 // How many prices may be inserted at a time
+	
+	private implicit val languageCode: String = "fi"
 	
 	
 	// IMPLEMENTED	--------------------------
@@ -59,6 +67,42 @@ object DbProducts extends ManyModelAccess[Product]
 	def deleteProductsWithoutShopData()(implicit connection: Connection): Unit = connection(
 		Delete(table.join(ShopProductFactory.table, JoinType.Left), table) +
 			Where(ShopProductFactory.table.primaryColumn.get.isNull))
+	
+	/**
+	  * Deletes all deprecated products data from the DB. This process is performed asynchronously and tracked via
+	  * a progress pointer
+	  * @return Process progress pointer and a future with eventual progress results
+	  */
+	def deleteDeprecatedDataAsync() =
+	{
+		/*
+		Progress updates:
+			- 0-5% DB connection
+			- 5-45% Net prices
+			- 45-90% Base prices
+			- 90-100% Sale amounts
+		 */
+		val progressPointer = new PointerWithEvents(ProgressState.initial("Muodostetaan tietokantayhteyttä"))
+		val future = Future {
+			connectionPool.tryWith { implicit connection =>
+				// Deletes deprecated net prices
+				progressPointer.value = ProgressState(0.05, "Poistetaan vanhentuneita nettohintoja")
+				DbNetPrices.deleteDeprecatedData()
+				// Deletes deprecated base prices
+				progressPointer.value = ProgressState(0.45, "Poistetaan vanhentuneita perushintoja")
+				DbBasePrices.deleteDeprecatedData()
+				// Deletes deprecated sale amounts
+				progressPointer.value = ProgressState(0.9, "Poistetaan vanhentuneita alennusmääriä")
+				DbSaleAmounts.deleteDeprecatedData()
+			}
+		}
+		future.onComplete { result =>
+			val message: LocalizedString = if (result.flatten.isSuccess) "Vanhentuneet tiedot poistettu"
+				else "Tietojen poistaminen epäonnistui"
+			progressPointer.value = ProgressState.finished(message)
+		}
+		progressPointer.view -> future
+	}
 	
 	/**
 	  * Inserts a number of new product prices to the database

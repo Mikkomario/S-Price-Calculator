@@ -56,10 +56,10 @@ case class VersionNumber(numbers: Vector[Int], suffix: String = "") extends Rich
 					if (o.hasSuffix)
 						suffix.compareTo(o.suffix)
 					else
-						1
+						-1
 				}
 				else if (o.hasSuffix)
-					-1
+					1
 				else
 					0
 			}

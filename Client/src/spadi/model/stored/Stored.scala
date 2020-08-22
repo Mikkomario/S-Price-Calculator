@@ -1,19 +1,18 @@
 package spadi.model.stored
 
-import scala.language.implicitConversions
+import spadi.model.Extender
 
-object Stored
-{
-	implicit def autoUnwrap[D](s: Stored[D]): D = s.data
-}
+import scala.language.implicitConversions
 
 /**
   * Common trait for database-originated items
   * @author Mikko Hilpinen
   * @since 28.7.2020, v1.2
   */
-trait Stored[+Data]
+trait Stored[+Data] extends Extender[Data]
 {
+	// ABSTRACT	--------------------------------
+	
 	/**
 	  * @return This item's primary index in the database
 	  */
@@ -23,4 +22,9 @@ trait Stored[+Data]
 	  * @return Wrapped data
 	  */
 	def data: Data
+	
+	
+	// IMPLEMENTED	---------------------------
+	
+	override def wrapped = data
 }

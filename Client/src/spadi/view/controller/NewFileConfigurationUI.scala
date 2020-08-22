@@ -23,6 +23,7 @@ import utopia.genesis.shape.shape1D.Direction1D.{Negative, Positive}
 import utopia.reflection.localization.LocalString._
 
 import scala.collection.immutable.VectorBuilder
+import scala.io.Codec
 import scala.util.{Failure, Success}
 
 /**
@@ -35,6 +36,7 @@ object NewFileConfigurationUI
 	// ATTRIBUTES   ------------------------
 	
 	private implicit val languageCode: String = "fi"
+	private implicit val encoding: Codec = Codec.UTF8
 	
 	
 	// OTHER    ----------------------------
@@ -89,7 +91,8 @@ object NewFileConfigurationUI
 				setting -> existingSaleMappings.filter { _.shopId == setting.shop.id }
 			}
 			val priceSettingsWithExistingMappings = priceSettings.map { setting =>
-				setting -> existingPriceMappings.filter { _.shopId == setting.shop.id }
+				setting -> existingPriceMappings.filter { mapping => mapping.shopId == setting.shop.id &&
+					mapping.priceType.matches(setting.inputType) }
 			}
 			val (saleSettingsWithoutMappings, saleSettingsWithMappings) = saleSettingsWithExistingMappings
 				.dividedWith { case (setting, mappings) =>
@@ -220,7 +223,7 @@ object NewFileConfigurationUI
 		{
 			val requiredColumnCount = mappingFactory.fieldNames.count { _._2 }
 			println(s"Requires $requiredColumnCount columns in ${setting.path.fileName}")
-			setting.path.fileType.toLowerCase match
+			/*(*/setting.path.fileType.toLowerCase match
 			{
 					// TODO: Remove test prints
 				case "csv" =>
@@ -251,7 +254,7 @@ object NewFileConfigurationUI
 							Log(error, s"Failed to read headers from ${setting.path}")
 							None
 					}
-			}
+			}// ).map { _.map(CleanInput.apply) }
 		}
 		
 		private var lastDialog: Option[DataProcessorWindowLike[A, M, _]] = None

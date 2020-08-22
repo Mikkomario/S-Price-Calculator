@@ -100,6 +100,16 @@ object Icons
 	  * @return A help icon
 	  */
 	def help = cache("help.png")
+	
+	/**
+	  * @return A more icon
+	  */
+	def more = cache("more.png")
+	
+	/**
+	  * @return A cleaning icon
+	  */
+	def clean = cache("clean.png")
 
 
 	// NESTED   ----------------------------

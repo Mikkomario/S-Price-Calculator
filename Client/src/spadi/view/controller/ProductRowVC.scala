@@ -2,9 +2,12 @@ package spadi.view.controller
 
 import spadi.controller.ProfitsPercentage
 import spadi.model.stored.pricing.{Product, Shop}
+import spadi.view.dialog.PriceComparePopup
+import spadi.view.util.Icons
 import spadi.view.util.Setup._
 import utopia.flow.util.StringExtensions.ExtendedString
 import utopia.reflection.component.context.{ColorContext, TextContext}
+import utopia.reflection.component.swing.button.ImageButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import utopia.reflection.component.template.display.Refreshable
@@ -47,14 +50,16 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product, shops: I
 	private val profitLabel = TextLabel.contextual()
 	private val finalPriceLabel = TextLabel.contextual()
 	private val savingsLabel = TextLabel.contextual()
+	private val moreButton = ImageButton.contextualWithoutAction(Icons.more.asIndividualButton)
 	
 	private val row = Stack.rowWithItems(segmentGroup.wrap(Vector(idLabel, nameLabel, priceLabel,
-		profitLabel, finalPriceLabel, savingsLabel)), margins.medium.any)
+		profitLabel, finalPriceLabel, savingsLabel, moreButton)), margins.medium.any)
 	
 	
 	// INITIAL CODE -------------------------------
 	
 	updateLabels()
+	moreButton.registerAction { () => PriceComparePopup.displayOver(moreButton, _content, shops) }
 	
 	
 	// IMPLEMENTED  -------------------------------

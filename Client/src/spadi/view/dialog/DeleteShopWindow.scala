@@ -1,7 +1,6 @@
 package spadi.view.dialog
 
 import spadi.controller.Log
-import spadi.controller.database.access.multi.DbProducts
 import spadi.controller.database.access.single.DbShop
 import spadi.model.stored.pricing.Shop
 import spadi.view.component.Fields
@@ -31,26 +30,33 @@ object DeleteShopWindow
 				Fields.deletionQuestionDialog(
 					"Haluatko varmasti poistaa kaikki tätä tukkua koskevat tiedot.\nTätä toimintoa ei voi peruuttaa.")
 					.display(parentWindow)
-					.map { shouldDelete =>
+					.flatMap { shouldDelete =>
 						if (shouldDelete)
 						{
-							connectionPool.tryWith { implicit connection =>
-								DbShop(shopId).delete()
-								DbProducts.deleteProductsWithoutShopData()
-							} match
-							{
-								case Success(_) => Fields.messageDialog("Tiedot poistettu",
-									"Kaikki tukkua koskevat tiedot on nyt poistettu").display(parentWindow)
-								case Failure(error) =>
-									Log(error, s"Failed to delete shop with id $shopId")
-									Fields.errorDialog(s"Tukun tietojen poistaminen epäonnistui.\nVirheilmoitus: ${
-										error.getLocalizedMessage}").display(parentWindow)
+							// Performs the shop deletion asynchronously and displays a loading dialog while doing so
+							val (progressPointer, deletionFuture) = DbShop(shopId).deleteAsync()
+							val loadingView = new LoadingView(progressPointer)
+							loadingView.display(parentWindow).flatMap { _ =>
+								deletionFuture.map { result =>
+									// Displays a dialog about deletion success or failure
+									result match
+									{
+										case Success(_) =>
+											Fields.messageDialog("Tiedot poistettu",
+												"Kaikki tukkua koskevat tiedot on nyt poistettu")
+												.display(parentWindow)
+										case Failure(error) =>
+											Log(error, s"Failed to delete shop with id $shopId")
+											Fields.errorDialog(s"Tukun tietojen poistaminen epäonnistui.\nVirheilmoitus: ${
+												error.getLocalizedMessage}").display(parentWindow)
+									}
+									// Returns id of deleted shop
+									Some(shopId)
+								}
 							}
-							// Once deletion is complete, returns the id of the deleted shop
-							Some(shopId)
 						}
 						else
-							None
+							Future.successful(None)
 					}
 			case None => Future.successful(None)
 		}

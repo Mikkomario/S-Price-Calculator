@@ -16,9 +16,11 @@ object NetPriceFactory extends FromValidatedRowModelFactory[NetPrice] with Depre
 {
 	// ATTRIBUTES	----------------------------
 	
+	val deprecationAttName = "deprecatedAfter"
 	val shopProductIdAttName = "shopProductId"
 	
 	lazy val shopProductIdColumn = table(shopProductIdAttName)
+	lazy val deprecationColumn = table(deprecationAttName)
 	
 	
 	// IMPLEMENTED	----------------------------
@@ -28,5 +30,5 @@ object NetPriceFactory extends FromValidatedRowModelFactory[NetPrice] with Depre
 	override protected def fromValidatedModel(model: Model[Constant]) = NetPrice(model("id"), model(shopProductIdAttName),
 		Price(model("netPrice"), model("saleUnit").stringOr("kpl"), model("saleCount").intOr(1)))
 	
-	override lazy val nonDeprecatedCondition = table("deprecatedAfter").isNull
+	override lazy val nonDeprecatedCondition = deprecationColumn.isNull
 }
