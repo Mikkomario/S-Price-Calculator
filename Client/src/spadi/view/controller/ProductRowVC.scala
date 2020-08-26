@@ -50,7 +50,8 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product, shops: I
 	private val profitLabel = TextLabel.contextual()
 	private val finalPriceLabel = TextLabel.contextual()
 	private val savingsLabel = TextLabel.contextual()
-	private val moreButton = ImageButton.contextualWithoutAction(Icons.more.asIndividualButtonWithColor(primaryColors))
+	private val moreButton = ImageButton.contextualWithoutAction(Icons.more
+		.asIndividualButtonWithColor(primaryColors.forBackgroundPreferringLight(parentContext.containerBackground)))
 	
 	private val row = Stack.rowWithItems(segmentGroup.wrap(Vector(idLabel, nameLabel, priceLabel,
 		profitLabel, finalPriceLabel, savingsLabel, moreButton)), margins.medium.any)

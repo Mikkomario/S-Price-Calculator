@@ -87,6 +87,11 @@ object Icons
 	def file = cache("file.png")
 	
 	/**
+	  * @return A folder icon
+	  */
+	def folder = cache("folder.png")
+	
+	/**
 	 * @return A warning icon
 	 */
 	def warning = cache("warning.png")
@@ -110,6 +115,11 @@ object Icons
 	  * @return A cleaning icon
 	  */
 	def clean = cache("clean.png")
+	
+	/**
+	  * @return A google search icon
+	  */
+	def google = cache("google.png")
 
 
 	// NESTED   ----------------------------

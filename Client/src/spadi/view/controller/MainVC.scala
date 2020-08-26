@@ -6,7 +6,8 @@ import spadi.controller.Log
 import spadi.controller.database.access.id.ProductIds
 import spadi.controller.database.access.multi.DbProducts
 import spadi.model.stored.pricing.{Product, Shop}
-import spadi.view.component.{MainViewHeader, ProductsView, SearchField}
+import spadi.view.component.{MainViewHeader, Overview, ProductsView, SearchField}
+import spadi.view.util.Icons
 import spadi.view.util.Setup._
 import utopia.flow.async.Volatile
 import utopia.flow.datastructure.mutable.PointerWithEvents
@@ -15,11 +16,17 @@ import utopia.flow.util.WaitUtils
 import utopia.flow.util.TimeExtensions._
 import utopia.flow.util.CollectionExtensions._
 import utopia.genesis.util.Screen
+import utopia.reflection.color.ColorRole.Info
+import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.AwtContainerRelated
 import utopia.reflection.container.swing.layout.multi.Stack
+import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
+import utopia.reflection.container.swing.layout.wrapper.SwitchPanel
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.StackLength
+import utopia.reflection.localization.LocalString._
 
 import scala.concurrent.{Future, Promise}
 
@@ -34,38 +41,37 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 	// ATTRIBUTES   -----------------------
 	
 	private implicit val language: String = "fi"
+	private val context = baseContext.inContextWithBackground(colorScheme.primary)
 	
 	private val minSearchDelay = 0.2.seconds
 	
 	private var lastSearchTime = Instant.now()
 	private val currentSearchCompletion = Volatile(Future.successful(()))
 	
-	//private val producerProductOrdering = Ordering.by[Product, Option[String]] { _.producer }
-	//private val productNameOrdering = Ordering.by[Product, String] { _.displayName }
-	// private implicit val productIdOrdering: Ordering[Product] = Ordering.by[Product, String] { _.id }
-	//private implicit val productOrdering: Ordering[Product] = new CombinedOrdering[Product](
-	//	Vector(producerProductOrdering, productNameOrdering, productIdOrdering))
-	
-	// Reads and orders product data
-	/*
-	private val allProducts = ReadProducts() match
-	{
-		case Success(data) =>
-			data._2.headOption.foreach { error => Log(error, s"${data._2.size} errors while reading products") }
-			data._1.toVector.sorted
-		case Failure(error) =>
-			Log(error, "Failed to read product data")
-			Vector()
-	}*/
 	private val productsPointer = new PointerWithEvents[Vector[Product]](defaultProducts)
+	private val (productsView, startView, contentPanel) = context.use { implicit c =>
+		val productsView = ProductsView(productsPointer, shops, Screen.height / 2)
+		val startView = Overview()
+		val contentPanel = SwitchPanel[AwtStackable](startView)
+		
+		(productsView, startView, contentPanel)
+	}
+	private val (noResultsView, noResultsLabel) = context.forChildComponentWithRole(Info)
+		.forTextComponents().expandingToRight
+		.use { implicit c =>
+			val textLabel = TextLabel.contextual()
+			Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
+				s += ImageLabel.contextual(Icons.warning.singleColorImage)
+				s += textLabel
+			}.framed(margins.small.any, c.containerBackground) -> textLabel
+		}
 	
 	// Won't display more than 100 items at once
-	private val (searchField, view) = baseContext.inContextWithBackground(colorScheme.primary).use { implicit c =>
+	private val (searchField, view) = context.use { implicit c =>
 		val searchField = SearchField.default("Etsi tuotteita")
-		val productsView = ProductsView(productsPointer, shops, Screen.height / 2)
 		val mainView = Stack.buildColumnWithContext(isRelated = true) { s =>
 			s += searchField
-			s += productsView.withAnimatedSize
+			s += contentPanel.withAnimatedSize
 		}.framed(margins.medium.any, c.containerBackground)
 		val stack = Stack.columnWithItems(Vector(new MainViewHeader(shops), mainView), StackLength.fixedZero)
 		
@@ -101,7 +107,7 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 				// After wait, checks current search words
 				val currentSearchWords = searchField.text.words
 				if (currentSearchWords.isEmpty)
-					productsPointer.value = defaultProducts
+					contentPanel.set(startView)
 				else
 				{
 					// Performs the search
@@ -120,6 +126,14 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 						}
 						//println(s"Top product: ${sortedProducts.headOption}")
 						productsPointer.value = sortedProducts
+						if (sortedProducts.isEmpty)
+						{
+							noResultsLabel.text = "Ei yhtään tuotetta haulla: %s".autoLocalized
+								.interpolated(Vector(currentSearchWords.mkString(", ")))
+							contentPanel.set(noResultsView)
+						}
+						else
+							contentPanel.set(productsView)
 					}.failure.foreach { error => Log(error, "Failed to search for products") }
 				}
 				
