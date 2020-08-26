@@ -5,7 +5,7 @@ import spadi.controller.database.model.pricing.ShopProductModel
 import spadi.model.stored.pricing.ShopProduct
 import utopia.vault.database.Connection
 import utopia.vault.nosql.access.ManyRowModelAccess
-import utopia.vault.sql.OrderBy
+import utopia.vault.sql.{Count, OrderBy, Where}
 
 /**
   * Used for accessing multiple shop products at a time
@@ -24,6 +24,18 @@ object DbShopProducts extends ManyRowModelAccess[ShopProduct]
 	// COMPUTED	-----------------------------------
 	
 	private def model = ShopProductModel
+	
+	/**
+	  * @param connection Implicit database connection
+	  * @return Number of products for each of the registered shops
+	  */
+	def count(implicit connection: Connection) =
+	{
+		DbShops.all.map { shop =>
+			val numberOfProducts = connection(Count(table) + Where(model.withShopId(shop.id))).firstValue.getInt
+			shop -> numberOfProducts
+		}.toMap
+	}
 	
 	
 	// OTHER	-----------------------------------
