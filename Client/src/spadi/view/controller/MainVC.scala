@@ -61,7 +61,7 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 	
 	// Won't display more than 100 items at once
 	private val (searchField, view) = baseContext.inContextWithBackground(colorScheme.primary).use { implicit c =>
-		val searchField = SearchField.default("Rajaa tuotteita")
+		val searchField = SearchField.default("Etsi tuotteita")
 		val productsView = ProductsView(productsPointer, shops, Screen.height / 2)
 		val mainView = Stack.buildColumnWithContext(isRelated = true) { s =>
 			s += searchField
