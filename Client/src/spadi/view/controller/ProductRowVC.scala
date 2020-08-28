@@ -54,7 +54,7 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product, shops: I
 		.asIndividualButtonWithColor(primaryColors.forBackgroundPreferringLight(parentContext.containerBackground)))
 	
 	private val row = Stack.rowWithItems(segmentGroup.wrap(Vector(idLabel, nameLabel, priceLabel,
-		profitLabel, finalPriceLabel, savingsLabel, moreButton)), margins.medium.any)
+		savingsLabel, profitLabel, finalPriceLabel, moreButton)), margins.medium.any)
 	
 	
 	// INITIAL CODE -------------------------------

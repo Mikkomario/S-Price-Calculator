@@ -43,7 +43,7 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 	private implicit val language: String = "fi"
 	private val context = baseContext.inContextWithBackground(colorScheme.primary)
 	
-	private val minSearchDelay = 0.2.seconds
+	private val minSearchDelay = 0.25.seconds
 	
 	private var lastSearchTime = Instant.now()
 	private val currentSearchCompletion = Volatile(Future.successful(()))
@@ -61,7 +61,7 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 		.use { implicit c =>
 			val textLabel = TextLabel.contextual()
 			Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
-				s += ImageLabel.contextual(Icons.warning.singleColorImage)
+				s += ImageLabel.contextual(Icons.info.singleColorImage)
 				s += textLabel
 			}.framed(margins.small.any, c.containerBackground) -> textLabel
 		}
@@ -104,6 +104,10 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 				while (Instant.now() < lastSearchTime + minSearchDelay)
 					WaitUtils.waitUntil(lastSearchTime + minSearchDelay, waitLock)
 				
+				lastSearchTime = Instant.now()
+				// Completes current search
+				newPromise.success(())
+				
 				// After wait, checks current search words
 				val currentSearchWords = searchField.text.words
 				if (currentSearchWords.isEmpty)
@@ -136,9 +140,6 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 							contentPanel.set(productsView)
 					}.failure.foreach { error => Log(error, "Failed to search for products") }
 				}
-				
-				// Completes current search
-				newPromise.success(())
 			}
 		}
 	}

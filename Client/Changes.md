@@ -1,4 +1,16 @@
 # S-Price Calculator - List of Changes
+#v1.2.2
+### New Features
+- Added a new view that is displayed while the search field is empty
+- Added a new view that is shown when there are no search results
+- Added a Google button for googling the product
+- Product details view now automatically opens when the search returns only a single product
+### Other Changes
+- Changed product name
+- Added a new logo
+- Altered secondary color in the color scheme
+- Changed column ordering in search results view
+
 #v1.2.1
 ### New Features
 - Added a new button for comparing shop prices
