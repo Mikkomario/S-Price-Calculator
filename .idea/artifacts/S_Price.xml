@@ -60,7 +60,7 @@
         <element id="extracted-dir" path="$PROJECT_DIR$/Client/lib/xmlbeans-3.1.0.jar" path-in-jar="/" />
         <element id="extracted-dir" path="$PROJECT_DIR$/../Utopia/Vault/lib/mariadb-java-client-1.5.9.jar" path-in-jar="/" />
       </element>
-      <element id="archive" name="S-Price.jar">
+      <element id="archive" name="Suho.jar">
         <element id="directory" name="META-INF">
           <element id="file-copy" path="$PROJECT_DIR$/Client/META-INF/MANIFEST.MF" />
         </element>
