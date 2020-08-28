@@ -2,6 +2,7 @@ package spadi.controller
 
 import java.nio.file.Path
 
+import spadi.model.cached.VersionNumber
 import utopia.flow.async.ThreadPool
 import utopia.flow.util.FileExtensions._
 import utopia.vault.database.ConnectionPool
@@ -15,6 +16,11 @@ import scala.concurrent.ExecutionContext
  */
 object Globals
 {
+	/**
+	  * Current program version number
+	  */
+	val versionNumber = VersionNumber(1, 2, 2)
+	
 	/**
 	 * Asynchronous execution context used in this project
 	 */

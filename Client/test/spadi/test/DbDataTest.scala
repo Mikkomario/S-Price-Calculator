@@ -1,6 +1,6 @@
 package spadi.test
 
-import spadi.controller.database.access.multi.{DbShopProducts, DbShops}
+import spadi.controller.database.access.multi.DbShopProducts
 import spadi.controller.database.factory.pricing.ProductFactory
 import spadi.controller.database.model.pricing.ProductModel
 import spadi.controller.database.{DbSetup, Tables}
@@ -35,10 +35,11 @@ object DbDataTest extends App
 		}
 		
 		// Reads a few products for each shop
+		/*
 		DbShops.all.foreach { shop =>
 			println(s"\nData for ${shop.name}")
 			DbShopProducts.forShopWithId(shop.id).take(5).foreach { println(_) }
-		}
+		}*/
 		
 		/*
 		println()
@@ -48,6 +49,9 @@ object DbDataTest extends App
 		
 		println()
 		println(connection(SelectAll(ProductFactory.target) + Where(ProductModel.withId(58739).toCondition)))
+		
+		println()
+		DbShopProducts.count.foreach { case (shop, count) => println(s"Products in ${shop.name}: $count") }
 	}
 	
 	println("\nDone")

@@ -1,12 +1,16 @@
 package spadi.view.dialog
 
+import spadi.controller.Log
 import spadi.model.stored.pricing.{Product, Shop}
+import spadi.view.component.Fields
 import spadi.view.controller.PriceCompareRowVC
-import spadi.view.util.Icons
+import spadi.view.util.{Browser, Icons}
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import spadi.view.util.Setup._
+import utopia.flow.util.CollectionExtensions._
+import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.shape.shape2D.Point
-import utopia.reflection.component.swing.button.ImageButton
+import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton}
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.template.ComponentLike
 import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
@@ -15,6 +19,8 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.{StackInsets, StackLength}
+import utopia.reflection.localization.LocalString._
 
 /**
   * This object allows one to display a price comparison pop-up for a product
@@ -36,32 +42,87 @@ object PriceComparePopup
 		val backgroundColor = primaryColors.bestAgainst(Vector(grayColors.dark, grayColors.default))
 		val segmentGroup = new SegmentGroup(layouts = Vector(Trailing, Leading))
 		
-		// Creates the price comparison list
+		// Creates the price comparison list (header + a row for each price option)
+		val rowCap = margins.small.downscaling
 		val headerRow = baseContext.inContextWithBackground(grayColors.dark).forTextComponents().use { implicit c =>
-			val headerRow = Stack.rowWithItems(segmentGroup.wrap(Vector[LocalizedString]("Tukku", "Hinta")
-				.map { TextLabel.contextual(_) }), margins.small.any)
-			headerRow.background = c.containerBackground
-			headerRow
+			Stack.rowWithItems(segmentGroup.wrap(Vector[LocalizedString]("Tukku", "Hinta")
+				.map { TextLabel.contextual(_) }), c.relatedItemsStackMargin)
+				.framed(StackInsets.horizontal(rowCap), c.containerBackground)
 		}
-		val productsStack = baseContext.inContextWithBackground(grayColors.default).forTextComponents().use { implicit c =>
-			val stack = Stack.buildColumnWithContext(isRelated = true) { s =>
-				s += headerRow
-				product.shopData.toVector.sortBy { _.price.map { _.pricePerUnit }.getOrElse(100000.0) }
-					.foreach { shopProduct =>
-						s += new PriceCompareRowVC(segmentGroup, shopProduct, shops)
-					}
+		val sortedPrices = product.shopData.toVector.sortBy { _.price.map { _.pricePerUnit }.getOrElse(100000.0) }
+		// The cheapest price is displayed at the top and highlighted
+		val firstRow = sortedPrices.headOption.map { price =>
+			val highlightColor = secondaryColors.bestAgainst(Vector(grayColors.dark, grayColors.default))
+			baseContext.inContextWithBackground(highlightColor).forTextComponents().use { implicit c =>
+				val row = new PriceCompareRowVC(segmentGroup, price, shops)
+				row.background = c.containerBackground
+				row
 			}
-			stack.background = c.containerBackground
-			stack
+		}
+		// Builds the products row list, which consists of 0-n elements
+		val productsStack = baseContext.inContextWithBackground(grayColors.default).forTextComponents().use { implicit c =>
+			Stack.buildColumn(StackLength.fixedZero) { stack =>
+				stack += headerRow
+				val moreRows = sortedPrices.drop(1).map { price => new PriceCompareRowVC(segmentGroup, price, shops) }
+				stack +=
+				{
+					// Case: Multiple rows
+					if (moreRows.nonEmpty)
+						Stack.columnWithItems(firstRow.toVector ++ moreRows, c.relatedItemsStackMargin)
+							.framed(rowCap, c.containerBackground)
+					else
+						firstRow match
+						{
+							// Case: Single row
+							case Some(row) => row.framed(rowCap, c.containerBackground)
+							// Case: No rows at all
+							case None =>
+								val label = TextLabel.contextual("Ei hintatietoja saatavilla", isHint = true)
+								label.background = c.containerBackground
+								label
+						}
+				}
+			}
 		}
 		
 		// Adds a close button and wraps in a popup
+		val googleButton =
+		{
+			val searchWords = sortedPrices.headOption match
+			{
+				case Some(price) => (shops.find { _.id == price.shopId }.map { _.name }.toVector :+ price.name)
+					.map { _.trim }.filterNot { _.isEmpty }
+				case None => Vector()
+			}
+			if (Browser.isEnabled && searchWords.nonEmpty)
+				Some(baseContext.inContextWithBackground(backgroundColor).forTextComponents().forPrimaryColorButtons
+					.use { implicit c =>
+						ImageAndTextButton.contextual(Icons.google.inButton, "Googlaa tuote") {
+							Browser.google(product.electricId +: searchWords).failure.foreach { error =>
+								Log(error, "Failed to open browser")
+								Fields.errorDialog("Googlaus epäonnistui.\nVirheilmoitus: %s".autoLocalized
+									.interpolated(Vector(error.getLocalizedMessage))).display(productsStack.parentWindow)
+							}
+						}
+					})
+			else
+				None
+		}
 		val popup = baseContext.inContextWithBackground(backgroundColor).forTextComponents().use { implicit context =>
 			val closeButton = ImageButton.contextualWithoutAction(Icons.close.asIndividualButton)
-			val content = Stack.buildRowWithContext(layout = Leading, isRelated = true) { mainRow =>
+			val mainStack = Stack.buildRowWithContext(layout = Leading, isRelated = true) { mainRow =>
 				mainRow += productsStack
 				mainRow += closeButton
-			}.framed(margins.small.any, backgroundColor)
+			}
+			val content = (googleButton match
+			{
+				case Some(button) =>
+					Stack.buildColumnWithContext(isRelated = true) { s =>
+						s += mainStack
+						s += button
+					}
+				case None => mainStack
+			}).framed(margins.small.any, backgroundColor)
 			
 			val popup = Popup(component, content, actorHandler) { (cSize, pSize) =>
 				Point(cSize.width + margins.medium, (cSize.height - pSize.height) / 2.0 ) }
@@ -69,6 +130,8 @@ object PriceComparePopup
 			
 			popup
 		}
+		// Closes the pop-up if any key is pressed
+		popup.addKeyStateListener(KeyStateListener.onAnyKeyPressed { _ => popup.close() })
 		
 		popup.display()
 	}

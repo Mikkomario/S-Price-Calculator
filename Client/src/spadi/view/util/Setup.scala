@@ -44,9 +44,11 @@ object Setup
 	implicit val ppi: Ppi = Screen.ppi
 	
 	val primaryColors = ColorSet.fromHexes("#455a64", "#718792", "#1c313a").get
-	val secondaryColors = ColorSet.fromHexes("#ffc400", "#fff64f", "#c79400").get
+	val secondaryColors = ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
+		// ColorSet.fromHexes("#ffc400", "#fff64f", "#c79400").get
 	val grayColors = ColorScheme.defaultDarkGray // ColorSet.fromHexes("#424242", "#6d6d6d", "#1b1b1b").get
-	val warningColors = ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
+	val warningColors = ColorSet.fromHexes("#ff6d00", "#ff9e40", "#c43c00").get
+		// ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
 	val colorScheme = ColorScheme.twoTone(primaryColors, secondaryColors, grayColors) + (Warning, warningColors)
 	
 	val margins = Margins(3.mm.toPixels)

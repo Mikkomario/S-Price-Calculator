@@ -10,11 +10,14 @@ import spadi.view.controller.{MainVC, NewFileConfigurationUI}
 import spadi.view.dialog.LoadingView
 import utopia.flow.async.AsyncExtensions._
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.util.FileExtensions.RichPath
+import utopia.flow.util.TimeExtensions.TimeNumber
+import utopia.genesis.image.Image
 import utopia.reflection.container.swing.window.Frame
 import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.Alignment
-import utopia.reflection.util.MultiFrameSetup
+import utopia.reflection.util.{ComponentCreationDefaults, MultiFrameSetup}
 
 import scala.util.{Failure, Success}
 
@@ -32,6 +35,12 @@ object SPriceApp extends App
 	
 	val setup = new MultiFrameSetup(actorHandler)
 	setup.start()
+	
+	Image.readFrom(resourceDirectory/"icons"/"logo.png") match
+	{
+		case Success(logo) => ComponentCreationDefaults.windowIcon = logo
+		case Failure(error) => Log(error, "Couldn't read program logo")
+	}
 	
 	// Sets up local database access (displays a loading view during database setup)
 	private val dbSetupProgressPointer = new PointerWithEvents(ProgressState.initial("Pystytetään tietokantaa"))
@@ -60,10 +69,10 @@ object SPriceApp extends App
 					val frameProgressPointer = new PointerWithEvents(ProgressState.initial("Käsitellään tuotetietoja"))
 					val loadCompletion = new LoadingView(frameProgressPointer).display()
 					frameProgressPointer.value = ProgressState(0.1, "Luodaan käyttöliittymäkomponentteja")
-					val frame = Frame.windowed(new MainVC(shops, defaultProducts), "S-Padi Hintalaskuri",
+					val frame = Frame.windowed(new MainVC(shops, defaultProducts), "Suho sähkötuoteapuri",
 						resizePolicy = Program, resizeAlignment = Alignment.TopLeft)
 					frame.setToCloseOnEsc()
-					frame.setToExitOnClose()
+					frame.setToExitOnClose(0.5.seconds)
 					frameProgressPointer.value = ProgressState.finished("Käyttöliittymä valmis käyttöön")
 					
 					// When loading screen closes, opens the main view

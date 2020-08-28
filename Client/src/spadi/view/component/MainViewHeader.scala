@@ -1,19 +1,24 @@
 package spadi.view.component
 
+import spadi.controller.{Globals, Log}
 import spadi.controller.database.access.multi.DbProducts
 import spadi.model.stored.pricing.Shop
 import spadi.view.dialog.{DeleteShopWindow, LoadingView}
 import spadi.view.util.Icons
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import spadi.view.util.Setup._
+import utopia.flow.util.FileExtensions.RichPath
+import utopia.genesis.image.Image
 import utopia.genesis.shape.shape2D.Point
 import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton}
-import utopia.reflection.component.swing.label.TextLabel
+import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
+import utopia.reflection.container.stack.StackLayout.Trailing
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.shape.Alignment.TopRight
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.localization.LocalString._
+import utopia.reflection.shape.StackLength
 
 import scala.util.{Failure, Success}
 
@@ -36,9 +41,31 @@ class MainViewHeader(initialShops: Iterable[Shop]) extends StackableAwtComponent
 	private val menuButton = context.use { implicit c =>
 		ImageButton.contextual(Icons.menu.asIndividualButton) { displayMenu() }
 	}
-	private val titleLabel = context.forTextComponents().use { implicit c => TextLabel.contextual("S-Price") }
-	private val view = Stack.rowWithItems(Vector(titleLabel, menuButton), margins.small.upscaling.expanding)
-		.framed(margins.small.downscaling, color)
+	private val versionNumberLabel = context.forTextComponents().mapFont { _ * 0.8 }.use { implicit c =>
+		TextLabel.contextual(s"- ${Globals.versionNumber}".noLanguageLocalizationSkipped)
+	}
+	// TODO: Add version number display
+	private val view = context.forTextComponents().mapFont { _ * 1.2 }.mapInsets { _.withoutHorizontal }
+		.use { implicit c =>
+			val titlePart = Stack.rowWithItems(Vector(TextLabel.contextual("Suho"), versionNumberLabel),
+				StackLength.fixedZero, layout = Trailing)
+			val leftSide = Image.readFrom(resourceDirectory/"icons"/"logo-clear.png") match
+			{
+				case Success(logo) =>
+					// Shrinks the logo down to accepted size
+					val correctSizeLogo = logo.withLimitedHeight(titlePart.optimalHeight max menuButton.optimalHeight)
+					Stack.buildRowWithContext(isRelated = true) { s =>
+						s += ImageLabel.contextual(correctSizeLogo, alwaysFillsArea = false, isLowPriority = true)
+						s += titlePart
+					}
+				case Failure(error) =>
+					Log(error, "Couldn't read logo icon")
+					titlePart
+			}
+			
+			Stack.rowWithItems(Vector(leftSide, menuButton), margins.small.upscaling.expanding)
+				.framed(margins.small.downscaling, color)
+		}
 	
 	
 	// IMPLEMENTED	-----------------------
