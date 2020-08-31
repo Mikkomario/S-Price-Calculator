@@ -25,7 +25,7 @@ import utopia.reflection.container.swing.window.interaction.YesNoWindow
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.StackSize
+import utopia.reflection.shape.stack.StackSize
 
 import scala.util.{Failure, Success}
 

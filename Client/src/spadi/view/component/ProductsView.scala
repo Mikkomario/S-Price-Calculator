@@ -14,7 +14,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.wrapper.scrolling.ScrollView
 import utopia.reflection.controller.data.ContainerContentDisplayer
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.{StackLength, StackLengthLimit}
+import utopia.reflection.shape.stack.{StackLength, StackLengthLimit}
 
 object ProductsView
 {

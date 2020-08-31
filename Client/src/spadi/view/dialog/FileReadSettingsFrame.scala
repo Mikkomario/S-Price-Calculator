@@ -28,7 +28,7 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Frame, Popup}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 object FileReadSettingsFrame
 {

@@ -20,8 +20,10 @@ import utopia.reflection.container.swing.window.WindowResizePolicy.Program
 import utopia.reflection.container.swing.window.{Dialog, Frame}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.Alignment.BottomLeft
-import utopia.reflection.shape.{Alignment, StackLength, StackLengthModifier}
+import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.LengthExtensions._
+import utopia.reflection.shape.stack.StackLength
+import utopia.reflection.shape.stack.modifier.StackLengthModifier
 
 import scala.concurrent.Future
 

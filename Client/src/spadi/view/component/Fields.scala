@@ -15,7 +15,7 @@ import utopia.reflection.container.swing.window.interaction.ButtonColor.Fixed
 import utopia.reflection.container.swing.window.interaction.{MessageWindow, YesNoWindow}
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.localization.LocalString._
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 import scala.concurrent.ExecutionContext
 

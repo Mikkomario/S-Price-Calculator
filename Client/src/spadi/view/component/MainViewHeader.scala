@@ -18,7 +18,7 @@ import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.shape.Alignment.TopRight
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.localization.LocalString._
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 import scala.util.{Failure, Success}
 

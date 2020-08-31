@@ -19,7 +19,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
-import utopia.reflection.shape.{StackInsets, StackLength}
+import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.localization.LocalString._
 
 /**

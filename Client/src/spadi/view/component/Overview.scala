@@ -18,7 +18,7 @@ import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.interaction.ButtonColor
 import utopia.reflection.shape.LengthExtensions.LengthNumber
 import utopia.reflection.localization.LocalString._
-import utopia.reflection.shape.StackLength
+import utopia.reflection.shape.stack.StackLength
 
 import scala.util.{Failure, Success}
 
