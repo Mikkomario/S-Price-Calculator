@@ -3,8 +3,6 @@ package spadi.view.util
 import java.awt.Desktop
 import java.net.URI
 
-import sun.plugin.dom.exception.BrowserNotSupportedException
-
 import utopia.flow.util.StringExtensions._
 
 import scala.util.{Failure, Try}
@@ -16,6 +14,8 @@ import scala.util.{Failure, Try}
   */
 object Browser
 {
+	// ATTRIBUTES	-------------------------
+	
 	/**
 	  * Whether browsing is currently enabled
 	  */
@@ -44,4 +44,9 @@ object Browser
 		val query = words.flatMap { _.words }.mkString("+")
 		open(s"https://www.google.com/search?q=$query")
 	}
+	
+	
+	// NESTED	-----------------------------
+	
+	private class BrowserNotSupportedException(message: String) extends Exception(message)
 }
