@@ -3,7 +3,7 @@ package spadi.view.dialog
 import java.nio.file.Path
 
 import spadi.controller.read.DataProcessor
-import spadi.model.cached.read.{KeyMapping, KeyMappingFactory}
+import spadi.model.cached.read.{InputField, KeyMapping, KeyMappingFactory}
 import spadi.model.stored.pricing.Shop
 import spadi.view.component.Fields
 import spadi.view.util.Icons
@@ -49,16 +49,16 @@ abstract class DataProcessorWindowLike[A, +M <: KeyMapping[A], KF <: AwtStackabl
 	protected val fieldWidth = standardFieldWidth.any.expanding
 	
 	private lazy val (inputComponents, inputRows) = inputContext.forGrayFields.use { implicit context =>
-		mappingFactory.fieldNames.splitMap { case (fieldName, isRequired) =>
-			val field = keyField(isRequired)
-			(fieldName, field, isRequired) -> new InputRowBlueprint(fieldName, field)
+		mappingFactory.fields.splitMap { fieldSpec =>
+			val field = keyField(fieldSpec)
+			(fieldSpec.name, field, fieldSpec.isRequired) -> new InputRowBlueprint(fieldSpec.name, field)
 		}
 	}
 	
 	
 	// ABSTRACT ----------------------------
 	
-	protected def keyField(isRequired: Boolean): KF
+	protected def keyField(specification: InputField): KF
 	
 	protected def valueOfField(field: KF): Value
 	

@@ -7,7 +7,6 @@ import spadi.model.cached.ProgressState
 import spadi.model.stored.pricing.Shop
 import spadi.view.util.Setup._
 import utopia.flow.datastructure.mutable.PointerWithEvents
-import utopia.vault.database.Connection
 import utopia.vault.nosql.access.{SingleRowModelAccess, UniqueAccess}
 import utopia.vault.sql.{Delete, Where}
 
@@ -58,12 +57,6 @@ object DbShop extends SingleRowModelAccess[Shop]
 		
 		
 		// OTHER	-------------------------------
-		
-		/**
-		  * Deletes this shop and all linked data
-		  * @param connection DB Connection (implicit)
-		  */
-		def delete()(implicit connection: Connection): Unit = connection(Delete(table) + Where(condition))
 		
 		/**
 		  * Deletes this shop's data asynchronously. The process may take a while, so it's performed asynchronously and

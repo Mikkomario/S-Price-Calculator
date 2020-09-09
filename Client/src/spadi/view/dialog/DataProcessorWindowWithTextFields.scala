@@ -3,7 +3,7 @@ package spadi.view.dialog
 import java.nio.file.Path
 
 import spadi.controller.read.DataProcessor
-import spadi.model.cached.read.{KeyMapping, KeyMappingFactory}
+import spadi.model.cached.read.{InputField, KeyMapping, KeyMappingFactory}
 import spadi.model.stored.pricing.Shop
 import spadi.view.util.Setup._
 import utopia.flow.datastructure.immutable.Value
@@ -26,8 +26,8 @@ class DataProcessorWindowWithTextFields[A, +M <: KeyMapping[A]](path: Path, shop
 	
 	// IMPLEMENTED  ------------------------
 	
-	override protected def keyField(isRequired: Boolean) = inputContext.forGrayFields.use { implicit context =>
-		TextField.contextual(fieldWidth, prompt = if (isRequired) None else Some("Vapaaehtoinen"))
+	override protected def keyField(specification: InputField) = inputContext.forGrayFields.use { implicit context =>
+		TextField.contextual(fieldWidth, prompt = if (specification.isRequired) None else Some("Vapaaehtoinen"))
 	}
 	
 	override protected def valueOfField(field: TextField) = field.value

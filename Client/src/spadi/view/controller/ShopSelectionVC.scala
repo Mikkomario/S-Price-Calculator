@@ -21,6 +21,18 @@ import utopia.reflection.localization.LocalString._
 
 import scala.util.{Failure, Success}
 
+object ShopSelectionVC
+{
+	/**
+	  * Creates a new shop selection VC
+	  * @param shops Selectable shops
+	  * @param context Component creation context
+	  * @return A new selection field
+	  */
+	def apply(shops: Vector[Shop])(implicit context: ButtonContextLike) =
+		new ShopSelectionVC(new PointerWithEvents[Vector[Shop]](shops))
+}
+
 /**
  * A drop down field used for selecting shops
  * @author Mikko Hilpinen

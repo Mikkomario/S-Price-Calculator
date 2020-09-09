@@ -117,6 +117,11 @@ object Icons
 	def clean = cache("clean.png")
 	
 	/**
+	  * @return Data read settings icon
+	  */
+	def readSettings = cache("backup-settings.png")
+	
+	/**
 	  * @return A google search icon
 	  */
 	def google = cache("google.png")
@@ -148,6 +153,11 @@ object Icons
 		 * @return A warning icon (large)
 		 */
 		def warning = iconCache("warning.png")
+		
+		/**
+		  * @return A success icon (large)
+		  */
+		def success = iconCache("check-circle.png")
 		
 		/**
 		 * @return A light loading icon (multi-color)

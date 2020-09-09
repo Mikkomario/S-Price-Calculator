@@ -3,7 +3,7 @@ package spadi.view.component
 import spadi.controller.{Globals, Log}
 import spadi.controller.database.access.multi.DbProducts
 import spadi.model.stored.pricing.Shop
-import spadi.view.dialog.{DeleteShopWindow, LoadingView}
+import spadi.view.dialog.{DeleteShopWindow, ForgetReadSettingsWindow, LoadingView}
 import spadi.view.util.Icons
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
 import spadi.view.util.Setup._
@@ -79,6 +79,12 @@ class MainViewHeader(initialShops: Iterable[Shop]) extends StackableAwtComponent
 	{
 		val context = baseContext.inContextWithBackground(color).forTextComponents()
 		
+		val deleteReadSettingsButton = context.forPrimaryColorButtons.use { implicit c =>
+			ImageAndTextButton.contextual(Icons.readSettings.inButton, "Unohda lukuasetuksia") {
+				ForgetReadSettingsWindow.display(shops.toVector.sortBy { _.name }, parentWindow)
+			}
+		}
+		
 		val deleteShopButton = context.forCustomColorButtons(colorScheme.error).use { implicit c =>
 			ImageAndTextButton.contextual(Icons.delete.inButton, "Poista tukku") {
 				DeleteShopWindow.display(shops, parentWindow).foreach { _.foreach { shopId =>
@@ -107,8 +113,9 @@ class MainViewHeader(initialShops: Iterable[Shop]) extends StackableAwtComponent
 		}
 		
 		val popupContent = Stack.buildColumnWithContext(isRelated = true) { s =>
-			s += deleteShopButton
+			s += deleteReadSettingsButton
 			s += cleanHistoryButton
+			s += deleteShopButton
 		}(context).framed(margins.small.any, color)
 		
 		Popup(menuButton, popupContent, actorHandler, resizeAlignment = TopRight) { (cSize, wSize) =>

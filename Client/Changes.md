@@ -1,4 +1,12 @@
 # S-Price Calculator - List of Changes
+#v1.2.3
+### New Features
+- Added a button for resetting read settings without deleting shop or product data
+### Other Changes
+- Column selection components in read settings definition now only offer valid options 
+(Eg. only number columns for price)
+- Changed button ordering in main menu
+
 #v1.2.2
 ### New Features
 - Added a new view that is displayed while the search field is empty

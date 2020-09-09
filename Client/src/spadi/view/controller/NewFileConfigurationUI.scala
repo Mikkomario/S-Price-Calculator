@@ -15,7 +15,9 @@ import spadi.view.component.Fields
 import spadi.view.dialog._
 import spadi.view.util.Setup._
 import utopia.flow.async.AsyncExtensions._
+import utopia.flow.datastructure.immutable.{Constant, Model}
 import utopia.flow.datastructure.mutable.PointerWithEvents
+import utopia.flow.generic.ValueConversions._
 import utopia.flow.parse.CsvReader
 import utopia.flow.util.CollectionExtensions._
 import utopia.flow.util.FileExtensions._
@@ -219,42 +221,50 @@ object NewFileConfigurationUI
 		// ATTRIBUTES   -------------------
 		
 		// Finds the first row in target document that is suitable for serving as the header
-		private lazy val headerRow: Option[Vector[String]] =
+		private lazy val (headerRow: Option[Vector[String]], exampleRows: Vector[Model[Constant]]) =
 		{
-			val requiredColumnCount = mappingFactory.fieldNames.count { _._2 }
-			println(s"Requires $requiredColumnCount columns in ${setting.path.fileName}")
-			/*(*/setting.path.fileType.toLowerCase match
+			val requiredColumnCount = mappingFactory.fields.count { _.isRequired }
+			setting.path.fileType.toLowerCase match
 			{
-					// TODO: Remove test prints
 				case "csv" =>
-					println("Csv file")
 					CsvReader.iterateRawRowsIn(setting.path) { rowsIter =>
-						if (rowsIter.isEmpty)
-							println("Empty row iterator")
-						rowsIter.find { _.count { _.nonEmpty } >= requiredColumnCount }
+						rowsIter.dropWhile { _.count { _.nonEmpty } < requiredColumnCount }
+						if (rowsIter.hasNext)
+						{
+							val headerRow = rowsIter.next()
+							val exampleRows = rowsIter.takeNext(15).map { row => Model.withConstants(headerRow.zip(row)
+								.map { case (fieldName, value) => Constant(fieldName, value) }) }
+							Some(headerRow) -> exampleRows
+						}
+						else
+							None -> Vector()
 					} match
 					{
-						case Success(result) =>
-							println(s"Csv headers: $result")
-							result
+						case Success(result) => result
 						case Failure(error) =>
-							Log(error, s"Headers search failed in ${setting.path}")
+							Log(error, s"Failed to scan csv file at ${setting.path}")
 							None
 					}
 				case _ =>
-					println("Excel file")
 					ReadExcel.withoutHeadersFromSheetAtIndex(setting.path, 0) match
 					{
 						case Success(rows) =>
-							println(s"Found ${rows.size} rows")
+							val targetRows = rows.dropWhile {
+								_.count { _.string.exists { _.nonEmpty } } < requiredColumnCount }
+							val headerRow = targetRows.headOption.map { _.map { _.getString } }
+							val exampleRows = headerRow match
+							{
+								case Some(headers) => targetRows.slice(1, 16).map { row => Model(headers zip row) }
+								case None => Vector()
+							}
+							headerRow -> exampleRows
 							val targetRow = rows.find { _.count { _.string.exists { _.nonEmpty } } >= requiredColumnCount }
-							println(s"Header row: $targetRow")
 							targetRow.map { _.map { _.getString } }
 						case Failure(error) =>
-							Log(error, s"Failed to read headers from ${setting.path}")
+							Log(error, s"Failed to read excel file at ${setting.path}")
 							None
 					}
-			}// ).map { _.map(CleanInput.apply) }
+			}
 		}
 		
 		private var lastDialog: Option[DataProcessorWindowLike[A, M, _]] = None
@@ -281,7 +291,8 @@ object NewFileConfigurationUI
 			val newDialog = headers match
 			{
 				case Some(headers) =>
-					new DataProcessorWindowWithSelections[A, M](setting.path, setting.shop, mappingFactory, headers)(makeProcessor)
+					new DataProcessorWindowWithSelections[A, M](setting.path, setting.shop, mappingFactory,
+						headers, exampleRows)(makeProcessor)
 				case None => new DataProcessorWindowWithTextFields[A, M](setting.path, setting.shop, mappingFactory)(makeProcessor)
 			}
 			

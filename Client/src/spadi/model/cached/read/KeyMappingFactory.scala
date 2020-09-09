@@ -14,15 +14,14 @@ trait KeyMappingFactory[+A, +M <: KeyMapping[A]] extends FromModelFactoryWithSch
 	// ABSTRACT ------------------------------------
 	
 	/**
-	  * @return Displayable names of the fields that are used for creating a new key mapping. Each name should be paired
-	  *         with a boolean that indicates whether the field is required.
+	  * @return Fields that are used for creating a new key mapping. Each field matches a mapped property.
 	  */
-	def fieldNames: Seq[(LocalString, Boolean)]
+	def fields: Seq[InputField]
 	
 	
 	// IMPLEMENTED  --------------------------------
 	
-	override def schema = ModelDeclaration(fieldNames.filter {_._2}.map { case (fName, _) =>
-		PropertyDeclaration(fName.string, StringType)
+	override def schema = ModelDeclaration(fields.filter { _.isRequired }.map { field =>
+		PropertyDeclaration(field.name.string, StringType)
 	})
 }

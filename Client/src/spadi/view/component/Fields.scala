@@ -124,6 +124,19 @@ object Fields
 	}
 	
 	/**
+	  * Creates a new dialog for success messages
+	  * @param text Text displayed on the dialog
+	  * @param title Title for the dialog (default = "Onnistui")
+	  * @return A new dialog
+	  */
+	def successDialog(text: LocalizedString, title: LocalizedString = "Onnistui") =
+	{
+		val context = baseContext.inContextWithBackground(colorScheme.success).forTextComponents()
+		new MessageWindow(context.mapFont { _ * 0.8 }, context.forSecondaryColorButtons, title, text, "OK",
+			Some(Icons.checkCircle), Some(Icons.large.success))
+	}
+	
+	/**
 	 * Creates a new error message dialog
 	 * @param text Text to display
 	 * @return New dialog

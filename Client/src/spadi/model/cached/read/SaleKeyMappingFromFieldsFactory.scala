@@ -20,7 +20,14 @@ case class SaleKeyMappingFromFieldsFactory(shopId: Int) extends KeyMappingFactor
 	
 	// IMPLEMENTED  -----------------------------
 	
-	override val fieldNames = Vector("ID".local -> true, "Alennusprosentti".local -> true)
+	override val fields = Vector(
+		InputField.withValidation("ID", isRequired = true) { s =>
+			val str = s.getString
+			str.length > 2 && str.length < 12
+		},
+		InputField.withValidation("Alennusprosentti", isRequired = true) { _.int.exists { i =>
+			i >= -100 && i <= 100 } }
+	)
 	
 	override protected def fromValidatedModel(model: Model[Constant]) = SaleKeyMappingData(shopId, model("ID"),
 		model("Alennusprosentti"))
