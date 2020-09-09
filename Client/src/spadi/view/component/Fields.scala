@@ -7,14 +7,22 @@ import spadi.view.util.Setup._
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.reflection.component.context.ButtonContextLike
-import utopia.reflection.component.swing.button.ImageAndTextButton
+import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
+import utopia.genesis.handling.MouseButtonStateListener
+import utopia.genesis.shape.shape2D.Point
+import utopia.genesis.util.Screen
+import utopia.reflection.color.ColorRole.Info
+import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
+import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton}
+import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.input.{DropDown, SearchFrom}
 import utopia.reflection.component.swing.label.TextLabel
+import utopia.reflection.container.swing.window.Popup
 import utopia.reflection.container.swing.window.interaction.ButtonColor.Fixed
 import utopia.reflection.container.swing.window.interaction.{MessageWindow, YesNoWindow}
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.localization.LocalString._
+import utopia.reflection.shape.Alignment
 import utopia.reflection.shape.stack.StackLength
 
 import scala.concurrent.ExecutionContext
@@ -108,6 +116,37 @@ object Fields
 					.displayOver(window)
 			}
 		}
+	}
+	
+	/**
+	  * Creates a bew button that is used for displaying more information / help
+	  * @param infoText Text to display when user clicks the button
+	  * @param context Button creation context
+	  * @return A new button
+	  */
+	def infoButton(infoText: LocalizedString)(implicit context: ColorContextLike) =
+	{
+		val buttonColor = context.color(Info)
+		val button = ImageButton.contextualWithoutAction(Icons.help.asIndividualButtonWithColor(buttonColor))
+		button.registerAction { () =>
+			// When button is pressed, display a pop-up with info text
+			val content = baseContext.inContextWithBackground(buttonColor).forTextComponents().mapFont { _ * 0.85 }
+				.use { implicit c => MultiLineTextView.contextual(infoText, Screen.width / 4) }
+			content.background = buttonColor
+			val popup = Popup(button, content, actorHandler, resizeAlignment = Alignment.Left,
+				hideWhenFocusLost = false) { (cSize, pSize) =>
+				Point(cSize.width + margins.medium, (cSize.height - pSize.height) / 2) }
+			// Pop-up is closed when any key is pressed or mouse is pressed outside pop-up
+			popup.addKeyStateListener { _: KeyStateEvent => popup.close() }
+			// FIXME: Not all mouse press events are being delivered + position is wrong (probably bug in Window)
+			popup.addMouseButtonListener(MouseButtonStateListener(MouseButtonStateEvent.wasPressedFilter) { e =>
+				if (!popup.bounds.contains(e.mousePosition))
+					popup.close()
+				None
+			})
+			popup.display(gainFocus = false)
+		}
+		button
 	}
 	
 	/**

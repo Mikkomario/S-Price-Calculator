@@ -10,7 +10,7 @@ import utopia.genesis.generic.GenesisDataType
 import utopia.genesis.handling.mutable.ActorHandler
 import utopia.genesis.util.{Ppi, Screen}
 import utopia.genesis.util.DistanceExtensions._
-import utopia.reflection.color.ColorRole.Warning
+import utopia.reflection.color.ColorRole.{Info, Warning}
 import utopia.reflection.color.{ColorScheme, ColorSet}
 import utopia.reflection.component.context.{AnimationContext, BaseContext, ScrollingContext}
 import utopia.reflection.localization.{Localizer, NoLocalization}
@@ -49,7 +49,9 @@ object Setup
 	val grayColors = ColorScheme.defaultDarkGray // ColorSet.fromHexes("#424242", "#6d6d6d", "#1b1b1b").get
 	val warningColors = ColorSet.fromHexes("#ff6d00", "#ff9e40", "#c43c00").get
 		// ColorSet.fromHexes("#ffab00", "#ffdd4b", "#c67c00").get
-	val colorScheme = ColorScheme.twoTone(primaryColors, secondaryColors, grayColors) + (Warning, warningColors)
+	val infoColors = ColorSet.fromHexes("#0091ea", "#64c1ff", "#0064b7").get
+	val colorScheme = ColorScheme.twoTone(primaryColors, secondaryColors, grayColors) +
+		(Warning, warningColors) + (Info, infoColors)
 	
 	val margins = Margins(3.mm.toPixels)
 	val standardFieldWidth = 5.cm.toPixels

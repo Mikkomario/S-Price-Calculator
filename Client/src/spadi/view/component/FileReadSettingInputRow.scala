@@ -18,10 +18,9 @@ import utopia.reflection.component.swing.StackSpace
 import utopia.reflection.component.swing.button.ImageAndTextButton
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.swing.template.StackableAwtComponentWrapperWrapper
+import utopia.reflection.container.stack.StackLayout.Center
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
-import utopia.reflection.container.swing.window.interaction.ButtonColor.Fixed
-import utopia.reflection.container.swing.window.interaction.YesNoWindow
 import utopia.reflection.localization.{DisplayFunction, LocalizedString}
 import utopia.reflection.localization.LocalString._
 import utopia.reflection.shape.LengthExtensions._
@@ -124,7 +123,20 @@ class FileReadSettingInputRow(group: SegmentGroup, base: Either[Path, FileReadSe
 	private val view =
 	{
 		val pathLabel = TextLabel.contextual(path.fileName.noLanguageLocalizationSkipped)
-		Stack.rowWithItems(group.wrap(Vector(pathLabel, shopSelection, typeSelection,
+		val typeSelectionArea = Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
+			s += typeSelection
+			s += Fields.infoButton(
+				"Tästä valitaan, minkätyyppinen tiedosto on kyseessä.\n\nNettohinnastot ovat tuoteluetteloita, " +
+					"joissa sinulle annettava hinta alennuksineen on laskettu valmiiksi.\nPerushinnastot ovat " +
+					"tuoteluetteloita joissa on listattu pelkästään hinta ennen mahdollisia (asiakaskohtaisia) " +
+					"alennuksia. Tällöin näissä tuotetiedoissa lukee, mitä alennusryhmää tuotteelle on tarkoitus " +
+					"käyttää.\nAlennusluettelot puolestaan ovat tiedostoja joissa on listattu tukun käyttämät " +
+					"alennusryhmät sekä näiden suuruudet.\n\nJos et tiedä minkä näistä valitsisit, kokeile avata " +
+					"tiedosto ja katsoa löydätkö sieltä kolumnin nettohinnoille vaiko ainoastaan perushinnoille. " +
+					"Jos rivit eivät sisällä tuotenimiä tai hintoja vaan alennusprosentteja, " +
+					"on kyseessä puolestaan alennusluettelo.")
+		}
+		Stack.rowWithItems(group.wrap(Vector(pathLabel, shopSelection, typeSelectionArea,
 			warning.map { _.alignedToCenter }.getOrElse(new StackSpace(StackSize.any.withLowPriority)),
 			/*isSortedSwitch,*/ openButton, deleteButton)), margins.medium.downscaling)
 	}
