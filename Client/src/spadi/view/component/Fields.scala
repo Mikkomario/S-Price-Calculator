@@ -1,17 +1,21 @@
 package spadi.view.component
 
 import java.nio.file.Path
+import java.time.Instant
 
 import spadi.view.util.Icons
 import spadi.view.util.Setup._
 import utopia.flow.datastructure.mutable.PointerWithEvents
 import utopia.flow.util.FileExtensions._
 import utopia.flow.util.CollectionExtensions._
-import utopia.genesis.event.KeyStateEvent
-import utopia.genesis.handling.KeyStateListener
+import utopia.flow.util.TimeExtensions._
+import utopia.genesis.event.{KeyStateEvent, MouseButtonStateEvent}
+import utopia.genesis.handling.{KeyStateListener, MouseButtonStateListener}
 import utopia.genesis.shape.shape2D.Point
 import utopia.genesis.util.Screen
-import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.genesis.view.{GlobalKeyboardEventHandler, GlobalMouseEventHandler}
+import utopia.inception.handling.Mortal
+import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.color.ColorRole.Info
 import utopia.reflection.component.context.{ButtonContextLike, ColorContextLike}
 import utopia.reflection.component.swing.animation.AnimatedVisibility
@@ -19,8 +23,7 @@ import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton
 import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.input.{DropDown, SearchFrom}
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.container.swing.window.Popup
-import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenClickedOutside
+import utopia.reflection.container.swing.window.{Popup, Window}
 import utopia.reflection.container.swing.window.interaction.ButtonColor.Fixed
 import utopia.reflection.container.swing.window.interaction.{MessageWindow, YesNoWindow}
 import utopia.reflection.event.VisibilityChange.Appearing
@@ -141,11 +144,14 @@ object Fields
 						.inRoundedFraming(margins.medium.any, buttonColor)
 					AnimatedVisibility.contextual(view, initialState = Appearing)
 				}
-			val popup = Popup(button, content, actorHandler, WhenClickedOutside, Alignment.Left) { (cSize, pSize) =>
+			val popup = Popup(button, content, actorHandler, resizeAlignment = Alignment.Left) { (cSize, pSize) =>
 				Point(cSize.width + margins.medium, (cSize.height - pSize.height) / 2) }
-			// Closes the pop-up when any key is pressed
+			// Closes the pop-up (with animation) when any key is pressed or when the user clicks outside
+			// the window area
+			GlobalMouseEventHandler.registerButtonListener(new AnimatedHideOnOutsideClickListener(popup, content))
 			GlobalKeyboardEventHandler.registerKeyStateListener(
-				KeyStateListener.oneTimeListener(KeyStateEvent.wasPressedFilter) { _ => popup.close() })
+				KeyStateListener.oneTimeListener(KeyStateEvent.wasPressedFilter) { _ =>
+					content.hide().onComplete { _ => popup.close() } })
 			popup.display(gainFocus = false)
 		}
 		button
@@ -200,5 +206,30 @@ object Fields
 		new YesNoWindow(dialogContext, "Oletko varma?", text,
 			Map(true -> Icons.delete, false -> Icons.close), Map(true -> Fixed(colorScheme.error)))({ (color, _) =>
 			dialogContext.forButtons(color) })
+	}
+	
+	private class AnimatedHideOnOutsideClickListener(window: Window[_], content: AnimatedVisibility[_])
+		extends MouseButtonStateListener with Handleable with Mortal
+	{
+		// ATTRIBUTES	---------------------------
+		
+		private val actionThreshold = Instant.now() + 0.1.seconds
+		
+		private var triggered = false
+		
+		override val mouseButtonStateEventFilter = e => e.isDown && window.isVisible &&
+			Instant.now() > actionThreshold && !window.bounds.contains(e.absoluteMousePosition)
+		
+		
+		// IMPLEMENTED	---------------------------
+		
+		override def isDead = triggered || window.isClosed
+		
+		override def onMouseButtonState(event: MouseButtonStateEvent) =
+		{
+			triggered = true
+			content.show().onComplete { _ => window.close() }
+			None
+		}
 	}
 }

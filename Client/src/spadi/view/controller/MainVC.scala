@@ -82,7 +82,7 @@ class MainVC(shops: Iterable[Shop], defaultProducts: Vector[Product])
 	// INITIAL CODE -----------------------
 	
 	// Focus is initially set to the search field
-	searchField.requestFocusInWindow()
+	onNextStackHierarchyAttachment { searchField.requestFocusInWindow() }
 	
 	// Filters products based on search results
 	searchField.addValueListener { _ =>

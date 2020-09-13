@@ -60,7 +60,7 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product, shops: I
 	// INITIAL CODE -------------------------------
 	
 	updateLabels()
-	moreButton.registerAction(showDetails)
+	moreButton.registerAction { () => showDetails() }
 	
 	
 	// IMPLEMENTED  -------------------------------
@@ -80,8 +80,10 @@ class ProductRowVC(segmentGroup: SegmentGroup, initialProduct: Product, shops: I
 	
 	/**
 	  * Displays more details about this product's price options
+	  * @param transferFocus Whether the details window should gain focus (default = true)
 	  */
-	def showDetails() = PriceComparePopup.displayOver(moreButton, _content, shops)
+	def showDetails(transferFocus: Boolean = true) = PriceComparePopup.displayOver(moreButton, _content, shops,
+		transferFocus)
 	
 	private def percentString(percentage: Double) =
 	{

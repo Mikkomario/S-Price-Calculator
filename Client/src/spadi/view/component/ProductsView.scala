@@ -87,7 +87,7 @@ class ProductsView(productsPointer: Changing[Vector[Product]], shops: Iterable[S
 				WaitUtils.delayed(0.7.seconds) {
 					val components = stack.components
 					if (components.size == 1)
-						components.head.showDetails()
+						components.head.showDetails(transferFocus = false)
 				}
 		}
 	}

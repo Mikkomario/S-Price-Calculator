@@ -221,6 +221,8 @@ object NewFileConfigurationUI
 		// ATTRIBUTES   -------------------
 		
 		// Finds the first row in target document that is suitable for serving as the header
+		// TODO: Strange warning: non-variable type argument Vector[String] in type pattern Option[Vector[String]] is
+		//  unchecked since it is eliminated by erasure
 		private lazy val (headerRow: Option[Vector[String]], exampleRows: Vector[Model[Constant]]) =
 		{
 			val requiredColumnCount = mappingFactory.fields.count { _.isRequired }

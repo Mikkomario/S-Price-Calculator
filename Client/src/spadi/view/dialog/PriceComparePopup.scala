@@ -1,5 +1,7 @@
 package spadi.view.dialog
 
+import java.awt.event.KeyEvent
+
 import spadi.controller.Log
 import spadi.model.stored.pricing.{Product, Shop}
 import spadi.view.component.Fields
@@ -8,19 +10,27 @@ import spadi.view.util.{Browser, Icons}
 import utopia.reflection.component.swing.template.AwtComponentRelated
 import spadi.view.util.Setup._
 import utopia.flow.util.CollectionExtensions._
+import utopia.flow.util.WaitUtils
+import utopia.flow.util.TimeExtensions._
+import utopia.genesis.event.KeyStateEvent
 import utopia.genesis.handling.KeyStateListener
 import utopia.genesis.shape.shape2D.Point
+import utopia.genesis.view.GlobalKeyboardEventHandler
+import utopia.inception.handling.{HandlerType, Mortal}
+import utopia.inception.handling.immutable.Handleable
 import utopia.reflection.component.swing.button.{ImageAndTextButton, ImageButton}
 import utopia.reflection.component.swing.label.TextLabel
-import utopia.reflection.component.template.ComponentLike
+import utopia.reflection.component.template.{ComponentLike, Focusable}
 import utopia.reflection.container.stack.StackLayout.{Leading, Trailing}
 import utopia.reflection.container.swing.layout.SegmentGroup
 import utopia.reflection.container.swing.layout.multi.Stack
-import utopia.reflection.container.swing.window.Popup
+import utopia.reflection.container.swing.window.{Popup, Window}
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.{WhenClickedOutside, WhenFocusLost}
 import utopia.reflection.localization.LocalizedString
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.shape.stack.{StackInsets, StackLength}
 import utopia.reflection.localization.LocalString._
+import utopia.reflection.shape.Alignment
 
 /**
   * This object allows one to display a price comparison pop-up for a product
@@ -29,15 +39,24 @@ import utopia.reflection.localization.LocalString._
   */
 object PriceComparePopup
 {
+	// ATTRIBUTES	----------------------------
+	
 	private implicit val languageCode: String = "fi"
+	
+	private val focusDelay = 0.1.seconds
+	
+	
+	// OTHER	--------------------------------
 	
 	/**
 	  * Displays a price comparison pop-up over a component
 	  * @param component Component this pop-up is displayed over
 	  * @param product Product displayed on this view
 	  * @param shops Known shops
+	  * @param gainFocus Whether the new pop-up should gain focus
 	  */
-	def displayOver(component: ComponentLike with AwtComponentRelated, product: Product, shops: Iterable[Shop]) =
+	def displayOver(component: ComponentLike with AwtComponentRelated, product: Product, shops: Iterable[Shop],
+					gainFocus: Boolean = true) =
 	{
 		val backgroundColor = primaryColors.bestAgainst(Vector(grayColors.dark, grayColors.default))
 		val segmentGroup = new SegmentGroup(layouts = Vector(Trailing, Leading))
@@ -108,7 +127,7 @@ object PriceComparePopup
 			else
 				None
 		}
-		val popup = baseContext.inContextWithBackground(backgroundColor).forTextComponents().use { implicit context =>
+		val (popup, closeButton) = baseContext.inContextWithBackground(backgroundColor).forTextComponents().use { implicit context =>
 			val closeButton = ImageButton.contextualWithoutAction(Icons.close.asIndividualButton)
 			val mainStack = Stack.buildRowWithContext(layout = Leading, isRelated = true) { mainRow =>
 				mainRow += productsStack
@@ -124,15 +143,51 @@ object PriceComparePopup
 				case None => mainStack
 			}).framed(margins.small.any, backgroundColor)
 			
-			val popup = Popup(component, content, actorHandler) { (cSize, pSize) =>
-				Point(cSize.width + margins.medium, (cSize.height - pSize.height) / 2.0 ) }
+			val popup = Popup(component, content, actorHandler, if (gainFocus) WhenFocusLost else WhenClickedOutside,
+				Alignment.Left) { (cSize, pSize) => Point(cSize.width + margins.medium, (cSize.height - pSize.height) / 2.0 ) }
 			closeButton.registerAction(popup.close)
 			
-			popup
+			popup -> closeButton
 		}
-		// Closes the pop-up if any key is pressed
-		popup.addKeyStateListener(KeyStateListener.onAnyKeyPressed { _ => popup.close() })
+		// Closes the pop-up if any key is pressed (except button triggering keys)
+		GlobalKeyboardEventHandler.registerKeyStateListener(new HidePopupOnKeyListener(popup, gainFocus))
 		
-		popup.display()
+		popup.display(gainFocus)
+		// Makes the Google button the first focused component in the window
+		if (gainFocus)
+			googleButton.foreach { button => WaitUtils.delayed(focusDelay) { button.requestFocusInWindow() } }
+		// Also, if this view didn't gain focus, will transfer focus on tab-key
+		else
+			component.addKeyStateListener(new MoveFocusToPopupListener(popup, googleButton.getOrElse(closeButton)))
+	}
+	
+	
+	// NESTED	----------------------------
+	
+	private class HidePopupOnKeyListener(window: Window[_], isFiltered: Boolean)
+		extends KeyStateListener with Mortal with Handleable
+	{
+		override val keyStateEventFilter = KeyStateEvent.notKeysFilter(
+			if (isFiltered) Vector(KeyEvent.VK_SPACE, KeyEvent.VK_ENTER, KeyEvent.VK_TAB) else Vector(KeyEvent.VK_TAB))
+		
+		override def onKeyState(event: KeyStateEvent) = window.close()
+		
+		override def isDead = window.isClosed
+	}
+	
+	private class MoveFocusToPopupListener(window: Window[_], firstFocusComponent: Focusable)
+		extends KeyStateListener with Mortal
+	{
+		override val keyStateEventFilter = KeyStateEvent.keyFilter(KeyEvent.VK_TAB)
+		
+		override def allowsHandlingFrom(handlerType: HandlerType) = window.isVisible
+		
+		override def onKeyState(event: KeyStateEvent) =
+		{
+			window.requestFocus()
+			WaitUtils.delayed(focusDelay) { firstFocusComponent.requestFocusInWindow() }
+		}
+		
+		override def isDead = window.isClosed
 	}
 }
