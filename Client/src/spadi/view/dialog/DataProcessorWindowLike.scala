@@ -17,7 +17,7 @@ import utopia.genesis.util.Screen
 import utopia.reflection.component.swing.display.MultiLineTextView
 import utopia.reflection.component.swing.label.TextLabel
 import utopia.reflection.component.template.Focusable
-import utopia.reflection.container.stack.StackLayout.Leading
+import utopia.reflection.container.stack.StackLayout.{Center, Leading}
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.layout.multi.Stack.AwtStackable
 import utopia.reflection.container.swing.window.interaction.{DialogButtonBlueprint, InputRowBlueprint, RowGroups}
@@ -51,7 +51,17 @@ abstract class DataProcessorWindowLike[A, +M <: KeyMapping[A], KF <: AwtStackabl
 	private lazy val (inputComponents, inputRows) = inputContext.forGrayFields.use { implicit context =>
 		mappingFactory.fields.splitMap { fieldSpec =>
 			val field = keyField(fieldSpec)
-			(fieldSpec.name, field, fieldSpec.isRequired) -> new InputRowBlueprint(fieldSpec.name, field)
+			val rowComponent =
+			{
+				if (fieldSpec.helpText.isEmpty)
+					field
+				else
+					Stack.buildRowWithContext(layout = Center, isRelated = true) { s =>
+						s += field
+						s += Fields.infoButton(fieldSpec.helpText)
+					}
+			}
+			(fieldSpec.name, field, fieldSpec.isRequired) -> new InputRowBlueprint(fieldSpec.name, rowComponent)
 		}
 	}
 	

@@ -53,12 +53,12 @@ object Setup
 	val colorScheme = ColorScheme.twoTone(primaryColors, secondaryColors, grayColors) +
 		(Warning, warningColors) + (Info, infoColors)
 	
-	val margins = Margins(3.mm.toPixels)
-	val standardFieldWidth = 5.cm.toPixels
-	val standardSwitchWidth = 1.5.cm.toPixels
+	val margins = Margins(3.mm.toPixels.round)
+	val standardFieldWidth = 5.cm.toPixels.round
+	val standardSwitchWidth = 1.5.cm.toPixels.round
 	
 	val actorHandler = ActorHandler()
-	val standardFontSize = 0.5.cm.toPixels.toInt
+	val standardFontSize = 0.5.cm.toPixels.round.toInt
 	val baseContext = BaseContext(actorHandler,
 		Font.load(resourceDirectory/"fonts/RobotoCondensed-Regular.ttf", standardFontSize)
 			.getOrElse(Font("Arial", standardFontSize)), colorScheme, margins)

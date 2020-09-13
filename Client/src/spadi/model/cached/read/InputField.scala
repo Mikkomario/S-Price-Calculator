@@ -8,20 +8,23 @@ object InputField
 	/**
 	  * Creates a field that only supports certain types of values
 	  * @param name Field name
+	  * @param helpText A helpful description of the field role (optional)
 	  * @param isRequired Whether field must be defined (default = false)
 	  * @param validator A function that checks whether a value would be accepted in this field
 	  * @return A new field
 	  */
-	def withValidation(name: LocalString, isRequired: Boolean = false)(validator: Value => Boolean) =
-		InputField(name, Some(validator), isRequired)
+	def withValidation(name: LocalString, helpText: LocalString = LocalString.empty, isRequired: Boolean = false)(
+		validator: Value => Boolean) = InputField(name, Some(validator), helpText, isRequired)
 	
 	/**
 	  * Creates a field that doesn't perform any checking and supports all types of values
 	  * @param name Field name
+	  * @param helpText A helpful description of the field role (optional)
 	  * @param isRequired Whether field must be defined (default = false)
 	  * @return A new field
 	  */
-	def freeForm(name: LocalString, isRequired: Boolean = false) = InputField(name, None, isRequired)
+	def freeForm(name: LocalString, helpText: LocalString = LocalString.empty, isRequired: Boolean = false) =
+		InputField(name, None, helpText, isRequired)
 }
 
 /**
@@ -29,7 +32,8 @@ object InputField
   * @author Mikko Hilpinen
   * @since 5.9.2020, v1.2.3
   */
-case class InputField(name: LocalString, validator: Option[Value => Boolean] = None, isRequired: Boolean = false)
+case class InputField(name: LocalString, validator: Option[Value => Boolean] = None,
+					  helpText: LocalString = LocalString.empty, isRequired: Boolean = false)
 {
 	// COMPUTED	---------------------------
 	

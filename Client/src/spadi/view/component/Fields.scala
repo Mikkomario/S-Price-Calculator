@@ -135,7 +135,8 @@ object Fields
 	def infoButton(infoText: LocalizedString)(implicit context: ColorContextLike) =
 	{
 		val buttonColor = context.color(Info)
-		val button = ImageButton.contextualWithoutAction(Icons.help.asIndividualButtonWithColor(buttonColor))
+		val button = ImageButton.contextualWithoutAction(Icons.help.asIndividualButtonWithColor(buttonColor),
+			isLowPriority = true)
 		button.registerAction { () =>
 			// When button is pressed, display a pop-up with info text
 			val content = baseContext.inContextWithBackground(buttonColor).forTextComponents().mapFont { _ * 0.85 }
