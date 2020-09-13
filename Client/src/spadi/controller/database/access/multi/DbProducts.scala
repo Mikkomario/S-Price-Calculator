@@ -61,6 +61,14 @@ object DbProducts extends ManyModelAccess[Product]
 		find(idColumn.in(productIds))
 	
 	/**
+	  * @param firstId The first product id to include
+	  * @param lastId The last product id to include
+	  * @param connection DB Connection (implicit)
+	  * @return Products read from the database
+	  */
+	def betweenIds(firstId: Int, lastId: Int)(implicit connection: Connection) = find(idColumn.isBetween(firstId, lastId))
+	
+	/**
 	  * Deletes all products which don't have any shop data linked
 	  * @param connection DB Connection (implicit)
 	  */

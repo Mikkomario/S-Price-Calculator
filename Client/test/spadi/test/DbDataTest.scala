@@ -1,5 +1,6 @@
 package spadi.test
 
+import spadi.controller.AnalyzeProducts
 import spadi.controller.database.access.multi.DbShopProducts
 import spadi.controller.database.factory.pricing.ProductFactory
 import spadi.controller.database.model.pricing.ProductModel
@@ -51,7 +52,13 @@ object DbDataTest extends App
 		println(connection(SelectAll(ProductFactory.target) + Where(ProductModel.withId(58739).toCondition)))
 		
 		println()
-		DbShopProducts.count.foreach { case (shop, count) => println(s"Products in ${shop.name}: $count") }
+		DbShopProducts.count.foreach { case (shop, count) => println(s"Products in ${shop.name} (${shop.id}): $count") }
+		
+		println()
+		println("Analyzing products")
+		val analysisProgress = new PointerWithEvents(ProgressState.initial("Preparing analysis"))
+		analysisProgress.addListener { e => println(e.newValue) }
+		AnalyzeProducts(analysisProgress).foreach { case (shopId, report) => println(s"$shopId => $report") }
 	}
 	
 	println("\nDone")
