@@ -15,6 +15,7 @@ import utopia.reflection.component.swing.label.{ImageLabel, TextLabel}
 import utopia.reflection.container.stack.StackLayout.Trailing
 import utopia.reflection.container.swing.layout.multi.Stack
 import utopia.reflection.container.swing.window.Popup
+import utopia.reflection.container.swing.window.Popup.PopupAutoCloseLogic.WhenFocusLost
 import utopia.reflection.shape.Alignment.TopRight
 import utopia.reflection.shape.LengthExtensions._
 import utopia.reflection.localization.LocalString._
@@ -118,7 +119,9 @@ class MainViewHeader(initialShops: Iterable[Shop]) extends StackableAwtComponent
 			s += deleteShopButton
 		}(context).framed(margins.small.any, color)
 		
-		Popup(menuButton, popupContent, actorHandler, resizeAlignment = TopRight) { (cSize, wSize) =>
-			Point(cSize.width - wSize.width, 0) }.display()
+		val popup = Popup(menuButton, popupContent, actorHandler, WhenFocusLost, resizeAlignment = TopRight) { (cSize, wSize) =>
+			Point(cSize.width - wSize.width, 0) }
+		popup.setToCloseOnEsc()
+		popup.display()
 	}
 }
